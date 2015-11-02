@@ -1,0 +1,530 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>3.3. Results &mdash; PLAMS documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/boxes.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="PLAMS documentation" href="index.html" />
+    <link rel="up" title="3. Components overview" href="components.html" />
+    <link rel="next" title="3.4. Job runners" href="runners.html" />
+    <link rel="prev" title="3.2. Jobs" href="jobs.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="runners.html" title="3.4. Job runners"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="jobs.html" title="3.2. Jobs"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PLAMS documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="components.html" accesskey="U">3. Components overview</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="results">
+<h1>3.3. Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h1>
+<p>Every <a class="reference internal" href="jobs.html#scm.plams.basejob.Job" title="scm.plams.basejob.Job"><code class="xref py py-class docutils literal"><span class="pre">Job</span></code></a> instance has an associated <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instance created automatically on job creation and stored in <code class="docutils literal"><span class="pre">results</span></code> attribute. The goal of <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> is to take care of the job folder after execution of the job is finished: gather information about produced files, help to manage them and extract data of interest from them. From the technical standpoint, <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> is the part of the job running mechanism that is responsible for thread safety and proper synchronization in parallel job execution.</p>
+<div class="section" id="files-in-the-job-folder">
+<h2>3.3.1. Files in the job folder<a class="headerlink" href="#files-in-the-job-folder" title="Permalink to this headline">¶</a></h2>
+<p>Directly after execution of a job is finished (see <a class="reference internal" href="jobs.html#job-life-cycle"><span>Running a job</span></a>), the job folder gets scanned by <a class="reference internal" href="#scm.plams.results.Results.collect" title="scm.plams.results.Results.collect"><code class="xref py py-meth docutils literal"><span class="pre">collect()</span></code></a> method. All files present there, including files in subfolders, are gathered in a list stored in <code class="docutils literal"><span class="pre">files</span></code> attribute of the <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instance. Entries in this list correspond to paths to files relative to the job folder, so files on the top level are stored by their names and files in subfolders by something like <code class="docutils literal"><span class="pre">childjob/childjob.out</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Files produced by <a class="reference internal" href="jobmanager.html#pickling"><span>Pickling</span></a> are excluded from this mechanism. Every file with <code class="docutils literal"><span class="pre">.dill</span></code> extension is simply ignored by <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a>.</p>
+</div>
+<p>If you need an absolute path to some file, the bracket notation known from dictionaries is defined for <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> objects. When supplied with an entry from <code class="docutils literal"><span class="pre">files</span></code> list, it returns the absolute path to that file. This mechanism is read-only:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">j</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">r</span><span class="o">.</span><span class="n">files</span>
+<span class="go">[&#39;plamsjob.err&#39;, &#39;plamsjob.in&#39;, &#39;plamsjob.out&#39;, &#39;plamsjob.run&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">r</span><span class="p">[</span><span class="s">&#39;plamsjob.out&#39;</span><span class="p">]</span>
+<span class="go">/home/user/plams.12345/plamsjob/plamsjob.in</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">[</span><span class="s">&#39;newfile.txt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;/home/user/abc.txt&#39;</span>
+<span class="go">TypeError: &#39;Results&#39; object does not support item assignment</span>
+</pre></div>
+</div>
+<p>In the bracket notation and in every other context regarding <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a>, whenever you need to pass a string with a filename, shortcut <code class="docutils literal"><span class="pre">$JN</span></code> can be used for the job name:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s">&#39;$JN.out&#39;</span><span class="p">,</span> <span class="s">&#39;outputfile&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">grep_file</span><span class="p">(</span><span class="s">&#39;$JN.err&#39;</span><span class="p">,</span> <span class="s">&#39;NORMAL TERMINATION&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">r</span><span class="p">[</span><span class="s">&#39;$JN.run&#39;</span><span class="p">]</span>
+<span class="go">/home/user/plams.12345/plamsjob/plamsjob.run</span>
+</pre></div>
+</div>
+<p>Some external binaries produce fixed name files during execution (like for example ADF&#8217;s <code class="docutils literal"><span class="pre">TAPE21</span></code>). If one wants to automatically rename those files it can be done with <code class="docutils literal"><span class="pre">_rename_map</span></code> class attribute:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">ADFResults</span><span class="o">.</span><span class="n">_rename_map</span>
+<span class="go">{&#39;TAPE13&#39;: &#39;$JN.t13&#39;, &#39;TAPE21&#39;: &#39;$JN.t21&#39;}</span>
+</pre></div>
+</div>
+<p>As presented in the above example, <code class="docutils literal"><span class="pre">_rename_map</span></code> is a dictionary defining which files should be renamed and how. Renaming is done only once, on <a class="reference internal" href="#scm.plams.results.Results.collect" title="scm.plams.results.Results.collect"><code class="xref py py-meth docutils literal"><span class="pre">collect()</span></code></a>. In generic <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> class <code class="docutils literal"><span class="pre">_rename_map</span></code> is an empty dictionary.</p>
+</div>
+<div class="section" id="synchronization-of-parallel-job-executions">
+<span id="parallel"></span><h2>3.3.2. Synchronization of parallel job executions<a class="headerlink" href="#synchronization-of-parallel-job-executions" title="Permalink to this headline">¶</a></h2>
+<p>One of the main advantages of PLAMS is the ability to run jobs in parallel. The whole job execution mechanism is designed in such a way that there is no need to prepare a special parallel script, the same scripts can be used for both serial and parallel execution. However, it is important to have a basic understanding of how parallelism in PLAMS works to avoid deadlocks and maximize the performance of your scripts.</p>
+<p>To run your job in parallel you need to use a parallel job runner:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pjr</span> <span class="o">=</span> <span class="n">JobRunner</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">myresults</span> <span class="o">=</span> <span class="n">myjob</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">jobrunner</span><span class="o">=</span><span class="n">pjr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Parallelism is not something that is &#8220;enabled&#8221; or &#8220;disabled&#8221; for the entire script: within one script you can use multiple job runners, some of them may be parallel and some may be serial. However, if you wish to always use the same <a class="reference internal" href="runners.html#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> instance, it is convenient to set is as a default at the beginning of your script:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span><span class="o">.</span><span class="n">default_jobrunner</span> <span class="o">=</span> <span class="n">JobRunner</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>All <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> calls without <code class="docutils literal"><span class="pre">jobrunner</span></code> argument supplied will now use this instance.</p>
+<p>When you run a job using a serial job runner, all steps of <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> (see <a class="reference internal" href="jobs.html#job-life-cycle"><span>Running a job</span></a>) are done in the main thread and <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instance is returned at the end. On the other hand, when a parallel job runner is used, a new thread is spawned at the beginning of <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> and all further work is done in this thread. Meanwhile the main thread proceeds with execution of the script. The important thing is that <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> method called in the main thread returns <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instance and allows the whole script to proceed even though the job is still running in a separate thread. This <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instance acts as a &#8220;guardian&#8221; protecting the job from being accessed while it is still running. Every time you call a method of any <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instance, the guardian checks the status of associated job and if the job is not yet finished, it forces the thread from which the call was done to wait. Thanks to that there is no need to explicitly put synchronization points in the script &#8211; results requests serve for that purpose.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">You should <strong>NEVER</strong> access results in any other way than by a <strong>method</strong> of <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instance.</p>
+</div>
+<p>The <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> class is designed in such a way, that each of its methods automatically gets wrapped with the access guardian when <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instance is created. That behavior holds for any <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> subclasses and new methods defined by user, so no need to worry about guardian when extending <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> functionality. Also <a class="reference internal" href="functions.html#binding-decorators"><span>Binding decorators</span></a> recognize when you try to use them with <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> and act accordingly. Methods whose names end with two underscores, as well as <a class="reference internal" href="#scm.plams.results.Results.refresh" title="scm.plams.results.Results.refresh"><code class="xref py py-meth docutils literal"><span class="pre">refresh()</span></code></a>, <a class="reference internal" href="#scm.plams.results.Results.collect" title="scm.plams.results.Results.collect"><code class="xref py py-meth docutils literal"><span class="pre">collect()</span></code></a>, <a class="reference internal" href="#scm.plams.results.Results._clean" title="scm.plams.results.Results._clean"><code class="xref py py-meth docutils literal"><span class="pre">_clean()</span></code></a> are not wrapped with the guardian. The guardian gives special privileges (earlier access) to <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.postrun" title="scm.plams.basejob.Job.postrun"><code class="xref py py-meth docutils literal"><span class="pre">postrun()</span></code></a> and <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.check" title="scm.plams.basejob.Job.check"><code class="xref py py-meth docutils literal"><span class="pre">check()</span></code></a> (see <a class="reference internal" href="jobs.html#prerun-postrun"><span>Prerun and postrun methods</span></a>).</p>
+<div class="technical admonition">
+<p class="first admonition-title">Technical</p>
+<p class="last">The behavior described above is implemented using Python mechanism called metaclasses. The guardian is simply a decorator wrapping instance methods.</p>
+</div>
+<p>If you never request any results of your job and just want to run it, <a class="reference internal" href="functions.html#scm.plams.common.finish" title="scm.plams.common.finish"><code class="xref py py-func docutils literal"><span class="pre">finish()</span></code></a> method works as a global synchronization point. It waits for all spawned threads to end before cleaning the environment and exiting your script.</p>
+<div class="section" id="examples">
+<h3>3.3.2.1. Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<p>This section provides a handful of examples together with an explanation of common pitfalls and good practices one should keep in mind when writing parallel PLAMS scripts.</p>
+<p>Let us start with a simple parallel script that takes all <code class="docutils literal"><span class="pre">.xyz</span></code> files in a given folder and for each one calculates a dipole moment magnitude using a single point ADF calculation:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">os</span>
+<span class="n">config</span><span class="o">.</span><span class="n">default_jobrunner</span> <span class="o">=</span> <span class="n">JobRunner</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="n">folder</span> <span class="o">=</span> <span class="s">&#39;/home/user/xyz&#39;</span>
+<span class="n">filenames</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.xyz&#39;</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">folder</span><span class="p">)))</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">Settings</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s">&#39;DZP&#39;</span>
+<span class="n">s</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">SP</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="n">s</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">xc</span><span class="o">.</span><span class="n">gga</span> <span class="o">=</span> <span class="s">&#39;PBE&#39;</span>
+
+<span class="n">jobs</span> <span class="o">=</span> <span class="p">[</span><span class="n">ADFJob</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">Molecule</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span><span class="n">f</span><span class="p">)),</span> <span class="n">name</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;.xyz&#39;</span><span class="p">),</span> <span class="n">settings</span><span class="o">=</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">]</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">job</span><span class="o">.</span><span class="n">run</span><span class="p">()</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+    <span class="n">dipole_vec</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">readkf</span><span class="p">(</span><span class="s">&#39;Properties&#39;</span><span class="p">,</span> <span class="s">&#39;Dipole&#39;</span><span class="p">)</span>
+    <span class="n">dipole_magn</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">a</span><span class="o">*</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">dipole_vec</span><span class="p">])</span><span class="o">**</span><span class="mf">0.5</span>
+    <span class="k">print</span> <span class="n">r</span><span class="o">.</span><span class="n">job</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\t\t</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">dipole_magn</span>
+</pre></div>
+</td></tr></table></div>
+<p>For an explanation purpose let us assume that folder <code class="docutils literal"><span class="pre">/home/user/xyz</span></code> contains three files: <code class="docutils literal"><span class="pre">Ammonia.xyz</span></code>, <code class="docutils literal"><span class="pre">Ethanol.xyz</span></code>, <code class="docutils literal"><span class="pre">Water.xyz</span></code>. When you run this script the standard output will look something like:</p>
+<div class="highlight-python"><div class="highlight"><pre>[14:34:17] Job Ammonia started
+[14:34:17] Job Ethanol started
+[14:34:17] Job Water started
+[14:34:17] Waiting for job Ammonia to finish
+[14:34:20] Job Water finished with status &#39;successful&#39;
+[14:34:20] Job Ammonia finished with status &#39;successful&#39;
+Ammonia         0.594949300726
+[14:34:21] Waiting for job Ethanol to finish
+[14:34:25] Job Ethanol finished with status &#39;successful&#39;
+Ethanol         0.594626131104
+Water       0.708226707277
+</pre></div>
+</div>
+<p>As you can see, <code class="docutils literal"><span class="pre">print</span></code> statements from line 18 are mixed with automatic logging messages. Let us examine in more detail what causes such a behavior. To do so we will follow what happens in the main thread. In line 5 an alphabetically sorted list of <code class="docutils literal"><span class="pre">.xyz</span></code> files from the given directory is created.  The list of jobs prepared in line 12 follows the same order so the job named &#8220;Ethanol&#8221; will come after &#8220;Ammonia&#8221; and before &#8220;Water&#8221;. Line 13 is in fact a for loop that goes along the list of jobs, runs each of them and collects returned <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instances in a list called <code class="docutils literal"><span class="pre">results</span></code>. If we were using a serial job runner all work would happen in this line: the &#8220;Ethanol&#8221; job would start only when &#8220;Ammonia&#8221; was finished, &#8220;Water&#8221; would wait for &#8220;Ethanol&#8221; and the main thread would proceed only when &#8220;Water&#8221; is done.</p>
+<p>In our case we are using a parallel job runner so the first job is started and quickly moves to a separate thread allowing the main thread to proceed to another instruction, which in this case is <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> of the &#8220;Ethanol&#8221; job (and so on). Thanks to that all jobs are started almost immediately one after another, corresponding <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> are gathered and the main thread proceeds to line 15 while all three jobs are running &#8220;in the background&#8221;, handled by separate threads. Now the main thread goes along <code class="docutils literal"><span class="pre">results</span></code> list (which follows the same order as <code class="docutils literal"><span class="pre">filenames</span></code> and <code class="docutils literal"><span class="pre">jobs</span></code>) and tries to obtain a dipole vector for each job. It uses <code class="docutils literal"><span class="pre">readkf</span></code> method of <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instance associated with the &#8220;Ammonia&#8221; job and since this job is still running, the main thread hangs and waits for the job to finish. Meanwhile we can see that the &#8220;Water&#8221; job ends and this fact is logged. Quickly after that also the &#8220;Ammonia&#8221; job finishes and the main thread obtains <code class="docutils literal"><span class="pre">dipole_vec</span></code>, calculates <code class="docutils literal"><span class="pre">dipole_magn</span></code> and prints it. Now the <code class="docutils literal"><span class="pre">for</span></code> loop in line 15 continues, this time for the &#8220;Ethanol&#8221; job. This job seems to be a bit longer than &#8220;Ammonia&#8221;, so it is still running and the main thread again hangs on the <code class="docutils literal"><span class="pre">readkf</span></code> method. After finally obtaining the dipole vector, calculating the magnitude and printing it, the <code class="docutils literal"><span class="pre">for</span></code> loop goes on with its last iteration, the &#8220;Water&#8221; job. This time there is no need to wait since the job is already finished - the result is calculated and printed immediately.</p>
+<p>Knowing that, let us wonder what would happen if the order of jobs was different. If &#8220;Ethanol&#8221; was the first job on the list, by the time its results would be obtained and printed, both other jobs would have finished, so no further waiting would be needed. On the other hand, if the order was &#8220;Water&#8221;&#8211;&#8221;Ammonia&#8221;&#8211;&#8221;Ethanol&#8221;, the main thread would have to wait every time when executing line 16.</p>
+<p>The most important lesson from the above is: the order in which you start jobs does not matter (too much), it is the order of results requests that makes a difference. Of course in our very simple example it influences only the way in which results are mixed with log messages, but in more complicated setups it can directly affect the runtime of your script.</p>
+<p>By the way, to solve the problem with mixed <code class="docutils literal"><span class="pre">print</span></code> statements and logging messages one could first store data and print it when all results are ready:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">to_print</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+    <span class="n">dipole_vec</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">readkf</span><span class="p">(</span><span class="s">&#39;Properties&#39;</span><span class="p">,</span> <span class="s">&#39;Dipole&#39;</span><span class="p">)</span>
+    <span class="n">dipole_magn</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">a</span><span class="o">*</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">dipole_vec</span><span class="p">])</span><span class="o">**</span><span class="mf">0.5</span>
+    <span class="n">to_print</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">r</span><span class="o">.</span><span class="n">job</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">dipole_magn</span><span class="p">)]</span>
+<span class="k">for</span> <span class="n">nam</span><span class="p">,</span> <span class="n">dip</span> <span class="ow">in</span> <span class="n">to_print</span><span class="p">:</span>
+    <span class="k">print</span> <span class="n">nam</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\t\t</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">dip</span>
+</pre></div>
+</div>
+<p>Another way could be disabling logging to standard output by putting <code class="docutils literal"><span class="pre">config.log.stdout</span> <span class="pre">=</span> <span class="pre">0</span></code> at the beginning of the script (see <a class="reference internal" href="functions.html#scm.plams.common.log" title="scm.plams.common.log"><code class="xref py py-func docutils literal"><span class="pre">log()</span></code></a>).</p>
+<p>Coming back to the main topic of our considerations, as we have seen above, parallelism in PLAMS is driven by results request. Not only the order of requests is important, but also (probably even more important) the place from which they are made. To picture this matter we will use the following script that performs geometry optimization followed by frequencies calculation of the optimized geometry:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">config</span><span class="o">.</span><span class="n">default_jobrunner</span> <span class="o">=</span> <span class="n">JobRunner</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="n">go</span> <span class="o">=</span> <span class="n">ADFJob</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;GeomOpt&#39;</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">Molecule</span><span class="p">(</span><span class="s">&#39;geom.xyz&#39;</span><span class="p">))</span>
+<span class="n">go</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">go</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="o">...</span> <span class="c">#other settings adjustments for geometry optimisation</span>
+<span class="n">go_results</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="n">opt_geo</span> <span class="o">=</span> <span class="n">go_results</span><span class="o">.</span><span class="n">get_molecule</span><span class="p">(</span><span class="s">&#39;Geometry&#39;</span><span class="p">,</span> <span class="s">&#39;xyz&#39;</span><span class="p">)</span>
+
+<span class="n">freq</span> <span class="o">=</span> <span class="n">ADFJob</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;Freq&#39;</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">opt_geo</span><span class="p">)</span>
+<span class="n">freq</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">frequencies</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="o">...</span> <span class="c">#other settings adjustments for frequency run</span>
+<span class="n">freq_results</span> <span class="o">=</span> <span class="n">freq</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="n">do_other_work</span><span class="p">()</span> <span class="c"># further part of the script, independent of GeomOpt and Freq</span>
+</pre></div>
+</td></tr></table></div>
+<p>Again let us follow the main thread. In line 8 we can see a results request for optimized geometry from &#8220;GeomOpt&#8221; job. The main thread will then wait for this job to finish before preparing &#8220;Freq&#8221; job and running it. That means <code class="docutils literal"><span class="pre">do_other_work()</span></code>, whatever it is, will not start before &#8220;GeomOpt&#8221; is done, even though it could, since it is independent of GeomOpt and Freq results. This is bad. The main thread wastes time that could be used for <code class="docutils literal"><span class="pre">do_other_work()</span></code> on idle waiting. We need to fix our script:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">config</span><span class="o">.</span><span class="n">default_jobrunner</span> <span class="o">=</span> <span class="n">JobRunner</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="n">go</span> <span class="o">=</span> <span class="n">ADFJob</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;GeomOpt&#39;</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">Molecule</span><span class="p">(</span><span class="s">&#39;geom.xyz&#39;</span><span class="p">))</span>
+<span class="n">go</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">go</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="o">...</span> <span class="c">#other settings adjustments for geometry optimisation</span>
+<span class="n">go_results</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="n">freq</span> <span class="o">=</span> <span class="n">ADFJob</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;Freq&#39;</span><span class="p">)</span>
+<span class="n">freq</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">frequencies</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="o">...</span> <span class="c">#other settings adjustments for frequency run</span>
+
+<span class="nd">@add_to_instance</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">prerun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">molecule</span> <span class="o">=</span> <span class="n">go_results</span><span class="o">.</span><span class="n">get_molecule</span><span class="p">(</span><span class="s">&#39;Geometry&#39;</span><span class="p">,</span> <span class="s">&#39;xyz&#39;</span><span class="p">)</span>
+
+<span class="n">freq_results</span> <span class="o">=</span> <span class="n">freq</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="n">do_other_work</span><span class="p">()</span> <span class="c"># further part of the script, independent of GeomOpt and Freq</span>
+</pre></div>
+</td></tr></table></div>
+<p>Now the results request have been moved from main script to the <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a> method of &#8220;Freq&#8221; job. This simple tweak changes everything since job&#8217;s <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a> is executed in job&#8217;s thread rather than the main thread. That means the main thread starts the &#8220;Freq&#8221; job immediately after starting &#8220;GeomOpt&#8221; job and then directly proceeds to <code class="docutils literal"><span class="pre">do_other_work()</span></code>. Meanwhile in the thread spawned for &#8220;Freq&#8221; the results request for molecule is made and that thread waits for &#8220;GeomOpt&#8221; to finish.</p>
+<p>As seen in the above example, it is extremely important to properly configure jobs that are dependent (setup of one depends on results of another). Resolving all such dependencies in job&#8217;s thread rather than the main thread guarantees that waiting for results is done only by the code that really needs them.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In some cases dependencies between job are not easily expressed via methods of <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> (for example, one job sets up some environment that is later used by another job). In such cases one can use job&#8217;s <code class="docutils literal"><span class="pre">depend</span></code> attribute to explicitly tell the job about other jobs which it has to wait for. Adding <code class="docutils literal"><span class="pre">job2</span></code> to <code class="docutils literal"><span class="pre">job1.depend</span></code> is roughly equivalent to putting <code class="docutils literal"><span class="pre">job2.results.wait()</span></code> in <code class="docutils literal"><span class="pre">job1</span></code> <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a>.</p>
+</div>
+<p>To sum up all the above considerations, here is the rule of thumb how to write properly working parallel PLAMS scripts:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Request results as late as possible, preferably just before using them.</li>
+<li>If possible, avoid requesting results in the main thread.</li>
+<li>Place the result request in the thread in which this data is later used.</li>
+</ol>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="cleaning-job-folder">
+<span id="cleaning"></span><h2>3.3.3. Cleaning job folder<a class="headerlink" href="#cleaning-job-folder" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instance associated with a job is responsible for cleaning the job folder. Cleaning is done by <a class="reference internal" href="#scm.plams.results.Results._clean" title="scm.plams.results.Results._clean"><code class="xref py py-meth docutils literal"><span class="pre">_clean()</span></code></a> and can be invoked manually if needed. However, usually there is no need to do this, since cleaning is done automatically,
+twice for each job.</p>
+<p>First cleaning is done during job execution, just after <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.check" title="scm.plams.basejob.Job.check"><code class="xref py py-meth docutils literal"><span class="pre">check()</span></code></a> and before <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.postrun" title="scm.plams.basejob.Job.postrun"><code class="xref py py-meth docutils literal"><span class="pre">postrun()</span></code></a>. The value adjusting first cleaning is taken from <code class="docutils literal"><span class="pre">myjob.settings.keep</span></code> and should be either string or list (see below). This cleaning will usually be used rather rarely. It is intended for purposes when your jobs produce large files that you don&#8217;t need for further processing. Running many of such jobs could then deplete disk quota and cause the whole script to crash. If you wish to immediately get rid of some files produced by your jobs (without having a chance to do anything with them), use this cleaning.</p>
+<p>In the majority of cases it is sufficient to use second cleaning, which is performed at the end of your script, when <a class="reference internal" href="functions.html#scm.plams.common.finish" title="scm.plams.common.finish"><code class="xref py py-func docutils literal"><span class="pre">finish()</span></code></a> method is called. It is adjusted by <code class="docutils literal"><span class="pre">myjob.settings.save</span></code>. You can use second cleaning to remove files that you no longer need after you extracted relevant data earlier in your script.</p>
+<p>The argument passed to <a class="reference internal" href="#scm.plams.results.Results._clean" title="scm.plams.results.Results._clean"><code class="xref py py-meth docutils literal"><span class="pre">_clean()</span></code></a> (in other words the value that is supposed to be kept in <code class="docutils literal"><span class="pre">myjob.settings.keep</span></code> and <code class="docutils literal"><span class="pre">myjob.settings.save</span></code>) can be one of the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">'all'</span></code> &#8211; nothing is removed, cleaning is skipped.</li>
+<li><code class="docutils literal"><span class="pre">'none'</span></code> or <code class="docutils literal"><span class="pre">[]</span></code> or <code class="docutils literal"><span class="pre">None</span></code> &#8211; everything is removed from the job folder.</li>
+<li>list of strings &#8211; list of filenames to be kept. Shortcut <code class="docutils literal"><span class="pre">$JN</span></code> can be used here, as well as *-wildcards. For example <code class="docutils literal"><span class="pre">['geo.*',</span> <span class="pre">'$JN.out',</span> <span class="pre">'logfile']</span></code> will keep <code class="docutils literal"><span class="pre">jobname.out</span></code>, <code class="docutils literal"><span class="pre">logfile</span></code> and all files whose names start with <code class="docutils literal"><span class="pre">geo.</span></code> and remove everything else from the job folder.</li>
+<li>list of strings with the first element <code class="docutils literal"><span class="pre">'-'</span></code> &#8211; reversed behavior to the above, listed files will be removed. For example <code class="docutils literal"><span class="pre">['-',</span> <span class="pre">'t21.*',</span> <span class="pre">'$JN.err']</span></code> will remove <code class="docutils literal"><span class="pre">jobname.err</span></code> and all files whose names start with <code class="docutils literal"><span class="pre">t21.</span></code></li>
+</ul>
+</div></blockquote>
+<div class="section" id="cleaning-for-multijobs">
+<h3>3.3.3.1. Cleaning for multijobs<a class="headerlink" href="#cleaning-for-multijobs" title="Permalink to this headline">¶</a></h3>
+<p>Cleaning happens for every job run with PLAMS, either single or multi. That means that if you have for example a single job that is a child of some multijob, its job folder will be cleaned two times by two different <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instances that can interfere with each other. Hence it is a good practice to set cleaning only on one level (either parent job or children jobs) and disable cleaning on the other level by using <code class="docutils literal"><span class="pre">'all'</span></code>.</p>
+<p>Another shortcut can be used for cleaning in multijobs. <code class="docutils literal"><span class="pre">$CH</span></code> is expanded with every possible child name. So for example if you have a multijob <code class="docutils literal"><span class="pre">mj</span></code> with 5 single job children (<code class="docutils literal"><span class="pre">child1</span></code>, <code class="docutils literal"><span class="pre">child2</span></code> and so on) and you wish to keep only input and output files of children jobs you can set:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mj</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;$CH/$CH.in&#39;</span><span class="p">,</span> <span class="s">&#39;$CH/$CH.out&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>It is equivalent to using:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mj</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;child1/child1.in&#39;</span><span class="p">,</span> <span class="s">&#39;child2/child2.in&#39;</span><span class="p">,</span> <span class="o">...</span> <span class="p">,</span> <span class="s">&#39;child1/child1.out&#39;</span><span class="p">,</span> <span class="s">&#39;child2/child2.out&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>As you can see in the above example, when cleaning a multijob folder you have to keep in mind the fact that files in subfolders are kept as relative paths.</p>
+</div>
+</div>
+<div class="section" id="api">
+<h2>3.3.4. API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="scm.plams.results.Results">
+<em class="property">class </em><code class="descname">Results</code><span class="sig-paren">(</span><em>job</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results" title="Permalink to this definition">¶</a></dt>
+<dd><p>General (concrete) class for job results.</p>
+<p><code class="docutils literal"><span class="pre">job</span></code> attribute stores a reference to associated job. <code class="docutils literal"><span class="pre">files</span></code> attribute is a list with contents of the job folder. <code class="docutils literal"><span class="pre">_rename_map</span></code> is a class attribute with dictionary storing the default renaming scheme.</p>
+<p>Bracket notation can be used to obtain full absolute paths to files in the job folder.</p>
+<p>Instance methods are automatically wrapped with access guardian which ensures thread safety (see <a class="reference internal" href="#parallel"><span>Synchronization of parallel job executions</span></a>).</p>
+<dl class="method">
+<dt id="scm.plams.results.Results.__getitem__">
+<code class="descname">__getitem__</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Magic method to enable bracket notation. Elements from <code class="docutils literal"><span class="pre">files</span></code> can be used to get absolute paths.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.results.Results._clean">
+<code class="descname">_clean</code><span class="sig-paren">(</span><em>arg</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results._clean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clean the job folder. <em>arg</em> should be a string or a list of strings. See <a class="reference internal" href="#cleaning"><span>Cleaning job folder</span></a> for details.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.results.Results._copy_to">
+<code class="descname">_copy_to</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results._copy_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy these results to <em>other</em>.</p>
+<p>This method is used when <a class="reference internal" href="jobmanager.html#rerun-prevention"><span>Rerun prevention</span></a> discovers an attempt to run a job identical to the one previously run. Instead of execution, results of the previous job are copied/linked to the new one.</p>
+<p>This method is called from results of old job and <em>other</em> should be results of new job. The goal is to faithfully recreate the state of <code class="docutils literal"><span class="pre">self</span></code> in <code class="docutils literal"><span class="pre">other</span></code>. To achieve that all contents of jobs folder are copied (or hardlinked, if your platform allows that and <code class="docutils literal"><span class="pre">self.settings.link_files</span></code> is <code class="docutils literal"><span class="pre">True</span></code>) to other&#8217;s job folder. Moreover, all attributes of <code class="docutils literal"><span class="pre">self</span></code> (other than <code class="docutils literal"><span class="pre">job</span></code> and <code class="docutils literal"><span class="pre">files</span></code>) are exported to <em>other</em> using <a class="reference internal" href="#scm.plams.results.Results._export_attribute" title="scm.plams.results.Results._export_attribute"><code class="xref py py-meth docutils literal"><span class="pre">_export_attribute()</span></code></a> method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.results.Results._export_attribute">
+<code class="descname">_export_attribute</code><span class="sig-paren">(</span><em>attr</em>, <em>other</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results._export_attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export this instance&#8217;s attribute to <em>other</em>. This method should be overridden in your <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> subclass if it has some attribute that is not properly copyable by <a class="reference external" href="http://docs.python.org/2.7/library/copy.html#copy.deepcopy" title="(in Python v2.7)"><code class="docutils literal"><span class="pre">copy.deepcopy()</span></code></a>.</p>
+<p><em>other</em> is the <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instance, <em>attr</em> is the <strong>value</strong> of the attribute to be copied. See <a class="reference internal" href="scm.html#scm.plams.scmjob.SCMResults._export_attribute" title="scm.plams.scmjob.SCMResults._export_attribute"><code class="xref py py-meth docutils literal"><span class="pre">SCMJob._export_attribute</span></code></a> for an example implementation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.results.Results._process_file">
+<code class="descname">_process_file</code><span class="sig-paren">(</span><em>filename</em>, <em>command</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results._process_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Skeleton for all file processing methods. Execute <em>command</em> (should be a list of strings) on <em>filename</em> and return output as a list of lines.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="scm.plams.results.Results._replace_job_name">
+<em class="property">static </em><code class="descname">_replace_job_name</code><span class="sig-paren">(</span><em>string</em>, <em>oldname</em>, <em>newname</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results._replace_job_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <em>string</em> starts with <em>oldname</em>, maybe followed by some extension, replace <em>oldname</em> with <em>newname</em>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.results.Results.awk_file">
+<code class="descname">awk_file</code><span class="sig-paren">(</span><em>filename</em>, <em>script=''</em>, <em>progfile=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results.awk_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute AWK script on a file given by <em>filename</em>.</p>
+<p>See <code class="docutils literal"><span class="pre">man</span> <span class="pre">awk</span></code> for details.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; a path to a file to be searched in.</li>
+<li><strong>script</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; a string containing AWK script.</li>
+<li><strong>progfile</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; a path to a file with AWK script (absolute or relative to the file pointed by <em>filename</em>). If this argument is supplied, <em>script</em> is ignored.</li>
+<li><strong>**kwargs</strong> &#8211; additional variables that are passed to AWK using <code class="docutils literal"><span class="pre">-v</span></code> flag.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list of lines returned by AWK.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.results.Results.awk_output">
+<code class="descname">awk_output</code><span class="sig-paren">(</span><em>script=''</em>, <em>progfile=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results.awk_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shortcut for <a class="reference internal" href="#scm.plams.results.Results.awk_file" title="scm.plams.results.Results.awk_file"><code class="xref py py-meth docutils literal"><span class="pre">awk_file()</span></code></a> on the output file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.results.Results.collect">
+<code class="descname">collect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results.collect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect the files present in the job folder after execution of the job is finished. This method is simply <a class="reference internal" href="#scm.plams.results.Results.refresh" title="scm.plams.results.Results.refresh"><code class="xref py py-meth docutils literal"><span class="pre">refresh()</span></code></a> plus rename according to <code class="docutils literal"><span class="pre">_rename_map</span></code>.</p>
+<p>If you wish to override this function, you have to call the parent version at the beginning.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.results.Results.grep_file">
+<code class="descname">grep_file</code><span class="sig-paren">(</span><em>filename</em>, <em>pattern=''</em>, <em>options=''</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results.grep_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute <code class="docutils literal"><span class="pre">grep</span></code> on a file given by <em>filename</em> and search for <em>pattern</em>.</p>
+<p>See <code class="docutils literal"><span class="pre">man</span> <span class="pre">grep</span></code> for details.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; a path to a file to be searched in.</li>
+<li><strong>pattern</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; a pattern to be searched for.</li>
+<li><strong>options</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; additional <code class="docutils literal"><span class="pre">grep</span></code> flags. Should be one string containing all flags (separated with spaces if needed).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list of lines returned by <code class="docutils literal"><span class="pre">grep</span></code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.results.Results.grep_output">
+<code class="descname">grep_output</code><span class="sig-paren">(</span><em>pattern=''</em>, <em>options=''</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results.grep_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shortcut for <a class="reference internal" href="#scm.plams.results.Results.grep_file" title="scm.plams.results.Results.grep_file"><code class="xref py py-meth docutils literal"><span class="pre">grep_file()</span></code></a> on the output file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.results.Results.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the contents of <code class="docutils literal"><span class="pre">files</span></code> list. Traverse the job folder (and all its subfolders) and collect relative paths to all files found there, except files with <code class="docutils literal"><span class="pre">.dill</span></code> extension.</p>
+<p>This is a cheap and fast method that should be used every time there is some risk that contents of the job folder changed and <code class="docutils literal"><span class="pre">files</span></code> list is no longer actual. For proper working of various PLAMS elements it is crucial that <code class="docutils literal"><span class="pre">files</span></code> always contains actual information about contents of job folder.</p>
+<p>All functions and methods defined in PLAMS that could change the state of job folder take care about refreshing <code class="docutils literal"><span class="pre">files</span></code>, so there is no need to manually call <a class="reference internal" href="#scm.plams.results.Results.refresh" title="scm.plams.results.Results.refresh"><code class="xref py py-meth docutils literal"><span class="pre">refresh()</span></code></a> after, for example, <a class="reference internal" href="#scm.plams.results.Results.rename" title="scm.plams.results.Results.rename"><code class="xref py py-meth docutils literal"><span class="pre">rename()</span></code></a>. If you are implementing new method of that kind don&#8217;t forget about refreshing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.results.Results.rename">
+<code class="descname">rename</code><span class="sig-paren">(</span><em>old</em>, <em>new</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results.rename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rename a file from <code class="docutils literal"><span class="pre">files</span></code>. In both <em>old</em> and <em>new</em> shortcut <code class="docutils literal"><span class="pre">$JN</span></code> can be used.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.results.Results.wait">
+<code class="descname">wait</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results.Results.wait" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wait for associated job to finish.</p>
+<p>This is <strong>not</strong> an abstract method. It does exactly what it should: nothing. All the work is done by <a class="reference internal" href="#scm.plams.results._restrict" title="scm.plams.results._restrict"><code class="xref py py-func docutils literal"><span class="pre">_restrict()</span></code></a> decorator that is wrapped around it.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scm.plams.results._MetaResults">
+<em class="property">class </em><code class="descname">_MetaResults</code><a class="headerlink" href="#scm.plams.results._MetaResults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Metaclass for <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a>. During new <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instance creation it wraps all methods with <a class="reference internal" href="#scm.plams.results._restrict" title="scm.plams.results._restrict"><code class="xref py py-func docutils literal"><span class="pre">_restrict()</span></code></a> decorator ensuring proper synchronization and thread safety. Methods listed in <code class="docutils literal"><span class="pre">_dont_restrict</span></code> as well as those with names ending with two underscores are not wrapped.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scm.plams.results._restrict">
+<code class="descname">_restrict</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.results._restrict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that wraps methods of <a class="reference internal" href="#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instances.</p>
+<p>Whenever decorated method is called, the status of associated job is checked. Depending of its value access to the method is granted, refused or the loop waiting and retrying every <code class="docutils literal"><span class="pre">config.sleepstep</span></code> seconds is started.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo"><a href="http://www.scm.com/">
+  <img class="logo" src="_static/scm_logo.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">3.3. Results</a><ul>
+<li><a class="reference internal" href="#files-in-the-job-folder">3.3.1. Files in the job folder</a></li>
+<li><a class="reference internal" href="#synchronization-of-parallel-job-executions">3.3.2. Synchronization of parallel job executions</a><ul>
+<li><a class="reference internal" href="#examples">3.3.2.1. Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cleaning-job-folder">3.3.3. Cleaning job folder</a><ul>
+<li><a class="reference internal" href="#cleaning-for-multijobs">3.3.3.1. Cleaning for multijobs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#api">3.3.4. API</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="jobs.html"
+                        title="previous chapter">3.2. Jobs</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="runners.html"
+                        title="next chapter">3.4. Job runners</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/results.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="runners.html" title="3.4. Job runners"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="jobs.html" title="3.2. Jobs"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PLAMS documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="components.html" >3. Components overview</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Scientific Computing &amp; Modelling.
+    </div>
+  </body>
+</html>

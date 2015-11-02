@@ -1,0 +1,312 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>3.4. Job runners &mdash; PLAMS documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/boxes.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="PLAMS documentation" href="index.html" />
+    <link rel="up" title="3. Components overview" href="components.html" />
+    <link rel="next" title="3.5. Job manager" href="jobmanager.html" />
+    <link rel="prev" title="3.3. Results" href="results.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="jobmanager.html" title="3.5. Job manager"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="results.html" title="3.3. Results"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PLAMS documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="components.html" accesskey="U">3. Components overview</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="job-runners">
+<h1>3.4. Job runners<a class="headerlink" href="#job-runners" title="Permalink to this headline">¶</a></h1>
+<p>Job runners have already been mentioned in previous chapters, in parts regarding job running. The aim of this chapter is to sum up all this information and to introduce various subclasses of <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a>.</p>
+<p>Job runners in PLAMS are very simple objects, both from user&#8217;s perspective and in terms of internal architecture. They have no methods that are meant to be explicitly called, they are just supposed to be created and passed to <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> as parameters. <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> class defines a basic local job runner and serves as a base class for further subclassing.</p>
+<div class="section" id="local-job-runner">
+<h2>3.4.1. Local job runner<a class="headerlink" href="#local-job-runner" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="scm.plams.jobrunner.JobRunner">
+<em class="property">class </em><code class="descname">JobRunner</code><span class="sig-paren">(</span><em>parallel=False</em>, <em>maxjobs=0</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.jobrunner.JobRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class representing local job runner.</p>
+<p>The goal of <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> is to take care of two important things &#8211; parallelization and runscript execution:</p>
+<blockquote>
+<div><ul class="simple">
+<li>When the method <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> of any <a class="reference internal" href="jobs.html#scm.plams.basejob.Job" title="scm.plams.basejob.Job"><code class="xref py py-class docutils literal"><span class="pre">Job</span></code></a> instance is executed, this method, after some preparations, passes control to a <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> instance. This <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> instance decides if a separate thread should be spawned for this job or if the execution should proceed in the main thread. This decision is based on <code class="docutils literal"><span class="pre">parallel</span></code> attribute which can be set on <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> creation. There are no separate classes for serial and parallel job runner, both cases are covered by <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> depending on one bool parameter.</li>
+<li>If the executed job is an instance of <a class="reference internal" href="jobs.html#scm.plams.basejob.SingleJob" title="scm.plams.basejob.SingleJob"><code class="xref py py-class docutils literal"><span class="pre">SingleJob</span></code></a>, it creates a shell script (called runscript) which contains most of the actual computational work (usually it is just an execution of some external binary). The runscript is then submitted to a <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> instance using its method <a class="reference internal" href="#scm.plams.jobrunner.JobRunner.call" title="scm.plams.jobrunner.JobRunner.call"><code class="xref py py-meth docutils literal"><span class="pre">call()</span></code></a>. This method executes the runscript in a separate subprocess and takes care of setting proper working directory, output and error stream handling etc.</li>
+</ul>
+</div></blockquote>
+<p>The number of simultaneously running <a class="reference internal" href="#scm.plams.jobrunner.JobRunner.call" title="scm.plams.jobrunner.JobRunner.call"><code class="xref py py-meth docutils literal"><span class="pre">call()</span></code></a> methods can be limited using <em>maxjobs</em> parameter. If <em>maxjobs</em> is 0, no limit is enforced. If <em>parallel</em> is <code class="docutils literal"><span class="pre">False</span></code>, <em>maxjobs</em> is ignored. If <em>parallel</em> is <code class="docutils literal"><span class="pre">True</span></code> and <em>maxjobs</em> is a positive integer, a <a class="reference external" href="http://docs.python.org/2.7/library/threading.html#threading.BoundedSemaphore" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">BoundedSemaphore</span></code></a> of that size is used to limit the number of concurrently running <a class="reference internal" href="#scm.plams.jobrunner.JobRunner.call" title="scm.plams.jobrunner.JobRunner.call"><code class="xref py py-meth docutils literal"><span class="pre">call()</span></code></a> methods.</p>
+<p>A <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> instance can be passed to <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> with a keyword argument <code class="docutils literal"><span class="pre">jobrunner</span></code>. If this argument is omitted, the instance stored in <code class="docutils literal"><span class="pre">config.default_jobrunner</span></code> is used.</p>
+<dl class="method">
+<dt id="scm.plams.jobrunner.JobRunner._run_job">
+<code class="descname">_run_job</code><span class="sig-paren">(</span><em>job</em>, <em>jobmanager</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.jobrunner.JobRunner._run_job" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method aggregates those parts of <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> that are supposed to be run in separate thread in case of parallel job execution. It is wrapped with <a class="reference internal" href="#scm.plams.jobrunner._in_thread" title="scm.plams.jobrunner._in_thread"><code class="xref py py-func docutils literal"><span class="pre">_in_thread()</span></code></a> decorator.</p>
+<p>This method should not be overridden.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.jobrunner.JobRunner.call">
+<code class="descname">call</code><span class="sig-paren">(</span><em>runscript</em>, <em>workdir</em>, <em>out</em>, <em>err</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.jobrunner.JobRunner.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the <em>runscript</em> in the directory <em>workdir</em>. Redirect output and error streams to <em>out</em> and <em>err</em>, respectively.</p>
+<p>Other keyword arguments are ignored here but they can be useful in <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> subclasses (see <a class="reference internal" href="#scm.plams.jobrunner.GridRunner.call" title="scm.plams.jobrunner.GridRunner.call"><code class="xref py py-meth docutils literal"><span class="pre">GridRunner.call()</span></code></a>).</p>
+<p>This method can be safely overridden in <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> subclasses. For example, in <a class="reference internal" href="#scm.plams.jobrunner.GridRunner" title="scm.plams.jobrunner.GridRunner"><code class="xref py py-class docutils literal"><span class="pre">GridRunner</span></code></a> it submits the runscript to a job scheduler instead of executing it locally.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method is used automatically during <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> and should never be explicitly called in your script.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>runscript</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; a path to a file with the shell script to execute.</li>
+<li><strong>workdir</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; a path to a folder where <em>runscript</em> should be executed.</li>
+<li><strong>out</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; a path to a file to which the standard output stream is redirected. If <code class="docutils literal"><span class="pre">None</span></code>, no redirection occurs.</li>
+<li><strong>err</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; a path to a file to which the standard error stream is redirected.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the exit code returned by execution of <em>runscript</em>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scm.plams.jobrunner._MetaRunner">
+<em class="property">class </em><code class="descname">_MetaRunner</code><a class="headerlink" href="#scm.plams.jobrunner._MetaRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Metaclass for <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a>. Wraps <code class="xref py py-meth docutils literal"><span class="pre">call()</span></code> with <a class="reference internal" href="#scm.plams.jobrunner._limit" title="scm.plams.jobrunner._limit"><code class="xref py py-func docutils literal"><span class="pre">_limit()</span></code></a> decorator.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scm.plams.jobrunner._limit">
+<code class="descname">_limit</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.jobrunner._limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator for an instance method. If <code class="docutils literal"><span class="pre">semaphore</span></code> attribute of given instance is not <code class="docutils literal"><span class="pre">None</span></code>, use this attribute to wrap decorated method via <a class="reference external" href="http://docs.python.org/2.7/library/threading.html#with-locks" title="(in Python v2.7)"><span class="xref std std-ref">with</span></a> statement.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scm.plams.jobrunner._in_thread">
+<code class="descname">_in_thread</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.jobrunner._in_thread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator for an instance method. If <code class="docutils literal"><span class="pre">parallel</span></code> attribute of given instance is <code class="docutils literal"><span class="pre">True</span></code>, run decorated method in a separate <a class="reference external" href="http://docs.python.org/2.7/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">Thread</span></code></a>. This thread is usually a daemon thread, the decision is based on <code class="docutils literal"><span class="pre">config.daemon_threads</span></code> entry.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="remote-job-runner">
+<h2>3.4.2. Remote job runner<a class="headerlink" href="#remote-job-runner" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="scm.plams.jobrunner.GridRunner">
+<em class="property">class </em><code class="descname">GridRunner</code><span class="sig-paren">(</span><em>grid=u'auto'</em>, <em>sleepstep=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.jobrunner.GridRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> that submits the runscript to a job scheduler instead of executing it locally. Besides two new keyword arguments (<em>grid</em> and <em>sleepstep</em>) and different <a class="reference internal" href="#scm.plams.jobrunner.GridRunner.call" title="scm.plams.jobrunner.GridRunner.call"><code class="xref py py-meth docutils literal"><span class="pre">call()</span></code></a> method it behaves and is meant to be used just like regular <a class="reference internal" href="#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a>.</p>
+<p>There are many different job schedulers that are popular and widely used nowadays (for example TORQUE, SLURM, OGE). Usually they use different commands for submitting jobs or checking queue status. This class tries to build a common and flexible interface for all those tools. The idea is that commands used to communicate with job scheduler are not rigidly hard-coded but dynamically taken from a <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instance instead. Thanks to that user has almost full control over the behavior of <a class="reference internal" href="#scm.plams.jobrunner.GridRunner" title="scm.plams.jobrunner.GridRunner"><code class="xref py py-class docutils literal"><span class="pre">GridRunner</span></code></a>.</p>
+<p>So the behavior of <a class="reference internal" href="#scm.plams.jobrunner.GridRunner" title="scm.plams.jobrunner.GridRunner"><code class="xref py py-class docutils literal"><span class="pre">GridRunner</span></code></a> is determined by the contents of <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instance stored in its <code class="docutils literal"><span class="pre">settings</span></code> attribute. This <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instance can be manually supplied by the user or taken from a collection of predefined behaviors stored as branches of <code class="docutils literal"><span class="pre">config.gridrunner</span></code>. The adjustment is done via <em>grid</em> parameter that should be either string or <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a>. If string, it has to be a key occurring in <code class="docutils literal"><span class="pre">config.gridrunner</span></code> (or <code class="docutils literal"><span class="pre">'auto'</span></code> for autodetection). For example, if <code class="docutils literal"><span class="pre">grid='slurm'</span></code> is passed, <code class="docutils literal"><span class="pre">config.gridrunner.slurm</span></code> is linked as <code class="docutils literal"><span class="pre">settings</span></code>. If <em>grid</em> is <code class="docutils literal"><span class="pre">'auto'</span></code>, entries in <code class="docutils literal"><span class="pre">config.gridrunner</span></code> are tested one by one and the first one that works (its submit command is present on your system) is chosen. When a <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instance is passed it gets plugged directly as <code class="docutils literal"><span class="pre">settings</span></code>.</p>
+<p>Currently two predefined job schedulers are available (see <code class="docutils literal"><span class="pre">plams_defaults.py</span></code>): <code class="docutils literal"><span class="pre">slurm</span></code> for SLURM and <code class="docutils literal"><span class="pre">pbs</span></code> for job schedulers following PBS syntax (PBS, TORQUE, Oracle Grid Engine etc.).</p>
+<p>The <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instance used for <a class="reference internal" href="#scm.plams.jobrunner.GridRunner" title="scm.plams.jobrunner.GridRunner"><code class="xref py py-class docutils literal"><span class="pre">GridRunner</span></code></a> should have the following structure:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">.output</span></code> &#8211; flag for specifying output file path.</li>
+<li><code class="docutils literal"><span class="pre">.error</span></code> &#8211; flag for specifying error file path.</li>
+<li><code class="docutils literal"><span class="pre">.workdir</span></code> &#8211; flag for specifying path to working directory.</li>
+<li><code class="docutils literal"><span class="pre">.commands.submit</span></code> &#8211; submit command.</li>
+<li><code class="docutils literal"><span class="pre">.commands.check</span></code> &#8211; queue status check command.</li>
+<li><code class="docutils literal"><span class="pre">.commands.getid</span></code> &#8211; function extracting submitted job&#8217;s ID from output of submit command.</li>
+<li><code class="docutils literal"><span class="pre">.commands.finished</span></code> &#8211; function checking if submitted job is finished. It should take a single string (job&#8217;s ID) and return boolean.</li>
+<li><code class="docutils literal"><span class="pre">.commands.special.</span></code> &#8211; branch storing definitions of special <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> keyword arguments.</li>
+</ul>
+</div></blockquote>
+<p>See <a class="reference internal" href="#scm.plams.jobrunner.GridRunner.call" title="scm.plams.jobrunner.GridRunner.call"><code class="xref py py-meth docutils literal"><span class="pre">call()</span></code></a> for more technical details and examples.</p>
+<p>The <em>sleepstep</em> parameter defines how often the job is checked for being finished. It should be an integer value telling how many seconds should the interval between two checks last. If <code class="docutils literal"><span class="pre">None</span></code>, the global default from <code class="docutils literal"><span class="pre">config.sleepstep</span></code> is copied.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Usually job schedulers are configured in such a way that output of your job is captured somewhere else and copied to the location indicated by output flag when the job is finished. Because of that it is not possible to have a peek at your output while your job is running (for example to see if your calculation is going well). This limitation can be worked around with <code class="docutils literal"><span class="pre">[Job].settings.runscript.stdout_redirect</span></code>. If set to <code class="docutils literal"><span class="pre">True</span></code>, the output redirection will not be handled by a job scheduler, but built in the runscript using shell redirection <code class="docutils literal"><span class="pre">&gt;</span></code>. That forces the output file to be created directly in <em>workdir</em> and updated live as the job proceeds.</p>
+</div>
+<dl class="method">
+<dt id="scm.plams.jobrunner.GridRunner._autodetect">
+<code class="descname">_autodetect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.jobrunner.GridRunner._autodetect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to autodetect the type of installed job scheduler.</p>
+<p>The autodetection mechanism is relatively simple. For each entry in <code class="docutils literal"><span class="pre">config.gridrunner</span></code> the submit command followed by <code class="docutils literal"><span class="pre">--version</span></code> is executed (for example <code class="docutils literal"><span class="pre">qsub</span> <span class="pre">--version</span></code>). If the execution was successful (which is indicated by exit code 0) the job scheduler of corresponding type is present on the system and it gets chosen. So if there are multiple different job schedulers installed, only one is picked &#8211; the one which &#8220;name&#8221; (indicated by a key in <code class="docutils literal"><span class="pre">config.gridrunner</span></code>) is first in the lexicographical order.</p>
+<p>Returned value is one of <code class="docutils literal"><span class="pre">config.gridrunner</span></code> branches. If autodetection was not successful, an exception is raised.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.jobrunner.GridRunner.call">
+<code class="descname">call</code><span class="sig-paren">(</span><em>runscript</em>, <em>workdir</em>, <em>out</em>, <em>err</em>, <em>runflags</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.jobrunner.GridRunner.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submit <em>runscript</em> to the job scheduler with <em>workdir</em> as the working directory. Redirect output and error streams to <em>out</em> and <em>err</em>, respectively. <em>runflags</em> stores submit command options.</p>
+<p>The submit command has the following structure. Underscores denote spaces, parts in pointy brackets correspond to <code class="docutils literal"><span class="pre">settings</span></code> entries, parts in curly brackets to <a class="reference internal" href="#scm.plams.jobrunner.GridRunner.call" title="scm.plams.jobrunner.GridRunner.call"><code class="xref py py-meth docutils literal"><span class="pre">call()</span></code></a> arguments, square brackets contain optional parts:</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;.commands.submit&gt;_&lt;.workdir&gt;_{workdir}_&lt;.error&gt;_{err}[_&lt;.output&gt;_{out}][FLAGS]_{runscript}
+</pre></div>
+</div>
+<p>Output part is added if <em>out</em> is not <code class="docutils literal"><span class="pre">None</span></code>. This is handled automatically based on <code class="docutils literal"><span class="pre">.runscript.stdout_redirect</span></code> value in job&#8217;s <code class="docutils literal"><span class="pre">settings</span></code>.</p>
+<p><code class="docutils literal"><span class="pre">FLAGS</span></code> part is built based on <em>runflags</em> argument, which is a dictionary storing <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> keyword arguments. For every <em>(key,value)</em> pair in <em>runflags</em> the string <code class="docutils literal"><span class="pre">_-key_value</span></code> is appended <strong>unless</strong> <em>key</em> is a special key occurring in <code class="docutils literal"><span class="pre">.commands.special.</span></code>. In that case <code class="docutils literal"><span class="pre">_&lt;.commands.special.key&gt;value</span></code> is used (mind the lack of space in between!). For example, a <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instance defining interaction with SLURM job scheduler stored in <code class="docutils literal"><span class="pre">config.gridrunner.slurm</span></code> has the following entries:</p>
+<div class="highlight-python"><div class="highlight"><pre>.workdir = &#39;-D&#39;
+.output  = &#39;-o&#39;
+.error   = &#39;-e&#39;
+.special.nodes    = &#39;-N &#39;
+.special.walltime = &#39;-t &#39;
+.special.queue    = &#39;-p &#39;
+.commands.submit  = &#39;sbatch&#39;
+.commands.check   = &#39;squeue -j &#39;
+</pre></div>
+</div>
+<p>The submit command produced in such case:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gr</span> <span class="o">=</span> <span class="n">GridRunner</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">maxjobs</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="s">&#39;slurm&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">j</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">jobrunner</span><span class="o">=</span><span class="n">gr</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s">&#39;short&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">J</span><span class="o">=</span><span class="s">&#39;something&#39;</span><span class="p">,</span> <span class="n">O</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>will be:</p>
+<div class="highlight-python"><div class="highlight"><pre>sbatch -D {workdir} -e {err} -o {out} -p short -N 2 -J something -O  {runscript}
+</pre></div>
+</div>
+<p>In some job schedulers some flags don&#8217;t have a short form with semantics <code class="docutils literal"><span class="pre">-key</span> <span class="pre">value</span></code>. For example, in SLURM the flag <code class="docutils literal"><span class="pre">--nodefile=value</span></code> have a short form <code class="docutils literal"><span class="pre">-F</span> <span class="pre">value</span></code>, but the flag <code class="docutils literal"><span class="pre">--export=value</span></code> does not. One can still use such a flag using special keys mechanism:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gr</span> <span class="o">=</span> <span class="n">GridRunner</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">maxjobs</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="s">&#39;slurm&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gr</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">export</span> <span class="o">=</span> <span class="s">&#39;--export=&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">j</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">jobrunner</span><span class="o">=</span><span class="n">gr</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s">&#39;short&#39;</span><span class="p">,</span> <span class="n">export</span><span class="o">=</span><span class="s">&#39;value&#39;</span><span class="p">)</span>
+<span class="go">sbatch -D {workdir} -e {err} -o {out} -p short --export=value {runscript}</span>
+</pre></div>
+</div>
+<p>The submit command produced in the way explained above is then executed and returned output is used to determine submitted job&#8217;s ID. Function stored in <code class="docutils literal"><span class="pre">.commands.getid</span></code> is used for that purpose, it should take one string (whole output) and return a string with job&#8217;s ID.</p>
+<p>Now the method waits for the job to finish. Every <code class="docutils literal"><span class="pre">sleepstep</span></code> seconds it queries the job scheduler using following algorithm:</p>
+<blockquote>
+<div><ul class="simple">
+<li>if a key <code class="docutils literal"><span class="pre">finished</span></code> exists in <code class="docutils literal"><span class="pre">.commands.</span></code> it is used. It should be a function taking job&#8217;s ID and returning <code class="docutils literal"><span class="pre">True</span></code> or <code class="docutils literal"><span class="pre">False</span></code>.</li>
+<li>otherwise a string stored in <code class="docutils literal"><span class="pre">.commands.check</span></code> is concatenated with job&#8217;s ID (with no space between) and such command is executed. Nonzero exit status indicates that job is no longer in job scheduler hence it is finished.</li>
+</ul>
+</div></blockquote>
+<p>Since it is difficult (on some systems even impossible) to automatically obtain job&#8217;s exit code, the returned value is always 0. From <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> perspective it means that a job executed with <a class="reference internal" href="#scm.plams.jobrunner.GridRunner" title="scm.plams.jobrunner.GridRunner"><code class="xref py py-class docutils literal"><span class="pre">GridRunner</span></code></a> is never <em>crashed</em>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method is used automatically during <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> and should never be explicitly called in your script.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>runflags</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; a dictionary containing submit command options.</li>
+<li><strong>runscript</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; a path to a file with the shell script to execute.</li>
+<li><strong>workdir</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; a path to a folder where <em>runscript</em> should be executed.</li>
+<li><strong>out</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; a path to a file to which the standard output stream is redirected. If <code class="docutils literal"><span class="pre">None</span></code>, no redirection occurs.</li>
+<li><strong>err</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; a path to a file to which the standard error stream is redirected.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">always 0</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo"><a href="http://www.scm.com/">
+  <img class="logo" src="_static/scm_logo.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">3.4. Job runners</a><ul>
+<li><a class="reference internal" href="#local-job-runner">3.4.1. Local job runner</a></li>
+<li><a class="reference internal" href="#remote-job-runner">3.4.2. Remote job runner</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="results.html"
+                        title="previous chapter">3.3. Results</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="jobmanager.html"
+                        title="next chapter">3.5. Job manager</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/runners.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="jobmanager.html" title="3.5. Job manager"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="results.html" title="3.3. Results"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PLAMS documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="components.html" >3. Components overview</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Scientific Computing &amp; Modelling.
+    </div>
+  </body>
+</html>

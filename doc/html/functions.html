@@ -1,0 +1,264 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>3.6. Public functions &mdash; PLAMS documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/boxes.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="PLAMS documentation" href="index.html" />
+    <link rel="up" title="3. Components overview" href="components.html" />
+    <link rel="next" title="3.7. External binaries" href="external.html" />
+    <link rel="prev" title="3.5. Job manager" href="jobmanager.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="external.html" title="3.7. External binaries"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="jobmanager.html" title="3.5. Job manager"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PLAMS documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="components.html" accesskey="U">3. Components overview</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="public-functions">
+<span id="id1"></span><h1>3.6. Public functions<a class="headerlink" href="#public-functions" title="Permalink to this headline">¶</a></h1>
+<p>This chapter gathers information about publicly visible functions that can be used in PLAMS scripts.</p>
+<dl class="function">
+<dt id="scm.plams.common.init">
+<code class="descname">init</code><span class="sig-paren">(</span><em>path=None</em>, <em>folder=None</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.common.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize PLAMS environment. Create global <code class="docutils literal"><span class="pre">config</span></code> and default <a class="reference internal" href="jobmanager.html#scm.plams.jobmanager.JobManager" title="scm.plams.jobmanager.JobManager"><code class="xref py py-class docutils literal"><span class="pre">JobManager</span></code></a>.</p>
+<p>An empty <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instance is created and added to <a class="reference external" href="http://docs.python.org/2.7/library/__builtin__.html#module-__builtin__" title="(in Python v2.7)"><code class="xref py py-mod docutils literal"><span class="pre">public</span></code></a> namespace as <code class="docutils literal"><span class="pre">config</span></code>. Then it is populated with default settings by executing <code class="docutils literal"><span class="pre">plams_defaults.py</span></code>.
+A <a class="reference internal" href="jobmanager.html#scm.plams.jobmanager.JobManager" title="scm.plams.jobmanager.JobManager"><code class="xref py py-class docutils literal"><span class="pre">JobManager</span></code></a> instance is created as <code class="docutils literal"><span class="pre">config.jm</span></code> using <em>path</em> and <em>folder</em> to determine the main working directory. Settings used by this instance are directly linked from <code class="docutils literal"><span class="pre">config.jobmanager</span></code>. If <em>path</em> is not supplied, the current directory is used. If <em>folder</em> is not supplied, the string <code class="docutils literal"><span class="pre">plams.</span></code> followed by PID of the current process is used.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This function <strong>must</strong> be called before any other PLAMS command can be executed. Trying to do anything without it results in a crash. See also <a class="reference internal" href="started.html#master-script"><span>Master script</span></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="scm.plams.common.finish">
+<code class="descname">finish</code><span class="sig-paren">(</span><em>otherJM=None</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.common.finish" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wait for all threads to finish and clean the environment.</p>
+<p>This function must be called at the end of your script for <a class="reference internal" href="results.html#cleaning"><span>Cleaning job folder</span></a> to take place. See <a class="reference internal" href="started.html#master-script"><span>Master script</span></a> for details.</p>
+<p>If for some reason you use other job managers than the default one, they need to passed as <em>otherJM</em> list.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scm.plams.common.load">
+<code class="descname">load</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.common.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load previously saved job from <code class="docutils literal"><span class="pre">.dill</span></code> file. This is just a shortcut for <a class="reference internal" href="jobmanager.html#scm.plams.jobmanager.JobManager.load_job" title="scm.plams.jobmanager.JobManager.load_job"><code class="xref py py-meth docutils literal"><span class="pre">load_job()</span></code></a> method of the default job manager <code class="docutils literal"><span class="pre">config.jm</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scm.plams.common.load_all">
+<code class="descname">load_all</code><span class="sig-paren">(</span><em>path</em>, <em>jobmanager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.common.load_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load all jobs from <em>path</em>.</p>
+<p>This function works as a multiple execution of <a class="reference internal" href="jobmanager.html#scm.plams.jobmanager.JobManager.load_job" title="scm.plams.jobmanager.JobManager.load_job"><code class="xref py py-meth docutils literal"><span class="pre">load_job()</span></code></a>. It searches for <code class="docutils literal"><span class="pre">.dill</span></code> files inside the directory given by <em>path</em>, yet not directly in it, but one level deeper. In other words, all files matching <code class="docutils literal"><span class="pre">path/*/*.dill</span></code> are used. That way a path to the main working folder of previously run script can be used to import all jobs run by that script.</p>
+<p>The purpose of this function is to provide quick and easy way of restarting a script that previously failed. Loading all successful jobs from the previous run prevents double work and allows the script to proceed directly to the place where it failed.</p>
+<p>Jobs are loaded using default job manager stored in <code class="docutils literal"><span class="pre">config.jm</span></code>. If you wish to use a different one you can pass it as <em>jobmanager</em> argument of this function.</p>
+<p>Returned value is a dictionary containing all loaded jobs as values and absolute paths to <code class="docutils literal"><span class="pre">.dill</span></code> files as keys.</p>
+</dd></dl>
+
+<div class="section" id="logging">
+<span id="id2"></span><h2>3.6.1. Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
+<p>PLAMS features a simple logging mechanism. All important actions happening in functions and methods register their activity using log messages. These massages can be printed to standard output and/or saved to <code class="docutils literal"><span class="pre">.log</span></code> file located in the main working folder.</p>
+<p>Every log message has its &#8220;verbosity&#8221; defined as an integer number: the higher the number, the more detailed and descriptive the message is. In other words, it is a measure of importance of the message. Important events (like &#8220;job started&#8221;, &#8220;job finished&#8221;, &#8220;something went wrong&#8221;) should have low verbosity, whereas less crucial ones (for example &#8220;rotation of molecule finished&#8221;) a bit higher. The purpose of that is to allow user to choose how verbose the whole logfile is. Each logfile (either file or stdout) has an integer number associated with it defining which messages are printed to this logfile (for example, if this number is 3, all messages with verbosity 3 or less are printed). That way picking a smaller number results in logfile being short and containing only the most relevant information while larger numbers produce longer and more detailed logfiles.</p>
+<p>The behavior of the logging mechanism is adjusted by <code class="docutils literal"><span class="pre">config.log.</span></code> settings branch with the following keys:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">file</span></code> (integer) &#8211; verbosity of logfile printed to the <code class="docutils literal"><span class="pre">.log</span></code> file.</li>
+<li><code class="docutils literal"><span class="pre">stdout</span></code> (integer) &#8211; verbosity of logfile printed to the standard output.</li>
+<li><code class="docutils literal"><span class="pre">time</span></code> (boolean) &#8211; print time of each log event.</li>
+<li><code class="docutils literal"><span class="pre">date</span></code> (boolean) &#8211; print date of each log event.</li>
+</ul>
+</div></blockquote>
+<p>Log messages used within the PLAMS code use four different levels of verbosity:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>1</strong>: important</li>
+<li><strong>3</strong>: normal</li>
+<li><strong>5</strong>: verbose</li>
+<li><strong>7</strong>: debug</li>
+</ul>
+</div></blockquote>
+<p>Even levels are left empty for user&#8217;s convenience. For example, if you find level 5 too verbose and still want to be able to switch on and off log messages of your own code, you can log them with verbosity 4.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Your own code can (and should) contain some <a class="reference internal" href="#scm.plams.common.log" title="scm.plams.common.log"><code class="xref py py-func docutils literal"><span class="pre">log()</span></code></a> calls. They are very important for debugging purposes.</p>
+</div>
+<dl class="function">
+<dt id="scm.plams.common.log">
+<code class="descname">log</code><span class="sig-paren">(</span><em>message</em>, <em>level=0</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.common.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log <em>message</em> with verbosity <em>level</em>.</p>
+<p>Logs are printed independently to both text file and standard output. If <em>level</em> is equal or lower than verbosity (defined by <code class="docutils literal"><span class="pre">config.log.file</span></code> or <code class="docutils literal"><span class="pre">config.log.stdout</span></code>) the message is printed. Date and/or time can be added based on <code class="docutils literal"><span class="pre">config.log.date</span></code> and <code class="docutils literal"><span class="pre">config.log.time</span></code>. All logging activity is thread safe.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="binding-decorators">
+<span id="id3"></span><h2>3.6.2. Binding decorators<a class="headerlink" href="#binding-decorators" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes one wants to expand functionality of a class by adding a new method or modifying an existing one. It can be done in a few different ways:</p>
+<blockquote>
+<div><ul class="simple">
+<li>One can go directly to the source code defining the class and modify it there before running a script. Such a change is global &#8211; it affects all the future scripts, so in most cases it is not a good thing (for defining <a class="reference internal" href="jobs.html#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a> for example). And of course it requires an access to the source code.</li>
+<li>Creating a subclass with new/modified methods definitions is usually the best solution. It can be done directly in your script before the work is done or in a separate dedicated file executed before the actual script (see <a class="reference internal" href="started.html#master-script"><span>Master script</span></a>). Newly defined class can be then used instead of the old one and changes will be reflected. However, this solution fails in some rare cases when a method needs to differ for different instances or when it needs to be changed during the runtime of the script.</li>
+<li>PLAMS binding decorators can be used.</li>
+</ul>
+</div></blockquote>
+<p>Binding decorators allow to bind methods to existing classes or even directly to a particular instances without having to define a subclass. Such changes are visible only inside the script in which they are used.</p>
+<p>To fully understand how binding decorators work let us take a look at how Python handles method calling. Assume we have an instance of a class (let&#8217;s say <code class="docutils literal"><span class="pre">myres</span></code> is an instance of <code class="xref py py-class docutils literal"><span class="pre">DFTBResults</span></code>) and there is a method call in our script (let it be <code class="docutils literal"><span class="pre">myres.somemethod(arguments)</span></code>). Python first looks for <code class="docutils literal"><span class="pre">somemethod</span></code> amongst attributes of <code class="docutils literal"><span class="pre">myres</span></code>. If it is not there (which is usually the case, since methods are defined in classes), attributes of <code class="xref py py-class docutils literal"><span class="pre">DFTBResults</span></code> class are checked. If <code class="docutils literal"><span class="pre">somemethod</span></code> is still not there, parent classes are checked in the order of inheritance (in out case, first <a class="reference internal" href="scm.html#scm.plams.scmjob.SCMResults" title="scm.plams.scmjob.SCMResults"><code class="xref py py-class docutils literal"><span class="pre">SCMResults</span></code></a>, then <a class="reference internal" href="results.html#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a>). That implies two important things:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#scm.plams.common.add_to_instance" title="scm.plams.common.add_to_instance"><code class="xref py py-func docutils literal"><span class="pre">add_to_instance()</span></code></a> affects only one particular instance, but is &#8220;stronger&#8221; than <a class="reference internal" href="#scm.plams.common.add_to_class" title="scm.plams.common.add_to_class"><code class="xref py py-func docutils literal"><span class="pre">add_to_class()</span></code></a> &#8211; method added to instance always takes precedence before the same method added to (or just defined in) a class</li>
+<li>changes done with <a class="reference internal" href="#scm.plams.common.add_to_class" title="scm.plams.common.add_to_class"><code class="xref py py-func docutils literal"><span class="pre">add_to_class()</span></code></a> affect all instances of that particular class, including even those created before <a class="reference internal" href="#scm.plams.common.add_to_class" title="scm.plams.common.add_to_class"><code class="xref py py-func docutils literal"><span class="pre">add_to_class()</span></code></a> was used.</li>
+</ul>
+</div></blockquote>
+<p>The usage of binding decorators is straightforward. You simply define a regular function somewhere inside your script and decorate it with one of the decorators (see below). The function needs to be a valid method code, so it should have <code class="docutils literal"><span class="pre">self</span></code> as the first argument and use it to reference the class instance.</p>
+<dl class="function">
+<dt id="scm.plams.common.add_to_class">
+<code class="descname">add_to_class</code><span class="sig-paren">(</span><em>classname</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.common.add_to_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add decorated function as a method of the whole class <em>classname</em>.</p>
+<p>The decorated function should follow a method-like syntax, with the first argument <code class="docutils literal"><span class="pre">self</span></code> that references the class instance.
+Example usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@add_to_class</span><span class="p">(</span><span class="n">ADFResults</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">readkf</span><span class="p">(</span><span class="s">&#39;Energy&#39;</span><span class="p">,</span> <span class="s">&#39;Bond Energy&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After executing the above code all instances of <code class="docutils literal"><span class="pre">ADFResults</span></code> (even the ones created earlier) are enriched with <code class="docutils literal"><span class="pre">get_energy</span></code> method that can be invoked by:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">someadfresults</span><span class="o">.</span><span class="n">get_energy</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The added method is visible from subclasses of <em>classname</em> so <code class="docutils literal"><span class="pre">&#64;add_to_class(Results)</span></code> will also work in the above example.</p>
+<p>If <em>classname</em> is <a class="reference internal" href="results.html#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> or any of its subclasses, the added method will be wrapped with the thread safety guard (see <a class="reference internal" href="results.html#parallel"><span>Synchronization of parallel job executions</span></a>).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scm.plams.common.add_to_instance">
+<code class="descname">add_to_instance</code><span class="sig-paren">(</span><em>instance</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.common.add_to_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add decorated function as a method of one particular <em>instance</em>.</p>
+<p>The decorated function should follow a method-like syntax, with the first argument <code class="docutils literal"><span class="pre">self</span></code> that references the class instance.
+Example usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">results</span> <span class="o">=</span> <span class="n">myjob</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="nd">@add_to_instance</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">readkf</span><span class="p">(</span><span class="s">&#39;Energy&#39;</span><span class="p">,</span> <span class="s">&#39;Bond Energy&#39;</span><span class="p">)</span>
+
+<span class="n">results</span><span class="o">.</span><span class="n">get_energy</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The added method is visible only for one particular instance and it overrides any methods defined on class level or added with <a class="reference internal" href="#scm.plams.common.add_to_class" title="scm.plams.common.add_to_class"><code class="xref py py-func docutils literal"><span class="pre">add_to_class()</span></code></a> decorator.</p>
+<p>If <em>instance</em> is an instance of <a class="reference internal" href="results.html#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> or any of its subclasses, the added method will be wrapped with the thread safety guard (see <a class="reference internal" href="results.html#parallel"><span>Synchronization of parallel job executions</span></a>).</p>
+</dd></dl>
+
+<div class="technical admonition">
+<p class="first admonition-title">Technical</p>
+<p class="last">Each of the above decorators is in fact a decorator factory that, given an object (class or instance), produces a decorator that binds function as a method of that object. Both decorators are adding instance methods only, they cannot be used for static or class methods.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo"><a href="http://www.scm.com/">
+  <img class="logo" src="_static/scm_logo.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">3.6. Public functions</a><ul>
+<li><a class="reference internal" href="#logging">3.6.1. Logging</a></li>
+<li><a class="reference internal" href="#binding-decorators">3.6.2. Binding decorators</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="jobmanager.html"
+                        title="previous chapter">3.5. Job manager</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="external.html"
+                        title="next chapter">3.7. External binaries</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/functions.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="external.html" title="3.7. External binaries"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="jobmanager.html" title="3.5. Job manager"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PLAMS documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="components.html" >3. Components overview</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Scientific Computing &amp; Modelling.
+    </div>
+  </body>
+</html>

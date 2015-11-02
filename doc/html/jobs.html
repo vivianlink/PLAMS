@@ -1,0 +1,668 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>3.2. Jobs &mdash; PLAMS documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/boxes.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="PLAMS documentation" href="index.html" />
+    <link rel="up" title="3. Components overview" href="components.html" />
+    <link rel="next" title="3.3. Results" href="results.html" />
+    <link rel="prev" title="3.1. Settings" href="settings.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="results.html" title="3.3. Results"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="settings.html" title="3.1. Settings"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PLAMS documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="components.html" accesskey="U">3. Components overview</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="jobs">
+<h1>3.2. Jobs<a class="headerlink" href="#jobs" title="Permalink to this headline">¶</a></h1>
+<p>Without any doubt job is the most important object in PLAMS library. Job is the basic piece of computational work and running jobs is the main goal of PLAMS scripts.</p>
+<p>Various jobs may differ in details quite a lot, but they all follow the common set of rules defined in the abstract class <a class="reference internal" href="#scm.plams.basejob.Job" title="scm.plams.basejob.Job"><code class="xref py py-class docutils literal"><span class="pre">Job</span></code></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Being an abstract class means that <a class="reference internal" href="#scm.plams.basejob.Job" title="scm.plams.basejob.Job"><code class="xref py py-class docutils literal"><span class="pre">Job</span></code></a> class has some abstract methods &#8211; methods that are declared but not implemented (they do nothing). Those methods are supposed to be defined in subclasses of <a class="reference internal" href="#scm.plams.basejob.Job" title="scm.plams.basejob.Job"><code class="xref py py-class docutils literal"><span class="pre">Job</span></code></a>. When a subclass of an abstract class defines all required abstract methods it is called a <em>concrete class</em>. You should never create an instance of an abstract class, because when you try to use it, empty abstract methods are called and your script crashes.</p>
+</div>
+<p>Every job has its own unique name and a separate folder (called job folder, with the same name as the job) located in the main working folder. All files regarding that particular job (input, output, runscript, other files produced by the external binary) end up in its job folder.</p>
+<p>In general a job can be of one of two types: a single job or a multijob. These types are defined as subclasses of the <a class="reference internal" href="#scm.plams.basejob.Job" title="scm.plams.basejob.Job"><code class="xref py py-class docutils literal"><span class="pre">Job</span></code></a> class: <a class="reference internal" href="#scm.plams.basejob.SingleJob" title="scm.plams.basejob.SingleJob"><code class="xref py py-class docutils literal"><span class="pre">SingleJob</span></code></a> and <a class="reference internal" href="#scm.plams.basejob.MultiJob" title="scm.plams.basejob.MultiJob"><code class="xref py py-class docutils literal"><span class="pre">MultiJob</span></code></a>.</p>
+<p>Single job is a job representing a single calculation, usually done by executing an external binary (ADF, Dirac etc.). Single job creates a runscript that is then either executed locally or submitted to some external queueing system. As a result of running a single job a handful of files is created, including dumps of the standard output and standard error streams together with any other files produced by the external binary. <a class="reference internal" href="#scm.plams.basejob.SingleJob" title="scm.plams.basejob.SingleJob"><code class="xref py py-class docutils literal"><span class="pre">SingleJob</span></code></a> is still an abstract class that is further subclassed by program-specific concrete classes like for example <code class="xref py py-class docutils literal"><span class="pre">ADFJob</span></code>.</p>
+<p>Multijob, on the other hand, does not run any calculation by itself. It is a container for other jobs, used to aggregate smaller jobs into bigger ones. There is no runscript produced by a multijob. Instead, it contains a list of subjobs called <em>children</em> that are run together when the parent job is executed. Children jobs can in turn be either single or multijobs. Job folder of each child job is a subfolder of its parent&#8217;s job folder, so folder hierarchy fully corresponds to job child/parent hierarchy. <a class="reference internal" href="#scm.plams.basejob.MultiJob" title="scm.plams.basejob.MultiJob"><code class="xref py py-class docutils literal"><span class="pre">MultiJob</span></code></a> is a concrete class so you can create its instances and run them.</p>
+<div class="section" id="preparing-a-job">
+<h2>3.2.1. Preparing a job<a class="headerlink" href="#preparing-a-job" title="Permalink to this headline">¶</a></h2>
+<p>The first step to run a job using PLAMS is to create a job object. You need to pick a concrete class that defines a type of job you want to run (<code class="xref py py-class docutils literal"><span class="pre">ADFJob</span></code> will be used as an example in our case) and create its instance:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">myjob</span> <span class="o">=</span> <span class="n">ADFJob</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;myfirstjob&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Various keyword arguments (arguments of the form <code class="docutils literal"><span class="pre">arg=value</span></code>, like <code class="docutils literal"><span class="pre">name</span></code> in the example above) can be passed to a job constructor, depending on the type of your job. However, the following keyword arguments are common for all types of jobs:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">name</span></code> &#8211; a string containing the name of the job. If not supplied, default name <code class="docutils literal"><span class="pre">plamsjob</span></code> is used.</li>
+<li><code class="docutils literal"><span class="pre">settings</span></code> &#8211; a <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instance to be used by this job. It gets copied (using <a class="reference internal" href="settings.html#scm.plams.settings.Settings.copy" title="scm.plams.settings.Settings.copy"><code class="xref py py-meth docutils literal"><span class="pre">copy()</span></code></a>) so you can pass the same instance to several different jobs and changes made afterwards won&#8217;t interfere. Any instance of <a class="reference internal" href="#scm.plams.basejob.Job" title="scm.plams.basejob.Job"><code class="xref py py-class docutils literal"><span class="pre">Job</span></code></a> can be also passed as a value of this argument. In that case <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> associated with the passed job are copied.</li>
+<li><code class="docutils literal"><span class="pre">depend</span></code> &#8211; a list of jobs that need to be finished before this job can start. This is useful when you want to execute your jobs in parallel. Usually there is no need to use this argument, since dependencies between jobs are resolved automatically (see <a class="reference internal" href="results.html#parallel"><span>Synchronization of parallel job executions</span></a>). However, sometimes one needs to explicitly state such a dependency and this option is then helpful.</li>
+</ul>
+</div></blockquote>
+<p>Those values do not need to be passed to the constructor, they can be set or changed later (but they should be fixed before the job starts to run):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">myjob</span> <span class="o">=</span> <span class="n">ADFJob</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">myjob</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#39;myfirstjob&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">myjob</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">runscript</span><span class="o">.</span><span class="n">pre</span> <span class="o">=</span> <span class="s">&#39;echo HelloWorld&#39;</span>
+</pre></div>
+</div>
+<p>Single jobs can be supplied with another keyword argument, <code class="docutils literal"><span class="pre">molecule</span></code>. It is supposed to be a <code class="xref py py-class docutils literal"><span class="pre">Molecule</span></code> object. Multijobs, in turn, accept keyword argument <code class="docutils literal"><span class="pre">children</span></code> that stores the list of children jobs.</p>
+<p>The most meaningful part of each job object is its <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instance. It is used to store information about contents of job&#8217;s input file, runscript as well as general tweaks of job&#8217;s behavior. Thanks to tree-like structure of <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a>, this information is organized in a convenient way: the top level (<code class="docutils literal"><span class="pre">myjob.settings.</span></code>) stores general settings, <code class="docutils literal"><span class="pre">myjob.settings.input.</span></code> is a branch for specifying input settings, <code class="docutils literal"><span class="pre">myjob.settings.runscript.</span></code> holds information for runscript creation and so on. Some types of jobs will make use of their own <code class="docutils literal"><span class="pre">myjob.settings</span></code> branches and not every kind of job will always require <code class="docutils literal"><span class="pre">input</span></code> or <code class="docutils literal"><span class="pre">runscript</span></code> branches (like multijob for example). The nice thing is that all the unnecessary data present in job&#8217;s settings is simply ignored, so accidentally plugging settings with too much data will not cause any problem (except some cases where the whole content of some branch is used, like for example the <code class="docutils literal"><span class="pre">input</span></code> branch in <a class="reference internal" href="scm.html#scm.plams.scmjob.SCMJob" title="scm.plams.scmjob.SCMJob"><code class="xref py py-class docutils literal"><span class="pre">SCMJob</span></code></a>).</p>
+<div class="section" id="contents-of-job-s-settings">
+<span id="job-settings"></span><h3>3.2.1.1. Contents of job&#8217;s settings<a class="headerlink" href="#contents-of-job-s-settings" title="Permalink to this headline">¶</a></h3>
+<p>The following keys and branches of job&#8217;s settings are meaningful for all kinds of jobs:</p>
+<blockquote>
+<div><ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">myjob.settings.input.</span></code> is a branch storing settings regarding input file of a job. The way data present in this branch is used depends on type of a job and is specified in respective subclasses of <a class="reference internal" href="#scm.plams.basejob.Job" title="scm.plams.basejob.Job"><code class="xref py py-class docutils literal"><span class="pre">Job</span></code></a></p>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">myjob.settings.runscript.</span></code> holds runscript information, either program-specific or general:</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal"><span class="pre">myjob.settings.runscript.shebang</span></code> &#8211; the first line of the runscript, starting with <code class="docutils literal"><span class="pre">#!</span></code>, describing shell to use</li>
+<li><code class="docutils literal"><span class="pre">myjob.settings.runscript.pre</span></code> &#8211; an arbitrary string that will be placed in the runscript file just below the shebang line, before the actual contents</li>
+<li><code class="docutils literal"><span class="pre">myjob.settings.runscript.post</span></code> &#8211; an arbitrary string to put at the end of the runscript.</li>
+<li><code class="docutils literal"><span class="pre">myjob.settings.runscript.stdout_redirect</span></code> &#8211; boolean flag defining if standard output redirection should be handled inside the runscript. If set to <code class="docutils literal"><span class="pre">False</span></code>, the redirection will be done by Python outside the runscript. If set to <code class="docutils literal"><span class="pre">True</span></code>, standard output will be redirected inside the runscript using <code class="docutils literal"><span class="pre">&gt;</span></code>.</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">myjob.settings.run.</span></code> branch stores run flags for the job (see below)</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">myjob.settings.pickle</span></code> is a boolean defining if job object should be pickled after finishing</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">myjob.settings.keep</span></code> and <code class="docutils literal"><span class="pre">myjob.settings.save</span></code> are keys adjusting <a class="reference internal" href="results.html#cleaning"><span>Cleaning job folder</span></a>.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">myjob.settings.link_files</span></code> decides if files from job folder can be linked rather than copied when copying is requested</p>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="default-settings">
+<span id="id1"></span><h3>3.2.1.2. Default settings<a class="headerlink" href="#default-settings" title="Permalink to this headline">¶</a></h3>
+<p>Every job instance has an attribute called <code class="docutils literal"><span class="pre">default_settings</span></code> that stores a list of <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instances that serve as default templates for that job. Initially this list contains only one element, global defaults for all jobs stored in <code class="docutils literal"><span class="pre">config.job</span></code>. You can add other templates just like adding elements to a list:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">myjob</span><span class="o">.</span><span class="n">default_settings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sometemplate</span><span class="p">)</span>
+<span class="n">myjob</span><span class="o">.</span><span class="n">default_settings</span> <span class="o">+=</span> <span class="p">[</span><span class="n">temp1</span><span class="p">,</span> <span class="n">temp2</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>During job execution (just after <code class="docutils literal"><span class="pre">prerun()</span></code> is finished) job&#8217;s own <code class="docutils literal"><span class="pre">settings</span></code> are soft-updated with all elements of <code class="docutils literal"><span class="pre">default_settings</span></code> list, one by one, starting with <strong>last</strong>. That way if you want to adjust some setting for all jobs run in your script you don&#8217;t need to go to each job and set it there every time, one change in <code class="docutils literal"><span class="pre">config.job</span></code> is enough. Similarly, if you have a group of jobs that need the same <code class="docutils literal"><span class="pre">settings</span></code> adjustments, you can create an empty <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instance, put those adjustments in it and add it to each job&#8217;s <code class="docutils literal"><span class="pre">default_settings</span></code>. Keep in mind that <a class="reference internal" href="settings.html#scm.plams.settings.Settings.soft_update" title="scm.plams.settings.Settings.soft_update"><code class="xref py py-meth docutils literal"><span class="pre">soft_update()</span></code></a> is used so any key in a template in <code class="docutils literal"><span class="pre">default_settings</span></code> will end up in job&#8217;s <code class="docutils literal"><span class="pre">settings</span></code> only if such a key is not yet present there. Thanks to that the order of templates in <code class="docutils literal"><span class="pre">default_settings</span></code> somehow defines their importance: data from a preceding template will never override the following one, it can only enrich it.</p>
+</div>
+</div>
+<div class="section" id="running-a-job">
+<span id="job-life-cycle"></span><h2>3.2.2. Running a job<a class="headerlink" href="#running-a-job" title="Permalink to this headline">¶</a></h2>
+<p>After creating a job instance and adjusting its settings you can finally run it. It is done by invoking job&#8217;s <a class="reference internal" href="#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> method, which returns a <a class="reference internal" href="results.html#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> instance:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">myresults</span> <span class="o">=</span> <span class="n">myjob</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Again, various keyword arguments can be passed here. With <code class="docutils literal"><span class="pre">jobrunner</span></code> and <code class="docutils literal"><span class="pre">jobmanager</span></code> you can specify which <a class="reference internal" href="runners.html#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> and <a class="reference internal" href="jobmanager.html#scm.plams.jobmanager.JobManager" title="scm.plams.jobmanager.JobManager"><code class="xref py py-class docutils literal"><span class="pre">JobManager</span></code></a> to use for your job. If those arguments are omitted, the default instances stored in <code class="docutils literal"><span class="pre">config.default_jobrunner</span></code> and <code class="docutils literal"><span class="pre">config.jm</span></code> are taken. All other keyword arguments passed here are collected and stored in <code class="docutils literal"><span class="pre">myjob.settings.run</span></code> branch as one flat level. They can be used later by various objects involved in running your job, for example <a class="reference internal" href="runners.html#scm.plams.jobrunner.GridRunner" title="scm.plams.jobrunner.GridRunner"><code class="xref py py-class docutils literal"><span class="pre">GridRunner</span></code></a> uses them to build command executed to submit runscript to the queueing system.</p>
+<p>The following steps are taken after the <a class="reference internal" href="#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> method is called:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><code class="docutils literal"><span class="pre">myjob.settings.run</span></code> is soft-updated with <a class="reference internal" href="#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> keyword arguments.</li>
+<li>If a parallel <a class="reference internal" href="runners.html#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> was used, a new thread is spawned and all further steps of this list happen in this thread.</li>
+<li>Explicit dependencies from <code class="docutils literal"><span class="pre">myjob.depend</span></code> are resolved. This means waiting for all jobs listed there to finish.</li>
+<li>Job&#8217;s name gets registered in the job manager and the job folder is created.</li>
+<li>Job&#8217;s <a class="reference internal" href="#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a> method is called.</li>
+<li><code class="docutils literal"><span class="pre">myjob.settings</span></code> are updated according to contents of <code class="docutils literal"><span class="pre">myjob.default_settings</span></code>.</li>
+<li>The hash of a job is calculated and checked (see <a class="reference internal" href="jobmanager.html#rerun-prevention"><span>Rerun prevention</span></a>). If the same job was found as previously run, its results are copied (or linked) to the current job&#8217;s folder and <a class="reference internal" href="#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> finishes.</li>
+<li>Now the real job execution happens. If your job is a single job, an input file and a runscript are produced and passed to job runner&#8217;s method <a class="reference internal" href="runners.html#scm.plams.jobrunner.JobRunner.call" title="scm.plams.jobrunner.JobRunner.call"><code class="xref py py-meth docutils literal"><span class="pre">call()</span></code></a>. In case of multijob, <a class="reference internal" href="#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> method is called for all children jobs.</li>
+<li>After the execution is finished, result files produced by the job are collected and <a class="reference internal" href="#scm.plams.basejob.Job.check" title="scm.plams.basejob.Job.check"><code class="xref py py-meth docutils literal"><span class="pre">check()</span></code></a> is used to test if the execution was successful.</li>
+<li>The job folder is cleaned using <code class="docutils literal"><span class="pre">myjob.settings.keep</span></code>. See <a class="reference internal" href="results.html#cleaning"><span>Cleaning job folder</span></a> for details.</li>
+<li>Job&#8217;s <a class="reference internal" href="#scm.plams.basejob.Job.postrun" title="scm.plams.basejob.Job.postrun"><code class="xref py py-meth docutils literal"><span class="pre">postrun()</span></code></a> method is called.</li>
+<li>If <code class="docutils literal"><span class="pre">myjob.settings.pickle</span></code> is true, the whole job instance gets pickled and saved to the <code class="docutils literal"><span class="pre">.dill</span></code> file in the job folder.</li>
+</ol>
+</div></blockquote>
+<div class="section" id="name-conflicts">
+<h3>3.2.2.1. Name conflicts<a class="headerlink" href="#name-conflicts" title="Permalink to this headline">¶</a></h3>
+<p>Jobs are identified by their names and hence those names need to be unique. This is obligatory also because job&#8217;s name corresponds to the name of its folder. Usually it is recommended to manually set unique names for jobs for easier navigation through results. But for part of applications, especially those requiring running large numbers of similar jobs, this is neither convenient nor necessary.</p>
+<p>PLAMS automatically resolves conflicts between jobs&#8217; names. During step 4. of the above list, if a job with the same name was already registered, the new job is renamed. The new name is created by appending some number to the old one. For example, the second job with the name <code class="docutils literal"><span class="pre">plamsjob</span></code> will be renamed to <code class="docutils literal"><span class="pre">plamsjob.002</span></code>, third to <code class="docutils literal"><span class="pre">plamsjob.003</span></code> and so on. Number of digits used in this counter can be adjusted in <code class="docutils literal"><span class="pre">config.jobmanager.counter_len</span></code> and the default value is 3. Overflowing the counter will not cause any problems, the job coming after <code class="docutils literal"><span class="pre">plamsjob.999</span></code> will be called <code class="docutils literal"><span class="pre">plamsjob.1000</span></code>.</p>
+</div>
+<div class="section" id="prerun-and-postrun-methods">
+<span id="prerun-postrun"></span><h3>3.2.2.2. Prerun and postrun methods<a class="headerlink" href="#prerun-and-postrun-methods" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a> and <a class="reference internal" href="#scm.plams.basejob.Job.postrun" title="scm.plams.basejob.Job.postrun"><code class="xref py py-meth docutils literal"><span class="pre">postrun()</span></code></a> methods are intended for further customization of your jobs. The can contain arbitrary pieces of code that are executed before and after the actual execution of your job. <a class="reference internal" href="#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a> takes place after job&#8217;s folder is created but before hash checking. Here are some ideas what can be put there:</p>
+<blockquote>
+<div><ul class="simple">
+<li>adjusting job <code class="docutils literal"><span class="pre">settings</span></code></li>
+<li>copying to job folder some files required for running</li>
+<li>extracting results of some other job, processing them and plugging to job</li>
+<li>generating children jobs in multijobs</li>
+</ul>
+</div></blockquote>
+<p>See also <a class="reference internal" href="results.html#parallel"><span>Synchronization of parallel job executions</span></a> for explanation how to use <a class="reference internal" href="#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a> to automatically handle dependencies in parallel workflows.</p>
+<p>The other method, <a class="reference internal" href="#scm.plams.basejob.Job.postrun" title="scm.plams.basejob.Job.postrun"><code class="xref py py-meth docutils literal"><span class="pre">postrun()</span></code></a>, is called after job execution is finished, the results are collected and the job folder is cleaned. It is supposed to contain any kind of essential results postprocessing that needs to be done before results of this job can be pushed further in the workflow. For that purpose code contained in <a class="reference internal" href="#scm.plams.basejob.Job.postrun" title="scm.plams.basejob.Job.postrun"><code class="xref py py-meth docutils literal"><span class="pre">postrun()</span></code></a> has some special privileges. At the time the method is executed the job is not yet considered done, so all threads requesting its results are waiting. However, the guardian restricting the access to results of unfinished jobs can recognize code coming from <a class="reference internal" href="#scm.plams.basejob.Job.postrun" title="scm.plams.basejob.Job.postrun"><code class="xref py py-meth docutils literal"><span class="pre">postrun()</span></code></a> and allow it to access and modify results. So calling <a class="reference internal" href="results.html#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> methods can be safely done there and you can be sure that everything you put in <a class="reference internal" href="#scm.plams.basejob.Job.postrun" title="scm.plams.basejob.Job.postrun"><code class="xref py py-meth docutils literal"><span class="pre">postrun()</span></code></a> is done before other jobs have access to this job&#8217;s results.</p>
+<p><a class="reference internal" href="#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a> and <a class="reference internal" href="#scm.plams.basejob.Job.postrun" title="scm.plams.basejob.Job.postrun"><code class="xref py py-meth docutils literal"><span class="pre">postrun()</span></code></a> methods can be added to your jobs in multiple ways:</p>
+<blockquote>
+<div><ul>
+<li><p class="first">you can create a tiny subclass which redefines the method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyJobWithPrerun</span><span class="p">(</span><span class="n">MyJob</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">prerun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="c">#do stuff</span>
+</pre></div>
+</div>
+<p>It can be done right inside you script. After the above definition you can create instances of the new class and treat them in exactly the same way you would treat <code class="docutils literal"><span class="pre">MyJob</span></code> instances. The only difference is that they will be equipped with <a class="reference internal" href="#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a> method you just defined.</p>
+</li>
+<li><p class="first">you can bind the method to an existing class using <a class="reference internal" href="functions.html#scm.plams.common.add_to_class" title="scm.plams.common.add_to_class"><code class="xref py py-func docutils literal"><span class="pre">add_to_class()</span></code></a> decorator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nd">@add_to_class</span><span class="p">(</span><span class="n">MyJob</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">prerun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c">#do stuff</span>
+</pre></div>
+</div>
+<p>That change affects all instances of <code class="docutils literal"><span class="pre">MyJob</span></code>, even those created before the above code was executed (obviously it won&#8217;t affect instances previously finished).</p>
+</li>
+<li><p class="first">you can bind the method directly to an instance using <a class="reference internal" href="functions.html#scm.plams.common.add_to_instance" title="scm.plams.common.add_to_instance"><code class="xref py py-func docutils literal"><span class="pre">add_to_instance()</span></code></a> decorator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">j</span> <span class="o">=</span> <span class="n">MyJob</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@add_to_instance</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">prerun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c">#do stuff</span>
+</pre></div>
+</div>
+<p>Only one specified instance is affected this way. The downside is that method bound to an instance this way cannot be pickled and it gets removed before saving <code class="docutils literal"><span class="pre">j</span></code> to the file at the end of its execution. So when you load this file in future, information about what happened in <a class="reference internal" href="#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a> is lost (see <a class="reference internal" href="functions.html#binding-decorators"><span>Binding decorators</span></a> for details).</p>
+</li>
+</ul>
+</div></blockquote>
+<p>All the above works for <a class="reference internal" href="#scm.plams.basejob.Job.postrun" title="scm.plams.basejob.Job.postrun"><code class="xref py py-meth docutils literal"><span class="pre">postrun()</span></code></a> as well.</p>
+</div>
+</div>
+<div class="section" id="job-api">
+<h2>3.2.3. Job API<a class="headerlink" href="#job-api" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="scm.plams.basejob.Job">
+<em class="property">class </em><code class="descname">Job</code><span class="sig-paren">(</span><em>name=u'plamsjob'</em>, <em>settings=None</em>, <em>depend=None</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.Job" title="Permalink to this definition">¶</a></dt>
+<dd><p>General abstract class for all kind of computational tasks.</p>
+<p>Methods common for all kinds of jobs are gathered here. Instances of <a class="reference internal" href="#scm.plams.basejob.Job" title="scm.plams.basejob.Job"><code class="xref py py-class docutils literal"><span class="pre">Job</span></code></a> should never be created. It should not be subclassed either. If you wish to define a new type of job please subclass either <a class="reference internal" href="#scm.plams.basejob.SingleJob" title="scm.plams.basejob.SingleJob"><code class="xref py py-class docutils literal"><span class="pre">SingleJob</span></code></a> or <a class="reference internal" href="#scm.plams.basejob.MultiJob" title="scm.plams.basejob.MultiJob"><code class="xref py py-class docutils literal"><span class="pre">MultiJob</span></code></a>.</p>
+<p>Methods that are meant to be explicitly called by the user are <a class="reference internal" href="#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> and occasionally <a class="reference internal" href="#scm.plams.basejob.Job.pickle" title="scm.plams.basejob.Job.pickle"><code class="xref py py-meth docutils literal"><span class="pre">pickle()</span></code></a>. In most cases <a class="reference internal" href="jobmanager.html#pickling"><span>Pickling</span></a> is done automatically, but if for some reason you wish to do it manually, you can use <a class="reference internal" href="#scm.plams.basejob.Job.pickle" title="scm.plams.basejob.Job.pickle"><code class="xref py py-meth docutils literal"><span class="pre">pickle()</span></code></a> method.</p>
+<dl class="docutils">
+<dt>Methods that can be safely overridden in subclasses are:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="#scm.plams.basejob.Job.check" title="scm.plams.basejob.Job.check"><code class="xref py py-meth docutils literal"><span class="pre">check()</span></code></a></li>
+<li><a class="reference internal" href="#scm.plams.basejob.Job.hash" title="scm.plams.basejob.Job.hash"><code class="xref py py-meth docutils literal"><span class="pre">hash()</span></code></a> (see <a class="reference internal" href="jobmanager.html#rerun-prevention"><span>Rerun prevention</span></a>)</li>
+<li><a class="reference internal" href="#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a> and <a class="reference internal" href="#scm.plams.basejob.Job.postrun" title="scm.plams.basejob.Job.postrun"><code class="xref py py-meth docutils literal"><span class="pre">postrun()</span></code></a> (see <a class="reference internal" href="#prerun-postrun"><span>Prerun and postrun methods</span></a>)</li>
+</ul>
+</dd>
+</dl>
+<p>Other methods should remain unchanged.</p>
+<p>Class attribute <code class="docutils literal"><span class="pre">_result_type</span></code> defines the type of results associated with this job. It should point to a class and it <strong>must</strong> be a <a class="reference internal" href="results.html#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> subclass.</p>
+<dl class="docutils">
+<dt>Every job instance has the following attributes. Values of these attributes are adjusted automatically and should not be set by the user:</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal"><span class="pre">status</span></code> &#8211; current status of the job in human-readable format.</li>
+<li><code class="docutils literal"><span class="pre">results</span></code> &#8211; reference to a results instance. An empty instance of the type stored in <code class="docutils literal"><span class="pre">_result_type</span></code> is created when the job constructor is called.</li>
+<li><code class="docutils literal"><span class="pre">path</span></code> &#8211; an absolute path to the job folder.</li>
+<li><code class="docutils literal"><span class="pre">jobmanager</span></code> &#8211; a job manager associated with this job.</li>
+<li><code class="docutils literal"><span class="pre">parent</span></code> &#8211; a pointer to the parent job if this job is a child job of some <a class="reference internal" href="#scm.plams.basejob.MultiJob" title="scm.plams.basejob.MultiJob"><code class="xref py py-class docutils literal"><span class="pre">MultiJob</span></code></a>. <code class="docutils literal"><span class="pre">None</span></code> otherwise.</li>
+</ul>
+</dd>
+<dt>These attributes can be modified, but only before <a class="reference internal" href="#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> is called:</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal"><span class="pre">name</span></code> &#8211; the name of the job.</li>
+<li><code class="docutils literal"><span class="pre">settings</span></code> &#8211; settings of the job.</li>
+<li><code class="docutils literal"><span class="pre">default_settings</span></code> &#8211; see <a class="reference internal" href="#default-settings"><span>Default settings</span></a>.</li>
+<li><code class="docutils literal"><span class="pre">depend</span></code> &#8211; a list of explicit dependencies.</li>
+<li><code class="docutils literal"><span class="pre">_dont_pickle</span></code> &#8211; additional list of this instance&#8217;s attributes that will be removed before pickling. See <a class="reference internal" href="jobmanager.html#pickling"><span>Pickling</span></a> for details.</li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="scm.plams.basejob.Job.__getstate__">
+<code class="descname">__getstate__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.Job.__getstate__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepare an instance for pickling.</p>
+<p>Attributes <code class="docutils literal"><span class="pre">jobmanager</span></code>, <code class="docutils literal"><span class="pre">parent</span></code>, <code class="docutils literal"><span class="pre">default_settings</span></code> and <code class="docutils literal"><span class="pre">_lock</span></code> are removed, as well as all attributes listed in <code class="docutils literal"><span class="pre">self._dont_pickle</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.Job._execute">
+<code class="descname">_execute</code><span class="sig-paren">(</span><em>jobrunner</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.Job._execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the job. Abstract method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.Job._finalize">
+<code class="descname">_finalize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.Job._finalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gather the results of job execution and organize them. This method collects steps 9-12 from <a class="reference internal" href="#job-life-cycle"><span>Running a job</span></a>. Should not be overridden.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.Job._get_ready">
+<code class="descname">_get_ready</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.Job._get_ready" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get ready for <a class="reference internal" href="#scm.plams.basejob.Job._execute" title="scm.plams.basejob.Job._execute"><code class="xref py py-meth docutils literal"><span class="pre">_execute()</span></code></a>. This is the last step before <a class="reference internal" href="#scm.plams.basejob.Job._execute" title="scm.plams.basejob.Job._execute"><code class="xref py py-meth docutils literal"><span class="pre">_execute()</span></code></a> is called. Abstract method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.Job._prepare">
+<code class="descname">_prepare</code><span class="sig-paren">(</span><em>jobmanager</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.Job._prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepare the job for execution. This method collects steps 1-7 from <a class="reference internal" href="#job-life-cycle"><span>Running a job</span></a>. Should not be overridden.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>jobmanager</strong> (<a class="reference internal" href="jobmanager.html#scm.plams.jobmanager.JobManager" title="scm.plams.jobmanager.JobManager"><code class="xref py py-class docutils literal"><span class="pre">JobManager</span></code></a>) &#8211; Job manager instance to be used with this job.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if running of this job should continue (<a class="reference internal" href="jobmanager.html#rerun-prevention"><span>Rerun prevention</span></a> did not find this job previously run), <code class="docutils literal"><span class="pre">False</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.Job.check">
+<code class="descname">check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.Job.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the calculation was successful.</p>
+<p>This method can be overridden in concrete subclasses for different types of jobs. It should return a boolean value.</p>
+<p>The definition here serves as a default, to prevent crashing if a subclass does not define its own <a class="reference internal" href="#scm.plams.basejob.Job.check" title="scm.plams.basejob.Job.check"><code class="xref py py-meth docutils literal"><span class="pre">check()</span></code></a>. It always returns <code class="docutils literal"><span class="pre">True</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.Job.hash">
+<code class="descname">hash</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.Job.hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the hash of this instance. Abstract method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.Job.pickle">
+<code class="descname">pickle</code><span class="sig-paren">(</span><em>filename=None</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.Job.pickle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pickle this instance and save to a file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Path to a file. If <code class="docutils literal"><span class="pre">None</span></code>, save to <code class="docutils literal"><span class="pre">jobname.dill</span></code> in the job folder.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.Job.postrun">
+<code class="descname">postrun</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.Job.postrun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actions to take just after the actual job execution.</p>
+<p>This method is initially empty, it can be defined in subclasses or directly added to either whole class or a single instance using <a class="reference internal" href="functions.html#binding-decorators"><span>Binding decorators</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.Job.prerun">
+<code class="descname">prerun</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.Job.prerun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actions to take before the actual job execution.</p>
+<p>This method is initially empty, it can be defined in subclasses or directly added to either whole class or a single instance using <a class="reference internal" href="functions.html#binding-decorators"><span>Binding decorators</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.Job.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>jobrunner=None</em>, <em>jobmanager=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.Job.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the job. This method should <strong>not</strong> be overridden.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>jobmanager</strong> (<a class="reference internal" href="jobmanager.html#scm.plams.jobmanager.JobManager" title="scm.plams.jobmanager.JobManager"><code class="xref py py-class docutils literal"><span class="pre">JobManager</span></code></a>) &#8211; Job manager instance to be used with this job.</li>
+<li><strong>jobrunner</strong> (<a class="reference internal" href="runners.html#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a>) &#8211; Job runner instance to run this job.</li>
+<li><strong>**kwargs</strong> &#8211; Run flags to be stored in <code class="docutils literal"><span class="pre">run</span></code> branch of job&#8217;s settings.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Results of this job.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="results.html#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This method does not do too much by itself. After simple initial preparation it passes control to job runner, which decides if a new thread should be started for this job. The role of the job runner is to execute three methods that make the full job life cycle: <a class="reference internal" href="#scm.plams.basejob.Job._prepare" title="scm.plams.basejob.Job._prepare"><code class="xref py py-meth docutils literal"><span class="pre">_prepare()</span></code></a>, <a class="reference internal" href="#scm.plams.basejob.Job._execute" title="scm.plams.basejob.Job._execute"><code class="xref py py-meth docutils literal"><span class="pre">_execute()</span></code></a> and <a class="reference internal" href="#scm.plams.basejob.Job._finalize" title="scm.plams.basejob.Job._finalize"><code class="xref py py-meth docutils literal"><span class="pre">_finalize()</span></code></a>. During <a class="reference internal" href="#scm.plams.basejob.Job._execute" title="scm.plams.basejob.Job._execute"><code class="xref py py-meth docutils literal"><span class="pre">_execute()</span></code></a> the job runner is called once again to execute the runscript (only in case of <a class="reference internal" href="#scm.plams.basejob.SingleJob" title="scm.plams.basejob.SingleJob"><code class="xref py py-class docutils literal"><span class="pre">SingleJob</span></code></a>).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="single-jobs">
+<h2>3.2.4. Single jobs<a class="headerlink" href="#single-jobs" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="scm.plams.basejob.SingleJob">
+<em class="property">class </em><code class="descname">SingleJob</code><span class="sig-paren">(</span><em>molecule=None</em>, <em>name='plamsjob'</em>, <em>settings=None</em>, <em>depend=None</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.SingleJob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class representing a job consisting of a single execution of some external binary (or shell runscript in general).</p>
+<p>In addition to constructor arguments and attributes defined by <a class="reference internal" href="#scm.plams.basejob.Job" title="scm.plams.basejob.Job"><code class="xref py py-class docutils literal"><span class="pre">Job</span></code></a>, the constructor of this class accepts the keyword argument <code class="docutils literal"><span class="pre">molecule</span></code> that should be a <code class="xref py py-class docutils literal"><span class="pre">Molecule</span></code> instance. It is saved in <code class="docutils literal"><span class="pre">molecule</span></code> attribute of a job instance.</p>
+<p>Class attribute <code class="docutils literal"><span class="pre">_filenames</span></code> defines default names for input, output, runscript and error files. If you wish to override this attribute it should be a dictionary with string keys <code class="docutils literal"><span class="pre">'inp'</span></code>, <code class="docutils literal"><span class="pre">'out'</span></code>, <code class="docutils literal"><span class="pre">'run'</span></code>, <code class="docutils literal"><span class="pre">'err'</span></code>. The value for each key should be a string describing corresponding file&#8217;s name. Shortcut <code class="docutils literal"><span class="pre">$JN</span></code> can be used for job&#8217;s name. The default value is defined in the following way:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">_filenames</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;inp&#39;</span><span class="p">:</span><span class="s">&#39;$JN.in&#39;</span><span class="p">,</span> <span class="s">&#39;run&#39;</span><span class="p">:</span><span class="s">&#39;$JN.run&#39;</span><span class="p">,</span> <span class="s">&#39;out&#39;</span><span class="p">:</span><span class="s">&#39;$JN.out&#39;</span><span class="p">,</span> <span class="s">&#39;err&#39;</span><span class="p">:</span> <span class="s">&#39;$JN.err&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>This class defines no new methods that could be directly called in your script. Methods that can and should be overridden are <a class="reference internal" href="#scm.plams.basejob.SingleJob.get_input" title="scm.plams.basejob.SingleJob.get_input"><code class="xref py py-meth docutils literal"><span class="pre">get_input()</span></code></a> and <a class="reference internal" href="#scm.plams.basejob.SingleJob.get_runscript" title="scm.plams.basejob.SingleJob.get_runscript"><code class="xref py py-meth docutils literal"><span class="pre">get_runscript()</span></code></a>.</p>
+<dl class="method">
+<dt id="scm.plams.basejob.SingleJob._execute">
+<code class="descname">_execute</code><span class="sig-paren">(</span><em>jobrunner</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.SingleJob._execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute previously created runscript using <em>jobrunner</em>.</p>
+<p>The method <a class="reference internal" href="runners.html#scm.plams.jobrunner.JobRunner.call" title="scm.plams.jobrunner.JobRunner.call"><code class="xref py py-meth docutils literal"><span class="pre">call()</span></code></a> of <em>jobrunner</em> is used. Working directory is <code class="docutils literal"><span class="pre">self.path</span></code>. <code class="docutils literal"><span class="pre">self.settings.run</span></code> is passed as <code class="docutils literal"><span class="pre">runflags</span></code> argument.</p>
+<p>If preview mode is on, this method does nothing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.SingleJob._filename">
+<code class="descname">_filename</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.SingleJob._filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return filename for file of type <em>t</em>. <em>t</em> can be any key from <code class="docutils literal"><span class="pre">_filenames</span></code> dictionary. <code class="docutils literal"><span class="pre">$JN</span></code> is replaced with job name in returned string.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.SingleJob._get_ready">
+<code class="descname">_get_ready</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.SingleJob._get_ready" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate input and runscript files in the job folder. Methods <a class="reference internal" href="#scm.plams.basejob.SingleJob.get_input" title="scm.plams.basejob.SingleJob.get_input"><code class="xref py py-meth docutils literal"><span class="pre">get_input()</span></code></a> and <a class="reference internal" href="#scm.plams.basejob.SingleJob.get_runscript" title="scm.plams.basejob.SingleJob.get_runscript"><code class="xref py py-meth docutils literal"><span class="pre">get_runscript()</span></code></a> are used for that purpose.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.SingleJob.get_input">
+<code class="descname">get_input</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.SingleJob.get_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the input file. Abstract method.</p>
+<p>This method should return a single string with full content of the input file. It should process information stored in <code class="docutils literal"><span class="pre">input</span></code> branch of job&#8217;s settings and in <code class="docutils literal"><span class="pre">molecule</span></code> attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.SingleJob.get_runscript">
+<code class="descname">get_runscript</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.SingleJob.get_runscript" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate runscript. Abstract method.</p>
+<p>This method should return a single string with runscript contents. It can process information stored in <code class="docutils literal"><span class="pre">runscript</span></code> branch of job&#8217;s settings. In general the full runscript has the following form:</p>
+<div class="highlight-python"><div class="highlight"><pre>[first line defined by job.settings.runscript.shebang]
+
+[contents of job.settings.runscript.pre, if any]
+
+[value returned by get_runscript()]
+
+[contents of job.settings.runscript.post, if any]
+</pre></div>
+</div>
+<p>When overridden, this method should pay attention to <code class="docutils literal"><span class="pre">.runscript.stdout_redirect</span></code> key in job&#8217;s <code class="docutils literal"><span class="pre">settings</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.SingleJob.hash">
+<code class="descname">hash</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.SingleJob.hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate unique hash of this instance.</p>
+<p>The behavior of this method is adjusted by the value of <code class="docutils literal"><span class="pre">hashing</span></code> key in <a class="reference internal" href="jobmanager.html#scm.plams.jobmanager.JobManager" title="scm.plams.jobmanager.JobManager"><code class="xref py py-class docutils literal"><span class="pre">JobManager</span></code></a> settings. If no <a class="reference internal" href="jobmanager.html#scm.plams.jobmanager.JobManager" title="scm.plams.jobmanager.JobManager"><code class="xref py py-class docutils literal"><span class="pre">JobManager</span></code></a> is yet associated with this job, default setting from <code class="docutils literal"><span class="pre">config.jobmanager.hashing</span></code> is used.</p>
+<dl class="docutils">
+<dt>Currently supported values for <code class="docutils literal"><span class="pre">hashing</span></code> are:</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal"><span class="pre">False</span></code> or <code class="docutils literal"><span class="pre">None</span></code> &#8211; returns <code class="docutils literal"><span class="pre">None</span></code> and disables <a class="reference internal" href="jobmanager.html#rerun-prevention"><span>Rerun prevention</span></a>.</li>
+<li><code class="docutils literal"><span class="pre">input</span></code> &#8211; returns SHA256 hash of the input file.</li>
+<li><code class="docutils literal"><span class="pre">runscript</span></code> &#8211; returns SHA256 hash of the runscript.</li>
+<li><code class="docutils literal"><span class="pre">input+runscript</span></code> &#8211; returns SHA256 hash of the concatenation of input and runscript.</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="subclassing-singlejob">
+<h3>3.2.4.1. Subclassing SingleJob<a class="headerlink" href="#subclassing-singlejob" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="#scm.plams.basejob.SingleJob" title="scm.plams.basejob.SingleJob"><code class="xref py py-class docutils literal"><span class="pre">SingleJob</span></code></a> class was designed in a way that makes subclassing it quick and easy. Thanks to that it takes very little effort to create PLAMS interface for a new external binary.</p>
+<p>Your new class has to, of course, be a subclass of <a class="reference internal" href="#scm.plams.basejob.SingleJob" title="scm.plams.basejob.SingleJob"><code class="xref py py-class docutils literal"><span class="pre">SingleJob</span></code></a> and define methods <a class="reference internal" href="#scm.plams.basejob.SingleJob.get_input" title="scm.plams.basejob.SingleJob.get_input"><code class="xref py py-meth docutils literal"><span class="pre">get_input()</span></code></a> and <a class="reference internal" href="#scm.plams.basejob.SingleJob.get_runscript" title="scm.plams.basejob.SingleJob.get_runscript"><code class="xref py py-meth docutils literal"><span class="pre">get_runscript()</span></code></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scm.plams.basejob</span> <span class="kn">import</span> <span class="n">SingleJob</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyJob</span><span class="p">(</span><span class="n">SingleJob</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">get_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="o">...</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="s">&#39;string with input file&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">get_runscript</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="o">...</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="s">&#39;string with runscript&#39;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><a class="reference internal" href="#scm.plams.basejob.SingleJob.get_runscript" title="scm.plams.basejob.SingleJob.get_runscript"><code class="xref py py-meth docutils literal"><span class="pre">get_runscript()</span></code></a> method should properly handle output redirection based on the value of <code class="docutils literal"><span class="pre">myjob.settings.runscript.stdout_redirect</span></code>. When <code class="docutils literal"><span class="pre">False</span></code>, no redirection should occur inside runscript. If <code class="docutils literal"><span class="pre">True</span></code>, runscript should be constructed in such a way that all standard output is redirected (using <code class="docutils literal"><span class="pre">&gt;</span></code>) to the proper file (its name is &#8220;visible&#8221; as <code class="docutils literal"><span class="pre">self._filename('out')</span></code> from inside <a class="reference internal" href="#scm.plams.basejob.SingleJob.get_runscript" title="scm.plams.basejob.SingleJob.get_runscript"><code class="xref py py-meth docutils literal"><span class="pre">get_runscript()</span></code></a> body).</p>
+</div>
+<p>This is sufficient for your new job to work properly with other PLAMS components. However, there are other useful attributes and methods that can be overridden:</p>
+<blockquote>
+<div><ul>
+<li><p class="first"><a class="reference internal" href="#scm.plams.basejob.Job.check" title="scm.plams.basejob.Job.check"><code class="xref py py-meth docutils literal"><span class="pre">check()</span></code></a> &#8211; the default version of this method defined in <a class="reference internal" href="#scm.plams.basejob.Job" title="scm.plams.basejob.Job"><code class="xref py py-class docutils literal"><span class="pre">Job</span></code></a> always returns <code class="docutils literal"><span class="pre">True</span></code> and hence effectively disables correctness checking. If you wish to enable checking for your new class, you need to define <a class="reference internal" href="#scm.plams.basejob.Job.check" title="scm.plams.basejob.Job.check"><code class="xref py py-meth docutils literal"><span class="pre">check()</span></code></a> method in it, just like <a class="reference internal" href="#scm.plams.basejob.SingleJob.get_input" title="scm.plams.basejob.SingleJob.get_input"><code class="xref py py-meth docutils literal"><span class="pre">get_input()</span></code></a> and <a class="reference internal" href="#scm.plams.basejob.SingleJob.get_runscript" title="scm.plams.basejob.SingleJob.get_runscript"><code class="xref py py-meth docutils literal"><span class="pre">get_runscript()</span></code></a> in the example above. It should take no other arguments than <code class="docutils literal"><span class="pre">self</span></code> and return a boolean value indicating if job execution was successful. This method is privileged to have an early access to <a class="reference internal" href="results.html#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> methods in exactly the same way as <a class="reference internal" href="#scm.plams.basejob.Job.postrun" title="scm.plams.basejob.Job.postrun"><code class="xref py py-meth docutils literal"><span class="pre">postrun()</span></code></a>.</p>
+</li>
+<li><p class="first">if you wish to create a special <a class="reference internal" href="results.html#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> subclass for results of your new job, make sure to let it know about it:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scm.plams.basejob</span> <span class="kn">import</span> <span class="n">SingleJob</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyResults</span><span class="p">(</span><span class="n">Results</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">some_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="o">...</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyJob</span><span class="p">(</span><span class="n">SingleJob</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">_result_type</span> <span class="o">=</span> <span class="n">MyResults</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">get_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="o">...</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="s">&#39;string with input file&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">get_runscript</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="o">...</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="s">&#39;string with runscript&#39;</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><a class="reference internal" href="#scm.plams.basejob.Job.hash" title="scm.plams.basejob.Job.hash"><code class="xref py py-meth docutils literal"><span class="pre">hash()</span></code></a> &#8211; see <a class="reference internal" href="jobmanager.html#rerun-prevention"><span>Rerun prevention</span></a> for details</p>
+</li>
+<li><p class="first">if your new job requires some special preparations regarding input or runscript files these preparations can be done for example in <a class="reference internal" href="#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a>. However, if you wish to leave <a class="reference internal" href="#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a> clean for further subclassing or adjusting in instance-based fashion, you can use another method called <a class="reference internal" href="#scm.plams.basejob.SingleJob._get_ready" title="scm.plams.basejob.SingleJob._get_ready"><code class="xref py py-meth docutils literal"><span class="pre">_get_ready()</span></code></a>. This method is responsible for input and runscript creation, so if you decide to override it you <strong>must</strong> call its parent version in your version:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">_get_ready</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c"># do some stuff</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">super</span><span class="p">(</span><span class="n">MyJob</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_get_ready</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c"># do some other stuff</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+<div class="technical admonition">
+<p class="first admonition-title">Technical</p>
+<p class="last">Whenever you need to call some method from a parent class it is strongly advised to use <a class="reference external" href="http://docs.python.org/2.7/library/functions.html#super" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">super()</span></code></a>. In other words, if <code class="docutils literal"><span class="pre">Child</span></code> is a subclass of <code class="docutils literal"><span class="pre">Parent</span></code>, <code class="docutils literal"><span class="pre">super(Child,</span> <span class="pre">self).method(args)</span></code> is preferred over <code class="docutils literal"><span class="pre">Parent.method(self,</span> <span class="pre">args)</span></code>. The result of both commands is almost always the same, apart from some cases of multiple inheritance, where only <a class="reference external" href="http://docs.python.org/2.7/library/functions.html#super" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">super()</span></code></a> ensures the proper behavior. Currently there is no multiple inheritance in PLAMS, but it is just a good practice to always use <a class="reference external" href="http://docs.python.org/2.7/library/functions.html#super" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">super()</span></code></a>.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Whenever you are subclassing any kind of job, either single of multi, and you wish to override its constructor (<code class="docutils literal"><span class="pre">__init__</span></code> method) it is <strong>absolutely essential</strong> to call the parent constructor and pass all unused keyword arguments to it:</p>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyJob</span><span class="p">(</span><span class="n">SomeOtherJob</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">myarg1</span><span class="p">,</span> <span class="n">myarg2</span><span class="o">=</span><span class="n">default2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">super</span><span class="p">(</span><span class="n">Myjob</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="c"># do stuff with myarg1 and myarg2</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="multijobs">
+<h2>3.2.5. Multijobs<a class="headerlink" href="#multijobs" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="scm.plams.basejob.MultiJob">
+<em class="property">class </em><code class="descname">MultiJob</code><span class="sig-paren">(</span><em>children=None</em>, <em>name='plamsjob'</em>, <em>settings=None</em>, <em>depend=None</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.MultiJob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concrete class representing a job that is a container for other jobs.</p>
+<p>In addition to constructor arguments and attributes defined by <a class="reference internal" href="#scm.plams.basejob.Job" title="scm.plams.basejob.Job"><code class="xref py py-class docutils literal"><span class="pre">Job</span></code></a>, the constructor of this class accepts two keyword arguments:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">children</span></code> &#8211; should be a list (or other iterable container) containing children jobs.</li>
+<li><code class="docutils literal"><span class="pre">childrunner</span></code> &#8211; by default all the children jobs are run using the same <a class="reference internal" href="runners.html#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> as the parent job. If you wish to use a different <a class="reference internal" href="runners.html#scm.plams.jobrunner.JobRunner" title="scm.plams.jobrunner.JobRunner"><code class="xref py py-class docutils literal"><span class="pre">JobRunner</span></code></a> for children, you can pass it using this argument.</li>
+</ul>
+</div></blockquote>
+<p>Values passed as <code class="docutils literal"><span class="pre">children</span></code> and <code class="docutils literal"><span class="pre">childrunner</span></code> are stored as instance attributes and can be adjusted later, but before the <a class="reference internal" href="#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> method is called.</p>
+<p>This class defines no new methods that could be directly called in your script.</p>
+<p>When executed, a multijob runs all its children using the same <a class="reference internal" href="#scm.plams.basejob.Job.run" title="scm.plams.basejob.Job.run"><code class="xref py py-meth docutils literal"><span class="pre">run()</span></code></a> arguments. If you need to specify different run flags for children you can do it by manually setting them in children job <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">childjob</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">run</span><span class="o">.</span><span class="n">arg</span> <span class="o">=</span> <span class="s">&#39;value&#39;</span>
+</pre></div>
+</div>
+<p>Since <code class="docutils literal"><span class="pre">run</span></code> branch of settings gets soft-updated by run flags, value set this way is not overwritten by parent job.</p>
+<p>Job folder of a multijob gets cleaned independently of its children. See <a class="reference internal" href="results.html#cleaning"><span>Cleaning job folder</span></a> for details.</p>
+<dl class="method">
+<dt id="scm.plams.basejob.MultiJob.__iter__">
+<code class="descname">__iter__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.MultiJob.__iter__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate through <code class="docutils literal"><span class="pre">children</span></code>. If it is a dictionary, iterate through its values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.MultiJob._execute">
+<code class="descname">_execute</code><span class="sig-paren">(</span><em>jobrunner</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.MultiJob._execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run all children from <code class="docutils literal"><span class="pre">children</span></code>. Then use <a class="reference internal" href="#scm.plams.basejob.MultiJob.new_children" title="scm.plams.basejob.MultiJob.new_children"><code class="xref py py-meth docutils literal"><span class="pre">new_children()</span></code></a> and run all jobs produced by it. Repeat this procedure until <a class="reference internal" href="#scm.plams.basejob.MultiJob.new_children" title="scm.plams.basejob.MultiJob.new_children"><code class="xref py py-meth docutils literal"><span class="pre">new_children()</span></code></a> returns an empty list. Wait for all started jobs to finish.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.MultiJob._get_ready">
+<code class="descname">_get_ready</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.MultiJob._get_ready" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get ready for <a class="reference internal" href="#scm.plams.basejob.MultiJob._execute" title="scm.plams.basejob.MultiJob._execute"><code class="xref py py-meth docutils literal"><span class="pre">_execute()</span></code></a>. Count children jobs and set their <code class="docutils literal"><span class="pre">parent</span></code> attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.MultiJob._notify">
+<code class="descname">_notify</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.MultiJob._notify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Notify this job that one of its children has finished.</p>
+<p>Decrement <code class="docutils literal"><span class="pre">_active_children</span></code> by one. Use <code class="docutils literal"><span class="pre">_lock</span></code> to ensure thread safety.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.MultiJob.check">
+<code class="descname">check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.MultiJob.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the calculation was successful. Returns <code class="docutils literal"><span class="pre">True</span></code> if every children job has its <code class="docutils literal"><span class="pre">status</span></code> attribute set to <code class="docutils literal"><span class="pre">successful</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.MultiJob.hash">
+<code class="descname">hash</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.MultiJob.hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hashing for multijobs is disabled by default. Return <code class="docutils literal"><span class="pre">None</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.basejob.MultiJob.new_children">
+<code class="descname">new_children</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.basejob.MultiJob.new_children" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate new children jobs.</p>
+<p>This method is useful when some of children jobs are not known beforehand and need to be generated based on other children jobs, like for example in any kind self-consistent procedure.</p>
+<p>The goal of this method is to produce new portion of children jobs. Newly created jobs need to be manually added to <code class="docutils literal"><span class="pre">self.children</span></code> and (besides that) returned as a list at the end of this method. No adjustment of newly created jobs&#8217; <code class="docutils literal"><span class="pre">parent</span></code> attribute is needed. This method <strong>cannot</strong> modify <code class="docutils literal"><span class="pre">_active_children</span></code> attribute.</p>
+<p>The method defined here is a default template, returning an empty list, which means no new children jobs are generated and the entire execution of the parent job consists only of running jobs initially found in <code class="docutils literal"><span class="pre">self.children</span></code>. To modify this behavior you can override this method in <a class="reference internal" href="#scm.plams.basejob.MultiJob" title="scm.plams.basejob.MultiJob"><code class="xref py py-class docutils literal"><span class="pre">MultiJob</span></code></a> subclass or use one of <a class="reference internal" href="functions.html#binding-decorators"><span>Binding decorators</span></a>, just like with <a class="reference internal" href="#prerun-postrun"><span>Prerun and postrun methods</span></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="using-multijob">
+<h3>3.2.5.1. Using MultiJob<a class="headerlink" href="#using-multijob" title="Permalink to this headline">¶</a></h3>
+<p>Since <a class="reference internal" href="#scm.plams.basejob.MultiJob" title="scm.plams.basejob.MultiJob"><code class="xref py py-class docutils literal"><span class="pre">MultiJob</span></code></a> is a concrete class, it can be used in two ways: either by creating instances of it or subclassing it. The simplest application is just to use an instance of <a class="reference internal" href="#scm.plams.basejob.MultiJob" title="scm.plams.basejob.MultiJob"><code class="xref py py-class docutils literal"><span class="pre">MultiJob</span></code></a> as a container grouping similar jobs that you wish to run at the same time using the same job runner:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mj</span> <span class="o">=</span> <span class="n">MultiJob</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;somejobs&#39;</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="p">[</span><span class="n">job1</span><span class="p">,</span> <span class="n">job2</span><span class="p">,</span> <span class="n">job3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mj</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mj</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can of course use it together with <a class="reference internal" href="#prerun-postrun"><span>Prerun and postrun methods</span></a> to further customize the behavior of <code class="docutils literal"><span class="pre">mj</span></code></p>
+<p>More flexible way of using multijobs is subclassing. You can subclass directly from <a class="reference internal" href="#scm.plams.basejob.MultiJob" title="scm.plams.basejob.MultiJob"><code class="xref py py-class docutils literal"><span class="pre">MultiJob</span></code></a> or from any of its subclasses. Defining your own multijob is the best solution when you need to run many similar jobs and later compare their results. In that case <a class="reference internal" href="#scm.plams.basejob.Job.prerun" title="scm.plams.basejob.Job.prerun"><code class="xref py py-meth docutils literal"><span class="pre">prerun()</span></code></a> method can be used for populating <code class="docutils literal"><span class="pre">children</span></code> and <a class="reference internal" href="#scm.plams.basejob.Job.postrun" title="scm.plams.basejob.Job.postrun"><code class="xref py py-meth docutils literal"><span class="pre">postrun()</span></code></a> for extracting results and merging them.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo"><a href="http://www.scm.com/">
+  <img class="logo" src="_static/scm_logo.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">3.2. Jobs</a><ul>
+<li><a class="reference internal" href="#preparing-a-job">3.2.1. Preparing a job</a><ul>
+<li><a class="reference internal" href="#contents-of-job-s-settings">3.2.1.1. Contents of job&#8217;s settings</a></li>
+<li><a class="reference internal" href="#default-settings">3.2.1.2. Default settings</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#running-a-job">3.2.2. Running a job</a><ul>
+<li><a class="reference internal" href="#name-conflicts">3.2.2.1. Name conflicts</a></li>
+<li><a class="reference internal" href="#prerun-and-postrun-methods">3.2.2.2. Prerun and postrun methods</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#job-api">3.2.3. Job API</a></li>
+<li><a class="reference internal" href="#single-jobs">3.2.4. Single jobs</a><ul>
+<li><a class="reference internal" href="#subclassing-singlejob">3.2.4.1. Subclassing SingleJob</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#multijobs">3.2.5. Multijobs</a><ul>
+<li><a class="reference internal" href="#using-multijob">3.2.5.1. Using MultiJob</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="settings.html"
+                        title="previous chapter">3.1. Settings</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="results.html"
+                        title="next chapter">3.3. Results</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/jobs.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="results.html" title="3.3. Results"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="settings.html" title="3.1. Settings"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PLAMS documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="components.html" >3. Components overview</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Scientific Computing &amp; Modelling.
+    </div>
+  </body>
+</html>

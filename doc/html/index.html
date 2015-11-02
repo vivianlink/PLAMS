@@ -1,0 +1,181 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Python Library for Automating Molecular Simulations &mdash; PLAMS documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/boxes.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="PLAMS documentation" href="#" />
+    <link rel="next" title="1. Introduction" href="intro.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="intro.html" title="1. Introduction"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">PLAMS documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="python-library-for-automating-molecular-simulations">
+<h1>Python Library for Automating Molecular Simulations<a class="headerlink" href="#python-library-for-automating-molecular-simulations" title="Permalink to this headline">¶</a></h1>
+<p><strong>Table of Contents</strong></p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">1. Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#what-is-plams">1.1. What is PLAMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#what-can-be-done-with-plams">1.2. What can be done with PLAMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#simple-example">1.3. Simple example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#what-plams-is-not">1.4. What PLAMS is <em>not</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#about-this-documentation">1.5. About this documentation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">2. Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="started.html#library-contents">2.1. Library contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="started.html#running-plams">2.2. Running PLAMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="started.html#master-script">2.3. Master script</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="started.html#optional-arguments">2.3.1. Optional arguments</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">3. Components overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">3.1. Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="settings.html#tree-like-structure">3.1.1. Tree-like structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html#dot-notation">3.1.2. Dot notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html#global-settings">3.1.3. Global settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html#api">3.1.4. API</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="jobs.html">3.2. Jobs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="jobs.html#preparing-a-job">3.2.1. Preparing a job</a></li>
+<li class="toctree-l3"><a class="reference internal" href="jobs.html#running-a-job">3.2.2. Running a job</a></li>
+<li class="toctree-l3"><a class="reference internal" href="jobs.html#job-api">3.2.3. Job API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="jobs.html#single-jobs">3.2.4. Single jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="jobs.html#multijobs">3.2.5. Multijobs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="results.html">3.3. Results</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="results.html#files-in-the-job-folder">3.3.1. Files in the job folder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="results.html#synchronization-of-parallel-job-executions">3.3.2. Synchronization of parallel job executions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="results.html#cleaning-job-folder">3.3.3. Cleaning job folder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="results.html#api">3.3.4. API</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="runners.html">3.4. Job runners</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="runners.html#local-job-runner">3.4.1. Local job runner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runners.html#remote-job-runner">3.4.2. Remote job runner</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="jobmanager.html">3.5. Job manager</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="jobmanager.html#rerun-prevention">3.5.1. Rerun prevention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="jobmanager.html#pickling">3.5.2. Pickling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="jobmanager.html#restarting-crashed-scripts">3.5.3. Restarting crashed scripts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="jobmanager.html#api">3.5.4. API</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="functions.html">3.6. Public functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="functions.html#logging">3.6.1. Logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functions.html#binding-decorators">3.6.2. Binding decorators</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="external.html">3.7. External binaries</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scm.html">3.7.1. ADF Suite</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dirac.html">3.7.2. Dirac</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cookbook.html">4. PLAMS cookbook</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html#multijob">4.1. MultiJob</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo"><a href="http://www.scm.com/">
+  <img class="logo" src="_static/scm_logo.png" alt="Logo"/>
+</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="next chapter">1. Introduction</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="intro.html" title="1. Introduction"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">PLAMS documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Scientific Computing &amp; Modelling.
+    </div>
+  </body>
+</html>

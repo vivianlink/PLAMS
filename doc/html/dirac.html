@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>3.7.2. Dirac &mdash; PLAMS documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/boxes.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="PLAMS documentation" href="index.html" />
+    <link rel="up" title="3.7. External binaries" href="external.html" />
+    <link rel="next" title="4. PLAMS cookbook" href="cookbook.html" />
+    <link rel="prev" title="3.7.1. ADF Suite" href="scm.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="cookbook.html" title="4. PLAMS cookbook"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="scm.html" title="3.7.1. ADF Suite"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PLAMS documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="components.html" >3. Components overview</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="external.html" accesskey="U">3.7. External binaries</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dirac">
+<h1>3.7.2. Dirac<a class="headerlink" href="#dirac" title="Permalink to this headline">¶</a></h1>
+<p>DIRAC is an <em>ab initio</em> quantum chemistry program for all electron relativistic calculation. It features a variety of methods including HF, MP2, DFT, CI and CC. More information about DIRAC can be found on its <a class="reference external" href="http://www.diracprogram.org">official website</a>.</p>
+<p>PLAMS offers a simple DIRAC interface and is capable of running DIRAC calculations. The relevant classes are <a class="reference internal" href="#scm.plams.diracjob.DiracJob" title="scm.plams.diracjob.DiracJob"><code class="xref py py-class docutils literal"><span class="pre">DiracJob</span></code></a> and <a class="reference internal" href="#scm.plams.diracjob.DiracResults" title="scm.plams.diracjob.DiracResults"><code class="xref py py-class docutils literal"><span class="pre">DiracResults</span></code></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">DIRAC is not a part of ADF Suite. To run DIRAC calculations with PLAMS you need to obtain and install DIRAC manually.</p>
+</div>
+<div class="section" id="preparing-a-calculation">
+<h2>3.7.2.1. Preparing a calculation<a class="headerlink" href="#preparing-a-calculation" title="Permalink to this headline">¶</a></h2>
+<p>Preparing an instance of <a class="reference internal" href="#scm.plams.diracjob.DiracJob" title="scm.plams.diracjob.DiracJob"><code class="xref py py-class docutils literal"><span class="pre">DiracJob</span></code></a> follows general principles for <a class="reference internal" href="jobs.html#scm.plams.basejob.SingleJob" title="scm.plams.basejob.SingleJob"><code class="xref py py-class docutils literal"><span class="pre">SingleJob</span></code></a>. Information adjusting input file is stored in <code class="docutils literal"><span class="pre">myjob.settings.input</span></code> branch, whereas a runscript is created based on contents of <code class="docutils literal"><span class="pre">myjob.settings.runscript</span></code>. The geometry of your system can be supplied in two ways. Unlike ADF or BAND, DIRAC uses two separate files, one for input settings and the other for atomic coordinates. Geometry file needs to be in <code class="docutils literal"><span class="pre">.xyz</span></code> format and it can be either generated automatically based on <code class="docutils literal"><span class="pre">myjob.molecule</span></code> or given directly by the user (see below for details).</p>
+<div class="section" id="input">
+<span id="dirac-input"></span><h3>3.7.2.1.1. Input<a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h3>
+<p>Input files for DIRAC are organized using blocks and subblocks with three level hierarchy. On the top level there are <em>blocks</em> (indicated by keywords starting with <code class="docutils literal"><span class="pre">**</span></code>) which can contain <em>keys</em> (starting with <code class="docutils literal"><span class="pre">.</span></code>) or <em>subblocks</em> (starting with <code class="docutils literal"><span class="pre">*</span></code>), which in turn can contain more keys. This structure can be easily reflected with tree-like <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> objects. In general, the preparation process is quite similar to <a class="reference internal" href="scm.html#scm.plams.scmjob.SCMJob" title="scm.plams.scmjob.SCMJob"><code class="xref py py-class docutils literal"><span class="pre">SCMJob</span></code></a>, however, there are a few nuances. The details are explained below.</p>
+<blockquote>
+<div><ul>
+<li><p class="first">Each key present on the top level of <code class="docutils literal"><span class="pre">myjob.settings.input</span></code> is translated to a block. Values of those keys should be <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instances. The block <code class="docutils literal"><span class="pre">DIRAC</span></code> is always printed as the first one, all other are ordered lexicographically (this behavior can be changed with <code class="docutils literal"><span class="pre">DiracJob._top</span></code> class attribute).</p>
+</li>
+<li><p class="first">In each block various keys and subblocks can be present. Subblocks are indicated by nested <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instances, all other values are interpreted as keys.</p>
+</li>
+<li><p class="first">An empty value of a key can be obtained by setting its value to <code class="docutils literal"><span class="pre">True</span></code>.</p>
+</li>
+<li><p class="first">An empty block or subblock can be obtained with an empty <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a> instance.</p>
+</li>
+<li><p class="first">If the value of a key is a list, each element of this list will be printed in a separate line.</p>
+</li>
+<li><p class="first">All keywords are written to the input file with upper case, values remain unchanged.</p>
+</li>
+<li><p class="first">Many DIRAC keywords contain spaces (for example <code class="docutils literal"><span class="pre">WAVE</span> <span class="pre">FUNCTION</span></code> or <code class="docutils literal"><span class="pre">LINEAR</span> <span class="pre">RESPONSE</span></code>) and thus cannot be used with convenient dot notation. Usual bracket notation has to be used in those cases (see <a class="reference internal" href="settings.html#dot-notation"><span>Dot notation</span></a>).</p>
+</li>
+<li><p class="first">Some subblocks follow the special requirement - they need to be &#8220;enabled&#8221; by presence of the corresponding keyword in the parent block. For example, in <code class="docutils literal"><span class="pre">**HAMILTONIAN</span></code> block a <em>subblock</em> <code class="docutils literal"><span class="pre">*FDE</span></code> can be used to specify frozen density embedding parameters, but this subblock is taken into account only if a <em>key</em> <code class="docutils literal"><span class="pre">.FDE</span></code> is present in <code class="docutils literal"><span class="pre">**HAMILTONIAN</span></code>. This introduces a problem, since you cannot store two entries with the same name in <a class="reference internal" href="settings.html#scm.plams.settings.Settings" title="scm.plams.settings.Settings"><code class="xref py py-class docutils literal"><span class="pre">Settings</span></code></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">myjob</span><span class="o">.</span><span class="n">setting</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">hamiltonian</span><span class="o">.</span><span class="n">fde</span> <span class="o">=</span> <span class="bp">True</span>   <span class="c">#sets the .FDE key on the top level of HAMILOTNIAN block</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">myjob</span><span class="o">.</span><span class="n">setting</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">hamiltonian</span><span class="o">.</span><span class="n">fde</span><span class="o">.</span><span class="n">frdens</span> <span class="o">=</span> <span class="s">&#39;value2&#39;</span>   <span class="c">#sets the *FDE subblock in the HAMILTONIAN block, but overwrites the key .FDE defined above</span>
+</pre></div>
+</div>
+<p>To solve this problem a special &#8220;enabler&#8221; key <code class="docutils literal"><span class="pre">_en</span></code> can be used <em>inside the subblock</em>. If such a key is present, the parent block of this subblock will be enriched with corresponding key and value:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">myjob</span><span class="o">.</span><span class="n">setting</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">hamiltonian</span><span class="o">.</span><span class="n">fde</span><span class="o">.</span><span class="n">_en</span> <span class="o">=</span> <span class="bp">True</span>   <span class="c">#sets the .FDE key on the top level of HAMILOTNIAN block, its value can be set just like any other key</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">myjob</span><span class="o">.</span><span class="n">setting</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">hamiltonian</span><span class="o">.</span><span class="n">fde</span><span class="o">.</span><span class="n">frdens</span> <span class="o">=</span> <span class="s">&#39;value2&#39;</span>   <span class="c">#sets the &quot;proper&quot; contents of *FDE subblock.</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="runscript">
+<span id="dirac-runscript"></span><h3>3.7.2.1.2. Runscript<a class="headerlink" href="#runscript" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Calculations with DIRAC are executed using a start script called <code class="docutils literal"><span class="pre">pam</span></code>. This script accepts a range of option flags adjusting various technical aspects of calculation, including input and geometry files. You can type <code class="docutils literal"><span class="pre">pam</span> <span class="pre">-h</span></code> in you command line for details.</p>
+<p>A runscript calling <code class="docutils literal"><span class="pre">pam</span></code> is automatically generated by PLAMS. Its contents are based on <code class="docutils literal"><span class="pre">myjob.settings.runscript</span></code> branch and follow general rules described in <a class="reference internal" href="jobs.html#job-settings"><span>Contents of job&#8217;s settings</span></a>. Besides that, the subbranch <code class="docutils literal"><span class="pre">myjob.settings.runscript.pam</span></code> is used to store option flags. Every key-value pair present there is transformed to <code class="docutils literal"><span class="pre">--key=value</span></code> flag appended to <code class="docutils literal"><span class="pre">pam</span></code> execution command. Following the usual convention, <code class="docutils literal"><span class="pre">True</span></code> represents an &#8220;empty value&#8221; (to get flags like <code class="docutils literal"><span class="pre">--key</span></code>) and list can be used for keys with multiple values (<code class="docutils literal"><span class="pre">--key=&quot;val1</span> <span class="pre">val2</span> <span class="pre">val3&quot;</span></code>).</p>
+<p>Initially, when an instance of <a class="reference internal" href="#scm.plams.diracjob.DiracJob" title="scm.plams.diracjob.DiracJob"><code class="xref py py-class docutils literal"><span class="pre">DiracJob</span></code></a> is created, the following <code class="docutils literal"><span class="pre">pam</span></code> options are set by default:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">runscript</span><span class="o">.</span><span class="n">pam</span><span class="o">.</span><span class="n">noarch</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">runscript</span><span class="o">.</span><span class="n">pam</span><span class="o">.</span><span class="n">get</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;DFCOEF&#39;</span><span class="p">,</span> <span class="s">&#39;GRIDOUT&#39;</span><span class="p">,</span> <span class="s">&#39;dirac.xml&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Their role is to obtain from DIRAC scratch space all the files produced by your calculation (they can be later discarded with <a class="reference internal" href="results.html#cleaning"><span>Cleaning job folder</span></a> if not needed) and prevent creating a <code class="docutils literal"><span class="pre">.tgz</span></code> archive out of them (to allow PLAMS to process them). These two default flags can be changed or removed if needed, but this can hinder some <a class="reference internal" href="results.html#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> functionalities, so make sure to know what you are doing.</p>
+<p>You don&#8217;t need to manually set mandatory <code class="docutils literal"><span class="pre">inp</span></code> and <code class="docutils literal"><span class="pre">mol</span></code> flags, they are added automatically just before the runscript is generated. If, for some reason, you don&#8217;t want to use automatic molecule handling and wish to provide a geometry file by yourself, all you need to do is to set <code class="docutils literal"><span class="pre">mol</span></code> entry in <code class="docutils literal"><span class="pre">myjob.settings.runscript.pam</span></code> with the path of your geometry file. PLAMS will then ignore geometry stored in <code class="docutils literal"><span class="pre">myjob.molecule</span></code> and use the supplied path.</p>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="results-extraction">
+<h2>3.7.2.2. Results extraction<a class="headerlink" href="#results-extraction" title="Permalink to this headline">¶</a></h2>
+<p>DIRAC produces two output files that can contain meaningful information. One is a &#8220;real&#8221; output of the calculation and the other is more technical output of <code class="docutils literal"><span class="pre">pam</span></code> script. For the sake of consistency PLAMS concatenates those two files into a single output file. The <code class="docutils literal"><span class="pre">pam</span></code> output is appended at the end of the &#8220;real&#8221; output, separated by a visual delimeter. Besides the regular text output some other files are produced by DIRAC. By default, <code class="docutils literal"><span class="pre">DFCOEF</span></code>, <code class="docutils literal"><span class="pre">GRIDOUT</span></code> and <code class="docutils literal"><span class="pre">dirac.xml</span></code> are fetched from the scratch space and renamed to, respectively, <code class="docutils literal"><span class="pre">jobname.dfcoef</span></code>, <code class="docutils literal"><span class="pre">jobname.grid</span></code> and <code class="docutils literal"><span class="pre">jobname.xml</span></code>.</p>
+<p>General text processing methods from <a class="reference internal" href="results.html#scm.plams.results.Results" title="scm.plams.results.Results"><code class="xref py py-class docutils literal"><span class="pre">Results</span></code></a> can be used to obtain data from results files. At the moment, no special tools are present for binary files. Contents of <code class="docutils literal"><span class="pre">.xml</span></code> files can be easily accessed with standard Python libraries present in <a class="reference external" href="http://docs.python.org/2.7/library/xml.html#module-xml" title="(in Python v2.7)"><code class="xref py py-mod docutils literal"><span class="pre">xml</span></code></a> package.</p>
+</div>
+<div class="section" id="api">
+<h2>3.7.2.3. API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="scm.plams.diracjob.DiracJob">
+<em class="property">class </em><code class="descname">DiracJob</code><span class="sig-paren">(</span><em>molecule=None</em>, <em>name='plamsjob'</em>, <em>settings=None</em>, <em>depend=None</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.diracjob.DiracJob" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class representing a single computational job with DIRAC.</p>
+<dl class="method">
+<dt id="scm.plams.diracjob.DiracJob._get_ready">
+<code class="descname">_get_ready</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.diracjob.DiracJob._get_ready" title="Permalink to this definition">¶</a></dt>
+<dd><p>Before generating runscript and input with parent method <a class="reference internal" href="jobs.html#scm.plams.basejob.SingleJob._get_ready" title="scm.plams.basejob.SingleJob._get_ready"><code class="xref py py-meth docutils literal"><span class="pre">SingleJob._get_ready</span></code></a> add proper <code class="docutils literal"><span class="pre">mol</span></code> and <code class="docutils literal"><span class="pre">inp</span></code> entries to <code class="docutils literal"><span class="pre">self.settings.runscript.pam</span></code>. If already present there, <code class="docutils literal"><span class="pre">mol</span></code> will not be added.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.diracjob.DiracJob.check">
+<code class="descname">check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.diracjob.DiracJob.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the calculation was successful by examining the last line of <code class="docutils literal"><span class="pre">pam</span></code> output.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.diracjob.DiracJob.get_input">
+<code class="descname">get_input</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.diracjob.DiracJob.get_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform all contents of <code class="docutils literal"><span class="pre">input</span></code> branch of <code class="docutils literal"><span class="pre">settings</span></code> into string with blocks, subblocks, keys and values.</p>
+<p>On the highest level alphabetic order of iteration is modified: keys occuring in class attribute <code class="docutils literal"><span class="pre">_top</span></code> are printed first. See <a class="reference internal" href="#dirac-input"><span>Input</span></a> for details.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scm.plams.diracjob.DiracJob.get_runscript">
+<code class="descname">get_runscript</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.diracjob.DiracJob.get_runscript" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a runscript. Returned string is a <code class="docutils literal"><span class="pre">pam</span></code> call followed by option flags generated based on <code class="docutils literal"><span class="pre">self.settings.runscript.pam</span></code> contents. See <a class="reference internal" href="#dirac-runscript"><span>Runscript</span></a> for details.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scm.plams.diracjob.DiracResults">
+<em class="property">class </em><code class="descname">DiracResults</code><span class="sig-paren">(</span><em>job</em><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.diracjob.DiracResults" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class for result of computation done with DIRAC.</p>
+<dl class="method">
+<dt id="scm.plams.diracjob.DiracResults.collect">
+<code class="descname">collect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scm.plams.diracjob.DiracResults.collect" title="Permalink to this definition">¶</a></dt>
+<dd><p>After collecting the files produced by job execution with parent method <a class="reference internal" href="results.html#scm.plams.results.Results.collect" title="scm.plams.results.Results.collect"><code class="xref py py-meth docutils literal"><span class="pre">Results.collect</span></code></a> append the <code class="docutils literal"><span class="pre">pam</span></code> output to the regular output file.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo"><a href="http://www.scm.com/">
+  <img class="logo" src="_static/scm_logo.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">3.7.2. Dirac</a><ul>
+<li><a class="reference internal" href="#preparing-a-calculation">3.7.2.1. Preparing a calculation</a><ul>
+<li><a class="reference internal" href="#input">3.7.2.1.1. Input</a></li>
+<li><a class="reference internal" href="#runscript">3.7.2.1.2. Runscript</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#results-extraction">3.7.2.2. Results extraction</a></li>
+<li><a class="reference internal" href="#api">3.7.2.3. API</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="scm.html"
+                        title="previous chapter">3.7.1. ADF Suite</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="cookbook.html"
+                        title="next chapter">4. PLAMS cookbook</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dirac.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="cookbook.html" title="4. PLAMS cookbook"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="scm.html" title="3.7.1. ADF Suite"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PLAMS documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="components.html" >3. Components overview</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="external.html" >3.7. External binaries</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Scientific Computing &amp; Modelling.
+    </div>
+  </body>
+</html>

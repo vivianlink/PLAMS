@@ -1,0 +1,180 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>4. PLAMS cookbook &mdash; PLAMS documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/boxes.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="PLAMS documentation" href="index.html" />
+    <link rel="prev" title="3.7.2. Dirac" href="dirac.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="dirac.html" title="3.7.2. Dirac"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PLAMS documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="plams-cookbook">
+<h1>4. PLAMS cookbook<a class="headerlink" href="#plams-cookbook" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="multijob">
+<h2>4.1. MultiJob<a class="headerlink" href="#multijob" title="Permalink to this headline">¶</a></h2>
+<p>A simple example using the MultiJob:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">scm.plams</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">init</span><span class="p">()</span>
+
+<span class="c"># Get the molecules:</span>
+
+<span class="n">molecules_dir</span> <span class="o">=</span> <span class="s">&#39;/absolute/path/molecules&#39;</span>
+<span class="n">molecules</span> <span class="o">=</span> <span class="p">[</span><span class="n">Molecule</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">molecules_dir</span><span class="p">,</span><span class="n">mol</span><span class="p">))</span> <span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">molecules_dir</span><span class="p">)]</span>
+
+<span class="c"># Calculate, for each molecule, the &quot;total&quot; bond order:</span>
+
+<span class="n">total_bond_order</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">molecule</span> <span class="ow">in</span> <span class="n">molecules</span><span class="p">:</span>
+   <span class="n">molecule</span><span class="o">.</span><span class="n">guess_bonds</span><span class="p">()</span>
+   <span class="n">total_bond_order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">sum</span><span class="p">([</span><span class="n">bond</span><span class="o">.</span><span class="n">order</span> <span class="k">for</span> <span class="n">bond</span> <span class="ow">in</span> <span class="n">molecule</span><span class="o">.</span><span class="n">bonds</span><span class="p">]))</span>
+
+<span class="c"># Initialize the common settings:</span>
+
+<span class="n">settings</span> <span class="o">=</span> <span class="n">Settings</span><span class="p">()</span>
+
+<span class="n">settings</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">Basis</span><span class="o">.</span><span class="n">Core</span> <span class="o">=</span> <span class="s">&#39;None&#39;</span>
+<span class="n">settings</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">NumericalQuality</span> <span class="o">=</span> <span class="s">&#39;Good&#39;</span>
+<span class="n">settings</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">Relativistic</span> <span class="o">=</span> <span class="s">&#39;Scalar ZORA&#39;</span>
+<span class="n">settings</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">XC</span><span class="o">.</span><span class="n">GGA</span> <span class="o">=</span> <span class="s">&#39;PBE&#39;</span>
+
+<span class="n">basis</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;SZ&#39;</span><span class="p">,</span> <span class="s">&#39;DZ&#39;</span><span class="p">,</span> <span class="s">&#39;DZP&#39;</span><span class="p">,</span> <span class="s">&#39;TZP&#39;</span><span class="p">,</span> <span class="s">&#39;TZ2P&#39;</span><span class="p">,</span> <span class="s">&#39;QZ4P&#39;</span><span class="p">]</span>
+<span class="n">reference_basis</span> <span class="o">=</span> <span class="s">&#39;QZ4P&#39;</span>
+
+<span class="c"># For each basis set set up a MultiJob and get the bond energies:</span>
+
+<span class="c"># Let&#39;s store the bond energies for different basis sets in a dictionary:</span>
+<span class="n">bond_energies</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">for</span> <span class="n">bas</span> <span class="ow">in</span> <span class="n">basis</span><span class="p">:</span>
+   <span class="c"># The basis set in the setting object:</span>
+   <span class="n">settings</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">Basis</span><span class="o">.</span><span class="n">Type</span> <span class="o">=</span> <span class="n">bas</span>
+
+   <span class="c"># Create the MultiJob comprising on  ADFJobs</span>
+   <span class="n">job</span> <span class="o">=</span> <span class="n">MultiJob</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">bas</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="p">[</span><span class="n">ADFJob</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">)</span> <span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">molecules</span><span class="p">])</span>
+
+   <span class="c"># Run the job:</span>
+   <span class="n">job</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+   <span class="c"># Get the bond energies:</span>
+   <span class="n">bond_energies</span><span class="p">[</span><span class="n">bas</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">child</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">readkf</span><span class="p">(</span><span class="s">&#39;Energy&#39;</span><span class="p">,</span> <span class="s">&#39;Bond Energy&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">job</span><span class="o">.</span><span class="n">children</span><span class="p">]</span>
+
+
+<span class="c"># Calculate the average absolute error for each basis set:</span>
+
+<span class="k">for</span> <span class="n">bas</span> <span class="ow">in</span> <span class="n">basis</span><span class="p">:</span>
+   <span class="k">if</span> <span class="n">bas</span> <span class="o">==</span> <span class="n">reference_basis</span><span class="p">:</span>
+      <span class="k">continue</span>
+   <span class="n">errs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">ref</span> <span class="o">-</span> <span class="n">en</span><span class="p">)</span><span class="o">/</span><span class="n">n</span> <span class="k">for</span> <span class="n">ref</span><span class="p">,</span> <span class="n">en</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">bond_energies</span><span class="p">[</span><span class="n">reference_basis</span><span class="p">],</span> <span class="n">bond_energies</span><span class="p">[</span><span class="n">bas</span><span class="p">],</span> <span class="n">total_bond_order</span><span class="p">)]</span>
+   <span class="n">avg_error</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">errs</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">errs</span><span class="p">)</span>
+   <span class="k">print</span> <span class="s">&#39;Basis set:&#39;</span><span class="p">,</span> <span class="n">bas</span><span class="p">,</span> <span class="s">&quot;Average Absolute Error per bond [kcal/mol]:&quot;</span><span class="p">,</span> <span class="n">Units</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">avg_error</span><span class="p">,</span> <span class="s">&#39;au&#39;</span><span class="p">,</span> <span class="s">&#39;kcal/mol&#39;</span><span class="p">)</span>
+
+<span class="n">finish</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo"><a href="http://www.scm.com/">
+  <img class="logo" src="_static/scm_logo.png" alt="Logo"/>
+</a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">4. PLAMS cookbook</a><ul>
+<li><a class="reference internal" href="#multijob">4.1. MultiJob</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dirac.html"
+                        title="previous chapter">3.7.2. Dirac</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/cookbook.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="dirac.html" title="3.7.2. Dirac"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PLAMS documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Scientific Computing &amp; Modelling.
+    </div>
+  </body>
+</html>
