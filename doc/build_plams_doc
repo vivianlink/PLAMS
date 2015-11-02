@@ -1,0 +1,8 @@
+#!/bin/sh
+
+SPHINX_BIN=$ADFBIN/pythonbase/bin/sphinx-build
+SPHINX_HOME=$ADFHOME/scripting/plams/doc
+SPHINX_SOURCE=$SPHINX_HOME/source
+SPHINX_TARGET=$SPHINX_HOME/html
+
+$SPHINX_BIN $SPHINX_SOURCE $SPHINX_TARGET
