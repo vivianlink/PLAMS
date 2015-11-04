@@ -32,25 +32,26 @@ def init(path=None, folder=None):
         import builtins as btins
     else:
         import __builtin__ as btins
-
     btins.config = Settings()
-    if 'PLAMSHOME' in os.environ:
-        defaults = os.path.join(os.environ['PLAMSHOME'], 'utils', 'plams_defaults.py')
-    elif 'ADFHOME' in os.environ:
-        defaults = os.path.join(os.environ['ADFHOME'], 'scripting', 'plams', 'utils', 'plams_defaults.py')
-    else:
-        # try to search for the defaults file automatically
-        mydir = os.path.dirname(__file__)
-        defaults = os.path.dirname(os.path.dirname(mydir))
-        defaults = os.path.join(defaultsfile, 'utils', 'plams_defaults.py')
-    if not os.path.exists(defaults):
-        # raise an error if we failed to locate the plams_defaults.py
-        raise PlamsError('plams_defaults.py not found, please set PLAMSHOME in your environment')
 
+
+    from os.path import isfile, expandvars, dirname
+    if 'PLAMSDEFAULTS' in os.environ and isfile(expandvars('$PLAMSDEFAULTS')):
+        defaults = expandvars('$PLAMSDEFAULTS')
+    elif 'PLAMSHOME' in os.environ and isfile(opj(expandvars('$PLAMSHOME'), 'utils', 'plams_defaults.py')):
+        defaults = opj(expandvars('$PLAMSHOME'), 'utils', 'plams_defaults.py')
+    elif 'ADFHOME' in os.environ and isfile(opj(expandvars('$ADFHOME'), 'scripting', 'plams', 'utils', 'plams_defaults.py')):
+        defaults = opj(expandvars('$ADFHOME'), 'scripting', 'plams', 'utils', 'plams_defaults.py')
+    else:
+        defaults = opj(dirname(dirname(dirname(dirname(__file__)))), 'utils', 'plams_defaults.py')
+        if not isfile(defaults):
+            raise PlamsError('plams_defaults.py not found, please set PLAMSDEFUALTS or PLAMSHOME in your environment')
     exec(compile(open(defaults).read(), defaults, 'exec'))
+
 
     from .jobmanager import JobManager
     config.jm = JobManager(config.jobmanager, path, folder)
+
 
     log('PLAMS running with Python %i' % sys.version_info[0], 5)
     log('PLAMS environment initialized', 5)
