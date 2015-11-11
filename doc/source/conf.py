@@ -26,9 +26,19 @@ class Technical(BaseAdmonition):
             self.content, self.lineno, self.content_offset, self.block_text,
             self.state, self.state_machine)
 
+class ADFSuite(BaseAdmonition):
+    node_class = nodes.admonition
+    def run(self):
+        self.options['class'] = ['adfsuite']
+        return make_admonition(
+            nodes.admonition, self.name, ["ADF Suite"], self.options,
+            self.content, self.lineno, self.content_offset, self.block_text,
+            self.state, self.state_machine)
+
 def setup(app):
     app.add_stylesheet('boxes.css')
     app.add_directive('technical', Technical)
+    app.add_directive('adfsuite', ADFSuite)
     app.add_javascript('copybutton.js')
 
 # If extensions (or modules to document with autodoc) are in another directory,

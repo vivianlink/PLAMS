@@ -7,9 +7,9 @@ What is PLAMS
 
 PLAMS (Python Library for Automating Molecular Simulation) is a collection of tools that aim at providing powerful, flexible and easily extendable Python interface to molecular modeling programs. It takes care of input preparation, job execution, file management and output processing as well as helps with building more advanced data workflows.
 
-Usually the daily work of a computational chemist consists of running a number of calculations. Those calculations are done using one or more molecular modeling programs, like for example ADF, BAND, Turbomole or Dirac (we will call such programs *external binaries*). Obtaining results with one of such programs requires a series of steps. First, the subject of the problem (description of a molecular system, set of desired simulation parameters) has to be presented in the format understandable by molecular modeling program and written to an *input file* which is usually some sort of a text file. Then the program is executed, it runs and produces *output* which is a collection of text or binary files. That output usually contains much more information than is required for a particular problem and needs to be processed and data of interest has to be extracted and (possibly) postprocessed. Needless to say that different computational tools use different input and output formats and are executed differently. And on top of that, in most cases many of such *single calculations* need to be performed to solve the problem of interest. That requires significant effort to be put into data hygiene to avoid confusing or overwriting input and output files from distinct calculations.
+Usually the daily work of a computational chemist consists of running a number of calculations. Those calculations are done using one or more molecular modeling programs, like for example ADF, BAND, Turbomole or Dirac (we will call such programs *external binaries*). Obtaining results with one of such programs requires a series of steps. First, the subject of the problem (description of a molecular system, set of desired simulation parameters) has to be presented in the format understandable by molecular modeling program and written to an *input file* which is usually some sort of a text file. Then the program is executed, it runs and produces *output* which is a collection of text or binary files. That output usually contains much more information than is required for a particular problem so data of interest has to be extracted and (possibly) postprocessed. Needless to say that different computational tools use different input and output formats and are executed differently. And on top of that, in most cases many of such *single calculations* need to be performed to solve the problem of interest. That requires significant effort to be put into data hygiene to avoid confusing or overwriting input and output files from distinct calculations.
 
-Each of the above steps, apart from actual calculation done by a molecular modeling program, needs to be performed by a human. Preparing and editing text files, creating folders in the filesystem, copying files between them and reading data from output all sum up to significant amount of tedious, repetitive and highly error-prone work. Some users deal with it using various types of automation, usually in form of ad hoc shell scripts. A few programs, like ADF Suite, offer graphical user interface to help with this kind of work, but again input preparation and output examination, even though assisted with convenient tools, have to be done by a human. That creates a bottleneck if we want to create automatic computational workflows, where output data of one calculation is used (usually after some processing) as an input to another calculation, sometimes done with different program on a different machine.
+Each of the above steps, apart from actual calculation done by a molecular modeling program, needs to be performed by a human. Preparing and editing text files, creating folders in the filesystem, copying files between them and reading data from output all sum up to significant amount of tedious, repetitive and highly error-prone work. Some users deal with it using various types of automation, usually in form of ad hoc shell scripts. A few programs, like ADF Suite, offer graphical user interface to help with this kind of work, but again, input preparation and output examination, even though assisted with convenient tools, have to be done by a human. Quite often that turns out to be a performance bottleneck if we want to create big  automatic computational workflows, where output data of one calculation is used (usually after some processing) as an input to another calculation, sometimes done with different program on a different machine.
 
 PLAMS was created to solve all these problems. It takes responsibility of all tiresome and monotonous technical details allowing you to focus on real science and your problem. It lets you do all the things mentioned above (and many more) using simple Python scripts. It gives you a helping hand with automating repetitive or complicated tasks in your daily work while still leaving you with 100% control over what is really happening with your files, disks and CPUs.
 
@@ -78,9 +78,9 @@ To provide some real life example: here is a simple PLAMS script which calculate
 
     #convert to kcal/mol and print
     energies = [Units.convert(e, 'au', 'kcal/mol') for e in energies]
-    print 'd[A]    E[kcal/mol]'
+    print('d[A]    E[kcal/mol]')
     for d,e in zip(distances, energies):
-        print '%.2f    %.3f' % (d,e)
+        print('%.2f    %.3f' % (d,e))
 
 Don't worry if something in the above code is incomprehensible or confusing. Everything you need to know to understand how PLAMS is working and how to write your own scripts is explained in next chapters of this documentation.
 
@@ -118,13 +118,13 @@ What PLAMS is *not*
 
 It should be stressed here that PLAMS is not a *program*, it's a *library*. That means it's not a standalone tool, it doesn't run or do anything by itself. To work it needs both an external binary on one side and properly written Python script on the other. Being a library means that PLAMS is in fact just a collection of commands and objects that can be used from within a regular Python script to perform common molecular modeling tasks.
 
-Because of the above PLAMS won't take your hand and guide you, it won't detect and warn you if you are about to do something stupid and it won't do anything except the things you explicitly asked for. You have to understand what you are doing, you have to know how to use the binary you want PLAMS to work with and you have to have at least very basic knowledge of Python programming language.
+Because of the above PLAMS won't take your hand and guide you, it won't detect and warn you if you are about to do something stupid and it won't do anything except the things you explicitly asked for. You have to understand what you are doing, you have to know how to use the binary you want PLAMS to work with and you have to have at least basic knowledge of Python programming language.
 
 
 About this documentation
 -------------------------
 
-This documentation tries to be a combination of tutorial and API reference. Whenever possible, discussed concepts are explained in a "know-how" manner, with example code snippets illustrating practical aspects and possible applications of particular class or method. On the other hand, an introduction of each object is followed by a rigorous description of its semantics (arguments taken, value returned, exceptions raised etc.). We believe that this way the right balance between comprehensiveness and intelligibility can be achieved.
+This documentation tries to be a combination of tutorial and API reference. Whenever possible, discussed concepts are explained in a "know-how" manner, with example code snippets illustrating practical aspects and possible applications of a particular class or method. On the other hand, an introduction of each object is followed by a rigorous description of its semantics (arguments taken, value returned, exceptions raised etc.). We believe that this way the right balance between comprehensiveness and intelligibility can be achieved.
 
 The documentation was written keeping in mind users with various level of technical expertise, from programming newcomers to professional developers. Therefore some readers will find some parts trivial and redundant, while for others other parts will appear mysterious and incomprehensible. Please do not get discouraged by this fact, reading and understanding every single line of this document is not necessary for the majority of users.
 
@@ -140,7 +140,12 @@ The following special text formatting appears within this document:
 
 .. technical::
 
-   More detailed technical explanation of some part of the code aimed at users with better technical background. Understanding it may require advanced Python knowledge. These parts can be safely skipped without a harm to general comprehension.
+    More detailed technical explanation of some part of the code aimed at users with better technical background. Understanding it may require advanced Python knowledge. These parts can be safely skipped without a harm to general comprehension.
+
+.. adfsuite::
+
+    Information for users who obtained PLAMS as a part of ADF Modeling Suite. Describes how PLAMS is integrated with other tools from the suite.
+
 
 It is assumed that the reader has some basic understanding of Python programming language. Gentle introduction to Python can be found in the excellent :ref:`Python Tutorial<tutorial-index>` and other parts of the official Python documentation.
 

@@ -1,4 +1,4 @@
-.technical tt {
+.technical code {
     background: #d8c876;
 }
 
@@ -7,7 +7,9 @@ div.technical {
     border: 1px solid #b07400;
 }
 
-.warning tt {
+
+
+.warning code {
     background: #f2b5b5;
 }
 
@@ -16,7 +18,9 @@ div.warning {
     border: 1px solid #f66;
 }
 
-.note tt {
+
+
+.note code {
     background: #d6d6d6;
 }
 
@@ -26,3 +30,12 @@ div.note {
 }
 
 
+
+.adfsuite code {
+    background: #75b5f2;
+}
+
+div.adfsuite {
+    background-color: #94d4ff;
+    border: 1px solid #66f;
+}
