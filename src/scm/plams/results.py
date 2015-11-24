@@ -8,6 +8,7 @@ import inspect
 import operator
 import os
 import shutil
+import threading
 import time
 import types
 try:
@@ -17,12 +18,19 @@ except ImportError:
 
 from os.path import join as opj
 
-from .errors import ResultsError, FileError
 from .common import log
+from .errors import ResultsError, FileError
 
 __all__ = ['Results']
 
+
+#===================================================================================================
+#===================================================================================================
+#===================================================================================================
+
+
 def _caller_name_and_arg(frame):
+    """Extract information about name and arguments of a function call from a *frame* object"""
     if frame is None:
         return None, None
     caller_name = frame.f_code.co_name
@@ -37,65 +45,76 @@ def _caller_name_and_arg(frame):
             caller_arg = loc[caller_varnames[0]]
     return caller_name, caller_arg
 
+def _privileged_access():
+    """Analyze contents of the current stack to find out if privileged access to the |Results| methods should be granted.
+
+    Privileged access is granted to two |Job| methods: |postrun| and :meth:`~scm.plams.basejob.Job.check`, but only if they are called from :meth:`~scm.plams.basejob.Job._finalize` of the same |Job| instance.
+    """
+    from .basejob import Job
+    for frame in inspect.getouterframes(inspect.currentframe()):
+        cal, arg = _caller_name_and_arg(frame[0])
+        prev_cal, prev_arg = _caller_name_and_arg(frame[0].f_back)
+        if cal in ['postrun', 'check'] and prev_cal == '_finalize' and arg == prev_arg and isinstance(arg, Job):
+                return True
+    return False
+
+
+
 def _restrict(func):
     """Decorator that wraps methods of |Results| instances.
 
-    Whenever decorated method is called, the status of associated job is checked. Depending of its value access to the method is granted, refused or the loop waiting and retrying every ``config.sleepstep`` seconds is started.
+    Whenever decorated method is called, the status of associated job is checked. Depending of its value access to the method is granted, refused or the calling thread is forced to wait for the right :ref:`event<event-objects>` to be set.
     """
 
     @functools.wraps(func)
     def guardian(self, *args, **kwargs):
-        from .basejob import Job
         if not self.job:
             raise ResultsError('Using Results not associated with any job')
 
-        waitlog = True
+        if self.job.status in ['successful', 'copied']:
+            return func(self, *args, **kwargs)
 
-        while self.job.status not in ['successful', 'copied']:
-            if self.job.status in ['created', 'preview']:
-                if config.ignore_failure:
-                    log('WARNING: Trying to obtain results of unfinished job %s. Returned value is None' % self.job.name, 3)
+        elif self.job.status in ['created', 'preview']:
+            if config.ignore_failure:
+                log("WARNING: Trying to obtain results of job %s with status '%s'. Returned value is None" % (self.job.name, self.job.status), 3)
+                return None
+            else:
+                raise ResultsError('Using Results associated with unfinished job')
+
+        elif self.job.status in ['crashed', 'failed']:
+            if func.__name__ == 'wait': #waiting for crashed of failed job should not trigger any warnings/exceptions
+                cal, arg = _caller_name_and_arg(inspect.currentframe())
+                if isinstance(arg, Results):
+                    return func(self, *args, **kwargs)
+            if config.ignore_failure:
+                log('WARNING: Trying to obtain results of crashed or failed job %s' % self.job.name, 3)
+                try:
+                    ret = func(self, *args, **kwargs)
+                except:
+                    log('Obtaining results of %s failed. Returned value is None' % self.job.name, 3)
                     return None
-                else:
-                    raise ResultsError('Using Results associated with unfinished job')
+                log('Obtaining results of %s successful. However, no guarantee that they make sense'% self.job.name, 3)
+                return ret
+            else:
+                raise ResultsError('Using Results associated with crashed or failed job')
 
-            elif self.job.status in ['crashed', 'failed']:
-                if func.__name__ == 'wait': #waiting for crashed of failed job should not trigger any warnings/exceptions
-                    cal, arg = _caller_name_and_arg(inspect.currentframe())
-                    if isinstance(arg, Results):
-                        return func(self, *args, **kwargs)
-                if config.ignore_failure:
-                    log('WARNING: Trying to obtain results of crashed or failed job %s' % self.job.name, 3)
-                    try:
-                        ret = func(self, *args, **kwargs)
-                    except:
-                        log('Obtaining results of %s failed. Returned value is None' % self.job.name, 3)
-                        return None
-                    log('Obtaining results of %s successful. However, no guarantee that they make sense'% self.job.name, 3)
-                    return ret
-                else:
-                    raise ResultsError('Using Results associated with crashed or failed job')
+        elif self.job.status in ['started', 'registered', 'running']:
+            log('Waiting for job %s to finish' % self.job.name, 3)
+            if _privileged_access():
+                self.finished.wait()
+            else:
+                self.done.wait()
+            return func(self, *args, **kwargs)
 
-            elif self.job.status in ['started', 'registered', 'running']:
-                if waitlog:
-                    waitlog = False
-                    log('Waiting for job %s to finish' % self.job.name, 3)
-                time.sleep(config.sleepstep)
-
-            elif self.job.status == 'finished':
-                for frame in inspect.getouterframes(inspect.currentframe()):
-                    cal, arg = _caller_name_and_arg(frame[0])
-                    prev_cal, prev_arg = _caller_name_and_arg(frame[0].f_back)
-                    if cal in ['postrun', 'check'] and prev_cal == '_finalize' and arg == prev_arg and isinstance(arg, Job):
-                        return func(self, *args, **kwargs)
-                if waitlog:
-                    waitlog = False
-                    log('Waiting for job %s to finish' % self.job.name, 3)
-                time.sleep(config.sleepstep)
-
-        return func(self, *args, **kwargs)
+        elif self.job.status in ['finished']:
+            if _privileged_access():
+                return func(self, *args, **kwargs)
+            log('Waiting for job %s to finish' % self.job.name, 3)
+            self.done.wait()
+            return func(self, *args, **kwargs)
 
     return guardian
+
 
 
 #===================================================================================================
@@ -132,6 +151,8 @@ class Results(object):
     def __init__(self, job):
         self.job = job
         self.files = []
+        self.finished = threading.Event()
+        self.done = threading.Event()
 
 
     def refresh(self):
@@ -240,6 +261,8 @@ class Results(object):
             self.files[self.files.index(old)] = new
         else:
             raise FileError('File %s not present in %s' % (old, self.job.path))
+
+
 #===============================================================================================
 
 
@@ -298,7 +321,7 @@ class Results(object):
                 shutil.copy(*args)
             other.files.append(newname)
         for k,v in self.__dict__.items():
-            if k in ['job', 'files']: continue
+            if k in ['job', 'files', 'done', 'finished']: continue
             other.__dict__[k] = self._export_attribute(v, other)
 
 

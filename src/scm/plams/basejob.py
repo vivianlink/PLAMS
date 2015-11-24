@@ -216,6 +216,7 @@ class Job(object):
             self.results.collect()
             if self.status != 'crashed':
                 self.status = 'finished'
+                self.results.finished.set()
                 if self.check():
                     log('%s.check() success. Cleaning results with keep = %s' % (self.name, self.settings.keep), 7)
                     self.results._clean(self.settings.keep)
@@ -223,6 +224,7 @@ class Job(object):
                     self.postrun()
                     log('%s.postrun() finished' % self.name, 5)
                     self.status = 'successful'
+                    self.results.done.set()
                     log('Pickling %s' % self.name, 7)
                     if self.settings.pickle:
                         self.pickle()

@@ -237,7 +237,13 @@ API
 .. autoclass:: Results
     :exclude-members: __weakref__, __metaclass__
 
-.. autoclass:: _MetaResults
-.. autofunction:: _restrict
+.. technical::
+
+    Other parts of ``results`` module described below are responsible for giving |Results| class its unique behavior described in :ref:`parallel`. They are presented here for the sake of completeness, from user's perspective this information is rather irrelevant.
+
+    .. autoclass:: _MetaResults
+    .. autofunction:: _restrict
+    .. autofunction::  _caller_name_and_arg
+    .. autofunction:: _privileged_access
 
 
