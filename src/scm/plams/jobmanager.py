@@ -23,7 +23,7 @@ class JobManager(object):
         *   ``folder`` -- the working folder name.
         *   ``path`` -- the absolute path to the directory with the working folder.
         *   ``workdir`` -- the absolute path to the working folder (``path/folder``).
-        *   ``settings`` -- a |Settings| instance for job manager (see below).
+        *   ``settings`` -- a |Settings| instance for this job manager (see below).
         *   ``jobs`` -- a list of all jobs managed with this instance (in order of |run| calls).
         *   ``names`` -- a dictionary with names of jobs. For each name an integer value is stored indicating how many jobs with that name have already been run.
         *   ``hashes`` -- a dictionary working as a hash-table for jobs.
@@ -33,7 +33,7 @@ class JobManager(object):
     ``settings`` attribute is directly set to the value of *settings* argument (unlike in other classes where they are copied) and it should be a |Settings| instance with the following keys:
 
         * ``hashing`` -- chosen hashing method (see |RPM|).
-        * ``counter_len`` -- length of number appended to job name in case of name conflict.
+        * ``counter_len`` -- length of number appended to the job name in case of name conflict.
         * ``remove_empty_directories`` -- if ``True``, all empty subdirectories of the working folder are removed on |finish|.
     """
 
@@ -113,7 +113,7 @@ class JobManager(object):
     def load_job(self, filename):
         """Load previously saved job from *filename*.
 
-        *Filename* should be a path to ``.dill`` file in some job folder. A |Job| instance stored there is loaded and returned. All attributes of this instance removed before pickling are restored. This includes ``jobmanager``, ``path`` (absolute path to *filename* is used), ``default_setting`` (list containing only ``config.job``) and also ``parent`` in case of children jobs.
+        *Filename* should be a path to ``.dill`` file in some job folder. A |Job| instance stored there is loaded and returned. All attributes of this instance removed before pickling are restored. This includes ``jobmanager``, ``path`` (absolute path to *filename* is used), ``default_setting`` (list containing only ``config.job``) and also ``parent`` in case of children of some |MultiJob|.
 
         See :ref:`pickling` for details.
         """

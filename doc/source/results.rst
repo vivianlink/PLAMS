@@ -3,7 +3,7 @@ Results
 
 .. currentmodule:: scm.plams.results
 
-Every |Job| instance has an associated |Results| instance created automatically on job creation and stored in ``results`` attribute. The goal of |Results| is to take care of the job folder after execution of the job is finished: gather information about produced files, help to manage them and extract data of interest from them. From the technical standpoint, |Results| is the part of the job running mechanism that is responsible for thread safety and proper synchronization in parallel job execution.
+Every |Job| instance has an associated |Results| instance created automatically on job creation and stored in ``results`` attribute. The goal of |Results| is to take care of the job folder after the execution of the job is finished: gather information about produced files, help to manage them and extract data of interest from them. From the technical standpoint, |Results| is the part of the job running mechanism that is responsible for thread safety and proper synchronization in parallel job execution.
 
 
 Files in the job folder
@@ -100,7 +100,7 @@ Let us start with a simple parallel script that takes all ``.xyz`` files in a gi
     for r in results:
         dipole_vec = r.readkf('Properties', 'Dipole')
         dipole_magn = sum([a*a for a in dipole_vec])**0.5
-        print r.job.name, '\t\t', dipole_magn
+        print(r.job.name + '\t\t' + str(dipole_magn))
 
 For an explanation purpose let us assume that folder ``/home/user/xyz`` contains three files: ``Ammonia.xyz``, ``Ethanol.xyz``, ``Water.xyz``. When you run this script the standard output will look something like::
 
@@ -132,7 +132,7 @@ By the way, to solve the problem with mixed ``print`` statements and logging mes
         dipole_magn = sum([a*a for a in dipole_vec])**0.5
         to_print += [(r.job.name, dipole_magn)]
     for nam, dip in to_print:
-        print nam, '\t\t', dip
+        print(nam + '\t\t' + str(dip))
 
 Another way could be disabling logging to standard output by putting ``config.log.stdout = 0`` at the beginning of the script (see |log|).
 
@@ -203,8 +203,7 @@ To sum up all the above considerations, here is the rule of thumb how to write p
 Cleaning job folder
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-|Results| instance associated with a job is responsible for cleaning the job folder. Cleaning is done by :meth:`~Results._clean` and can be invoked manually if needed. However, usually there is no need to do this, since cleaning is done automatically,
-twice for each job.
+|Results| instance associated with a job is responsible for cleaning the job folder (removing files that are no longer needed). Cleaning is done automatically, twice for each job, so usually there is no need to manually invoke it.
 
 First cleaning is done during job execution, just after :meth:`~scm.plams.basejob.Job.check` and before |postrun|. The value adjusting first cleaning is taken from ``myjob.settings.keep`` and should be either string or list (see below). This cleaning will usually be used rather rarely. It is intended for purposes when your jobs produce large files that you don't need for further processing. Running many of such jobs could then deplete disk quota and cause the whole script to crash. If you wish to immediately get rid of some files produced by your jobs (without having a chance to do anything with them), use this cleaning.
 
@@ -214,13 +213,13 @@ The argument passed to :meth:`~Results._clean` (in other words the value that is
 
     *   ``'all'`` -- nothing is removed, cleaning is skipped.
     *   ``'none'`` or ``[]`` or ``None`` -- everything is removed from the job folder.
-    *   list of strings -- list of filenames to be kept. Shortcut ``$JN`` can be used here, as well as \*-wildcards. For example ``['geo.*', '$JN.out', 'logfile']`` will keep ``jobname.out``, ``logfile`` and all files whose names start with ``geo.`` and remove everything else from the job folder.
-    *   list of strings with the first element ``'-'`` -- reversed behavior to the above, listed files will be removed. For example ``['-', 't21.*', '$JN.err']`` will remove ``jobname.err`` and all files whose names start with ``t21.``
+    *   list of strings -- list of filenames to be kept. Shortcut ``$JN`` can be used here, as well as \*-wildcards. For example ``['geo.*', '$JN.out', 'logfile']`` will keep ``[jobname].out``, ``logfile`` and all files whose names start with ``geo.`` and remove everything else from the job folder.
+    *   list of strings with the first element ``'-'`` -- reversed behavior to the above, listed files will be removed. For example ``['-', 't21.*', '$JN.err']`` will remove ``[jobname].err`` and all files whose names start with ``t21.``
 
 Cleaning for multijobs
 +++++++++++++++++++++++++
 
-Cleaning happens for every job run with PLAMS, either single or multi. That means that if you have for example a single job that is a child of some multijob, its job folder will be cleaned two times by two different |Results| instances that can interfere with each other. Hence it is a good practice to set cleaning only on one level (either parent job or children jobs) and disable cleaning on the other level by using ``'all'``.
+Cleaning happens for every job run with PLAMS, either single or multi. That means that if you have, for example, a single job that is a child of some multijob, its job folder will be cleaned two times by two different |Results| instances that can interfere with each other. Hence it is a good practice to set cleaning only on one level (either parent job or children jobs) and disable cleaning on the other level by using ``'all'``.
 
 Another shortcut can be used for cleaning in multijobs. ``$CH`` is expanded with every possible child name. So for example if you have a multijob ``mj`` with 5 single job children (``child1``, ``child2`` and so on) and you wish to keep only input and output files of children jobs you can set::
 

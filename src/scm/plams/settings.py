@@ -106,7 +106,7 @@ class Settings(dict):
 
         All stored values that have ``_settings_reduce`` method defined are reduced according to that method. ``_settings_reduce`` should take no arguments (other than ``self``) and return picklable object (preferably a string).
 
-        |Settings| instances are present in many different places of PLAMS environment. Usually values stored in them are simple numbers, strings or booleans. However, in some contexts other type of objects are stored and it sometimes causes problems with pickling. Problematic objects can then define ``_settings_reduce`` method to avoid crashes on pickle attempt.
+        |Settings| instances are present in many different places of PLAMS environment. Usually values stored in them are simple numbers, strings or booleans. However, in some contexts other type of objects are stored and it sometimes causes problems with pickling. Problematic objects can then define ``_settings_reduce`` method to avoid failure on pickle attempt.
         """
         a,(b,c,d) = dict.__reduce__(self)
         for key in d:

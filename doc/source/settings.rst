@@ -17,7 +17,7 @@ The |Settings| class is based on the regular Python dictionary (built-in class :
     >>> s = Settings()
     >>> s['abc'] = 283
     >>> s[147147] = 'some string'
-    >>> print s['abc']
+    >>> print(s['abc'])
     283
     >>> del s[147147]
 
@@ -30,7 +30,7 @@ The main difference is that data in |Settings| can be stored in multilevel fashi
     >>> s['x']['z'] = 13
     >>> s['x']['foo'][123] = 'even deeper'
     >>> s['x']['foo']['bar'] = 183
-    >>> print s
+    >>> print(s)
     a:
       b:    AB
       c:    AC
@@ -40,7 +40,7 @@ The main difference is that data in |Settings| can be stored in multilevel fashi
           bar:  183
       y:    10
       z:    13
-    >>> print s['x']
+    >>> print(s['x'])
     foo:
         123:    even deeper
         bar:    183
@@ -92,7 +92,7 @@ To avoid inconvenient punctuation, keys stored in |Settings| can be accessed usi
     >>> s['x']['z'] = 13
     >>> s['x'].foo[123] = 'even deeper'
     >>> s.x.foo.bar = 183
-    >>> print s
+    >>> print(s)
     a:
       b:    AB
       c:    AC
@@ -130,7 +130,7 @@ Global settings (variables adjusting general behavior of PLAMS as well as defaul
     config.job.pickle = False
     config.sleepstep = 10
 
-These changes are going to affect only the script they are called from. If you wish to permanently change some setting for all PLAMS executions, you can do it by editing ``plams_defaults.py``. This file is located in ``$ADFHOME/scripting/`` and contains definitions of all ``config`` entries together with short explanations of their roles.
+These changes are going to affect only the script they are called from. If you wish to permanently change some setting for all PLAMS executions, you can do it by editing ``plams_defaults.py``. This file is located in ``utils`` subfolder and contains definitions of all ``config`` entries together with short explanations of their roles.
 
 .. technical::
 

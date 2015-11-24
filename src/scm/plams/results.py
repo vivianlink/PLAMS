@@ -1,15 +1,15 @@
 from __future__ import unicode_literals
 from six import add_metaclass
 
+import copy
+import functools
+import glob
+import inspect
+import operator
 import os
 import shutil
-import glob
-import functools
-import inspect
 import time
-import operator
 import types
-import copy
 try:
     import subprocess32 as subprocess
 except ImportError:
@@ -104,11 +104,11 @@ def _restrict(func):
 
 
 class _MetaResults(type):
-    """Metaclass for |Results|. During new |Results| instance creation it wraps all methods with :func:`_restrict` decorator ensuring proper synchronization and thread safety. Methods listed in ``_dont_restrict`` as well as those with names ending with two underscores are not wrapped."""
+    """Metaclass for |Results|. During new |Results| instance creation it wraps all methods with :func:`_restrict` decorator ensuring proper synchronization and thread safety. Methods listed in ``_dont_restrict`` as well as "magic methods" are not wrapped."""
     _dont_restrict = ['refresh', 'collect', '_clean']
     def __new__(meta, name, bases, dct):
         for attr in dct:
-            if not attr.endswith('__') and callable(dct[attr]) and attr not in _MetaResults._dont_restrict:
+            if not (attr.endswith('__') and attr.startswith('__')) and callable(dct[attr]) and (attr not in _MetaResults._dont_restrict):
                 dct[attr] = _restrict(dct[attr])
         return type.__new__(meta, name, bases, dct)
 
@@ -119,11 +119,11 @@ class _MetaResults(type):
 
 @add_metaclass(_MetaResults)
 class Results(object):
-    """General (concrete) class for job results.
+    """General concrete class for job results.
 
-    ``job`` attribute stores a reference to associated job. ``files`` attribute is a list with contents of the job folder. ``_rename_map`` is a class attribute with dictionary storing the default renaming scheme.
+    ``job`` attribute stores a reference to associated job. ``files`` attribute is a list with contents of the job folder. ``_rename_map`` is a class attribute with the dictionary storing the default renaming scheme.
 
-    Bracket notation can be used to obtain full absolute paths to files in the job folder.
+    Bracket notation (``myresults[filename]`` can be used to obtain full absolute paths to files in the job folder.
 
     Instance methods are automatically wrapped with access guardian which ensures thread safety (see :ref:`parallel`).
     """
@@ -137,9 +137,9 @@ class Results(object):
     def refresh(self):
         """Refresh the contents of ``files`` list. Traverse the job folder (and all its subfolders) and collect relative paths to all files found there, except files with ``.dill`` extension.
 
-        This is a cheap and fast method that should be used every time there is some risk that contents of the job folder changed and ``files`` list is no longer actual. For proper working of various PLAMS elements it is crucial that ``files`` always contains actual information about contents of job folder.
+        This is a cheap and fast method that should be used every time there is some risk that contents of the job folder changed and ``files`` list is no longer up-to-date. For proper working of various PLAMS elements it is crucial that ``files`` always contains up-to-date information about contents of job folder.
 
-        All functions and methods defined in PLAMS that could change the state of job folder take care about refreshing ``files``, so there is no need to manually call :meth:`~Results.refresh` after, for example, :meth:`~Results.rename`. If you are implementing new method of that kind don't forget about refreshing.
+        All functions and methods defined in PLAMS that could change the state of job folder take care about refreshing ``files``, so there is no need to manually call :meth:`~Results.refresh` after, for example, :meth:`~Results.rename`. If you are implementing new method of that kind, don't forget about refreshing.
         """
         self.files = []
         for pth, dirs, files in os.walk(self.job.path):
@@ -161,6 +161,86 @@ class Results(object):
                 os.rename(opj(self.job.path, old), opj(self.job.path, new))
                 self.files[self.files.index(old)] = new
         self.refresh()
+
+
+    def wait(self):
+        """wait()
+        Wait for associated job to finish.
+
+        .. technical::
+
+            This is **not** an abstract method. It does exactly what it should: nothing. All the work is done by :func:`_restrict` decorator that is wrapped around it.
+        """
+        pass
+
+
+    def grep_file(self, filename, pattern='', options=''):
+        """grep_file(filename, pattern='', options='')
+        Execute ``grep`` on a file given by *filename* and search for *pattern*.
+
+        Additional ``grep`` flags can be passed with *options*, which should be a single string containing all flags, space separated.
+
+        Returned value is a list of lines (strings). See ``man grep`` for details.
+        """
+        cmd = ['grep'] + [pattern] + options.split()
+        return self._process_file(filename, cmd)
+
+
+    def awk_file(self, filename, script='', progfile=None, **kwargs):
+        """awk_file(filename, script='', progfile=None, **kwargs)
+        Execute an AWK script on a file given by *filename*.
+
+        The AWK script can be supplied in two ways: either by directly passing the contents of the script (should be a single string) as a *script* argument, or by providing the path (absolute or relative to the file pointed by *filename*) to some external file containing the actual AWK script using *progfile* argument. If *progfile* is not ``None``, the *script* argument is ignored.
+
+        Other keyword arguments (*\*\*kwargs*) can be used to pass additional variables to AWK (see ``-v`` flag in AWK manual)
+
+        Returned value is a list of lines (strings). See ``man awk`` for details.
+        """
+        cmd = ['awk']
+        for k,v in kwargs.items():
+            cmd += ['-v', '%s=%s'%(k,v)]
+        if progfile:
+            if os.path.isfile(progfile):
+                cmd += ['-f', progfile]
+            else:
+                raise FileError('File %s not present' % progfile)
+        else:
+            cmd += [script]
+        return self._process_file(filename, cmd)
+
+
+    def grep_output(self, pattern='', options=''):
+        """grep_output(pattern='', options='')
+        Shortcut for :meth:`~Results.grep_file` on the output file."""
+        try:
+            output = self.job._filename('out')
+        except AttributeError:
+            raise ResultsError('Job %s is not an instance of SingleJob, it does not have an output' % self.job.name)
+        return self.grep_file(output, pattern, options)
+
+
+    def awk_output(self, script='', progfile=None, **kwargs):
+        """awk_output(script='', progfile=None, **kwargs)
+        Shortcut for :meth:`~Results.awk_file` on the output file."""
+        try:
+            output = self.job._filename('out')
+        except AttributeError:
+            raise ResultsError('Job %s is not an instance of SingleJob, it does not have an output' % self.job.name)
+        return self.awk_file(output, script, progfile, **kwargs)
+
+
+    def rename(self, old, new):
+        """rename(old, new)
+        Rename a file from ``files``. In both *old* and *new* shortcut ``$JN`` can be used."""
+        old = old.replace('$JN', self.job.name)
+        new = new.replace('$JN', self.job.name)
+        self.refresh()
+        if old in self.files:
+            os.rename(opj(self.job.path, old), opj(self.job.path, new))
+            self.files[self.files.index(old)] = new
+        else:
+            raise FileError('File %s not present in %s' % (old, self.job.path))
+#===============================================================================================
 
 
     def _clean(self, arg):
@@ -199,17 +279,6 @@ class Results(object):
         else:
             log('WARNING: %s is not a valid keep/save argument' % str(arg), 3)
         self.refresh()
-
-
-    def wait(self):
-        """wait()
-        Wait for associated job to finish.
-
-        This is **not** an abstract method. It does exactly what it should: nothing. All the work is done by :func:`_restrict` decorator that is wrapped around it.
-        """
-        pass
-
-    #===============================================================================================
 
 
     def _copy_to(self, other):
@@ -277,74 +346,3 @@ class Results(object):
             raise FileError('File %s not present in %s' % (filename, self.job.path))
 
 
-    def grep_file(self, filename, pattern='', options=''):
-        """grep_file(filename, pattern='', options='')
-        Execute ``grep`` on a file given by *filename* and search for *pattern*.
-
-        See ``man grep`` for details.
-
-        :param str filename: a path to a file to be searched in.
-        :param str pattern: a pattern to be searched for.
-        :param str options: additional ``grep`` flags. Should be one string containing all flags (separated with spaces if needed).
-        :return: A list of lines returned by ``grep``.
-        """
-        cmd = ['grep'] + [pattern] + options.split()
-        return self._process_file(filename, cmd)
-
-
-    def awk_file(self, filename, script='', progfile=None, **kwargs):
-        """awk_file(filename, script='', progfile=None, **kwargs)
-        Execute AWK script on a file given by *filename*.
-
-        See ``man awk`` for details.
-
-        :param str filename: a path to a file to be searched in.
-        :param str script: a string containing AWK script.
-        :param str progfile: a path to a file with AWK script (absolute or relative to the file pointed by *filename*). If this argument is supplied, *script* is ignored.
-        :param \*\*kwargs: additional variables that are passed to AWK using ``-v`` flag.
-        :return: A list of lines returned by AWK.
-        """
-        cmd = ['awk']
-        for k,v in kwargs.items():
-            cmd += ['-v', '%s=%s'%(k,v)]
-        if progfile:
-            if os.path.isfile(progfile):
-                cmd += ['-f', progfile]
-            else:
-                raise FileError('File %s not present' % progfile)
-        else:
-            cmd += [script]
-        return self._process_file(filename, cmd)
-
-
-    def grep_output(self, pattern='', options=''):
-        """grep_output(pattern='', options='')
-        Shortcut for :meth:`~Results.grep_file` on the output file."""
-        try:
-            output = self.job._filename('out')
-        except AttributeError:
-            raise ResultsError('Job %s is not an instance of SingleJob, it does not have an output' % self.job.name)
-        return self.grep_file(output, pattern, options)
-
-
-    def awk_output(self, script='', progfile=None, **kwargs):
-        """awk_output(script='', progfile=None, **kwargs)
-        Shortcut for :meth:`~Results.awk_file` on the output file."""
-        try:
-            output = self.job._filename('out')
-        except AttributeError:
-            raise ResultsError('Job %s is not an instance of SingleJob, it does not have an output' % self.job.name)
-        return self.awk_file(output, script, progfile, **kwargs)
-
-
-    def rename(self, old, new):
-        """rename(old, new)
-        Rename a file from ``files``. In both *old* and *new* shortcut ``$JN`` can be used."""
-        old = old.replace('$JN', self.job.name)
-        new = new.replace('$JN', self.job.name)
-        self.refresh()
-        if old in self.files:
-            os.rename(opj(self.job.path, old), opj(self.job.path, new))
-            self.files[self.files.index(old)] = new
-        else:
-            raise FileError('File %s not present in %s' % (old, self.job.path))

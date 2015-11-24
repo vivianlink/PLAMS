@@ -48,6 +48,35 @@ class KFReader(object):
             self._autodetect()
 
 
+    def read(self, section, variable):
+        """Extract and return data for a *variable* located in a *section*.
+
+        For single-value numerical or boolean variables returned value is a single number or bool. For longer variables this method returns a list of values. For string variables a single string is returned.
+        """
+
+        if self._sections is None:
+            self._create_index()
+
+        try:
+            vtype, vlb, vstart, vlen = self._sections[section][variable]
+        except KeyError:
+            return None
+
+        ret = []
+        first = True
+        with open(self.path, 'rb') as f:
+            for i in KFReader._datablocks(self._data[section], vlb):
+                if first:
+                    ret = self._get_data(self._read_block(f,i))[vtype-1][vstart-1:]
+                    first = False
+                else:
+                    ret += self._get_data(self._read_block(f,i))[vtype-1]
+                if len(ret) >= vlen:
+                    ret = ret[:vlen]
+                    if len(ret) == 1: return ret[0]
+                    return ret
+
+
     def __iter__(self):
         """Iteration yields pairs of section name and variable name."""
         if self._sections is None:
@@ -58,7 +87,7 @@ class KFReader(object):
 
 
     def _settings_reduce(self):
-        """When this object is present as a value in |Settings| and string representation is needed, use the absolute path."""
+        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.settings.Settings.__reduce__>` for details."""
         return self.path
 
 
@@ -178,34 +207,6 @@ class KFReader(object):
             i += 1
             _, ret, last = lst[i]
 
-    def read(self, section, variable):
-        """Extract and return data for a *variable* located in a *section*.
-
-        For single-value numerical or boolean variables returned value is a single number or bool. For longer variables this method returns a list of values. For string variables a single string is returned.
-        """
-
-        if self._sections is None:
-            self._create_index()
-
-        try:
-            vtype, vlb, vstart, vlen = self._sections[section][variable]
-        except KeyError:
-            return None
-
-        ret = []
-        first = True
-        with open(self.path, 'rb') as f:
-            for i in KFReader._datablocks(self._data[section], vlb):
-                if first:
-                    ret = self._get_data(self._read_block(f,i))[vtype-1][vstart-1:]
-                    first = False
-                else:
-                    ret += self._get_data(self._read_block(f,i))[vtype-1]
-                if len(ret) >= vlen:
-                    ret = ret[:vlen]
-                    if len(ret) == 1: return ret[0]
-                    return ret
-
 
 #===================================================================================================
 #===================================================================================================
@@ -248,61 +249,6 @@ class KFFile(object):
         self.path = os.path.abspath(path)
         self.tmpdata = {}
         self.reader = KFReader(self.path) if os.path.isfile(self.path) else None
-
-
-    def __getitem__(self, name):
-        """Allow to use ``x = mykf['section%variable']`` or ``x = mykf[('section','variable')]`` instead of ``x = kf.read('section', 'variable')``."""
-        section, variable = KFFile._split(name)
-        return self.read(section, variable)
-
-    def __setitem__(self, name, value):
-        """Allow to use ``mykf['section%variable'] = value`` or ``mykf[('section','variable')] = value`` instead of ``kf.write('section', 'variable', value)``."""
-        section, variable = KFFile._split(name)
-        self.write(section, variable, value)
-
-    def __iter__(self):
-        """Iteration yields pairs of section name and variable name."""
-        ret = []
-        if self.reader:
-            for sec,var in self.reader:
-                ret.append((sec,var))
-        for sec in self.tmpdata:
-            for var in self.tmpdata[sec]:
-                ret.append((sec,var))
-        ret.sort(key=lambda x: x[0]+x[1])
-        for i in ret:
-            yield i
-
-
-    def _settings_reduce(self):
-        """When this object is present as a value in |Settings| and string representation is needed, use the absolute path."""
-        return self.path
-
-
-    @staticmethod
-    def _split(name):
-        """Ensure that a key used in bracket notation is of the form ``'section%variable'`` or ``('section','variable')``. If so, return a tuple ``('section','variable')``."""
-        if isinstance(name, tuple) and len(name) == 2 and isinstance(name[0], str) and isinstance(name[1], str):
-                return name[0], name[1]
-        if isinstance(name, str):
-            s = name.split('%')
-            if len(s) == 2:
-                return s[0], s[1]
-        raise ValueError('Improper key used in KFFile dictionary-like notation')
-
-
-    @staticmethod
-    def _str(val):
-        """Return a string representation of *val* in the form that can be understood by ``udmpkf``."""
-        if isinstance(val, (int,bool,float)):
-            val = [val]
-        t,step,f = KFFile._types[type(val[0])]
-        l = len(val) #length for str == 0 mod 160?
-        ret = '%10i%10i%10i'%(l,l,t)
-        for i,el in enumerate(val):
-            if i%step == 0: ret += '\n'
-            ret += f(el)
-        return ret
 
 
     def read(self, section, variable):
@@ -372,3 +318,61 @@ class KFFile(object):
                     subprocess.call(['cpkf', self.path, tmpfile, '-rm', section], stdout=null, stderr=null)
                 shutil.move(tmpfile, self.path)
                 self.reader = KFReader(self.path)
+
+
+
+    def __getitem__(self, name):
+        """Allow to use ``x = mykf['section%variable']`` or ``x = mykf[('section','variable')]`` instead of ``x = kf.read('section', 'variable')``."""
+        section, variable = KFFile._split(name)
+        return self.read(section, variable)
+
+    def __setitem__(self, name, value):
+        """Allow to use ``mykf['section%variable'] = value`` or ``mykf[('section','variable')] = value`` instead of ``kf.write('section', 'variable', value)``."""
+        section, variable = KFFile._split(name)
+        self.write(section, variable, value)
+
+    def __iter__(self):
+        """Iteration yields pairs of section name and variable name."""
+        ret = []
+        if self.reader:
+            for sec,var in self.reader:
+                ret.append((sec,var))
+        for sec in self.tmpdata:
+            for var in self.tmpdata[sec]:
+                ret.append((sec,var))
+        ret.sort(key=lambda x: x[0]+x[1])
+        for i in ret:
+            yield i
+
+
+
+    def _settings_reduce(self):
+        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.settings.Settings.__reduce__>` for details."""
+        return self.path
+
+
+
+    @staticmethod
+    def _split(name):
+        """Ensure that a key used in bracket notation is of the form ``'section%variable'`` or ``('section','variable')``. If so, return a tuple ``('section','variable')``."""
+        if isinstance(name, tuple) and len(name) == 2 and isinstance(name[0], str) and isinstance(name[1], str):
+                return name[0], name[1]
+        if isinstance(name, str):
+            s = name.split('%')
+            if len(s) == 2:
+                return s[0], s[1]
+        raise ValueError('Improper key used in KFFile dictionary-like notation')
+
+
+    @staticmethod
+    def _str(val):
+        """Return a string representation of *val* in the form that can be understood by ``udmpkf``."""
+        if isinstance(val, (int,bool,float)):
+            val = [val]
+        t,step,f = KFFile._types[type(val[0])]
+        l = len(val) #length for str == 0 mod 160?
+        ret = '%10i%10i%10i'%(l,l,t)
+        for i,el in enumerate(val):
+            if i%step == 0: ret += '\n'
+            ret += f(el)
+        return ret

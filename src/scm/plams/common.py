@@ -23,9 +23,9 @@ def init(path=None, folder=None):
 
     An empty |Settings| instance is created and added to :mod:`public<__builtin__>` namespace as ``config``. Then it is populated with default settings by executing ``plams_defaults.py``. The following locations are used to search for the defaults file, in order of precedence:
 
-        * If ``$PLAMSDEFAULTS`` variable is in your environment and it points to a file, this file is used (executed as Python script)
-        * If ``$PLAMSHOME`` variable is in your environment and ``$PLAMSHOME/utils/plams_defaults.py`` exists, it is used
-        * If ``$ADFHOME`` variable is in your environment and ``$ADFHOME/scripting/plams/utils/plams_defaults.py`` exists, it is used
+        * If ``$PLAMSDEFAULTS`` variable is in your environment and it points to a file, this file is used (executed as Python script).
+        * If ``$PLAMSHOME`` variable is in your environment and ``$PLAMSHOME/utils/plams_defaults.py`` exists, it is used.
+        * If ``$ADFHOME`` variable is in your environment and ``$ADFHOME/scripting/plams/utils/plams_defaults.py`` exists, it is used.
         * Otherwise, the path ``../../../utils/plams_defaults.py`` relative to the current file (``common.py``) is checked. If defaults file is not found there, an exception is raised.
 
     Next, a |JobManager| instance is created as ``config.jm`` using *path* and *folder* to determine the main working directory. Settings used by this instance are directly linked from ``config.jobmanager``. If *path* is not supplied, the current directory is used. If *folder* is not supplied, the string ``plams.`` followed by PID of the current process is used.
@@ -50,8 +50,8 @@ def init(path=None, folder=None):
         defaults = opj(expandvars('$ADFHOME'), 'scripting', 'plams', 'utils', 'plams_defaults.py')
     else:
         defaults = opj(dirname(dirname(dirname(dirname(__file__)))), 'utils', 'plams_defaults.py')
-    if not isfile(defaults):
-        raise PlamsError('plams_defaults.py not found, please set PLAMSDEFUALTS or PLAMSHOME in your environment')
+        if not isfile(defaults):
+            raise PlamsError('plams_defaults.py not found, please set PLAMSDEFUALTS or PLAMSHOME in your environment')
     exec(compile(open(defaults).read(), defaults, 'exec'))
 
 
@@ -90,7 +90,7 @@ def finish(otherJM=None):
 #===================================================================================================
 
 def load(filename):
-    """Load previously saved job from ``.dill`` file. This is just a shortcut for |load_job| method of the default job manager ``config.jm``."""
+    """Load previously saved job from ``.dill`` file. This is just a shortcut for |load_job| method of the default |JobManager| ``config.jm``."""
     return config.jm.load_job(filename)
 
 
@@ -145,7 +145,7 @@ def log(message, level=0):
 #===================================================================================================
 
 def add_to_class(classname):
-    """Add decorated function as a method of the whole class *classname*.
+    """Add decorated function as a method to the whole class *classname*.
 
     The decorated function should follow a method-like syntax, with the first argument ``self`` that references the class instance.
     Example usage::
@@ -172,7 +172,7 @@ def add_to_class(classname):
 #===================================================================================================
 
 def add_to_instance(instance):
-    """Add decorated function as a method of one particular *instance*.
+    """Add decorated function as a method to one particular *instance*.
 
     The decorated function should follow a method-like syntax, with the first argument ``self`` that references the class instance.
     Example usage::

@@ -15,7 +15,7 @@ config.erase_workdir = False
 
 #======================= JobManager defaults ==========================================
 
-#When two or more jobs have the same name they are renamed to jobname.002. Defines number of digits of appended number
+#When two or more jobs have the same name they are renamed to [jobname].002. Defines number of digits of appended number
 config.jobmanager.counter_len = 3
 
 #Defines hashing method for testing if job was previously run. Currently supported values are 'input', 'runscript', 'input+runscript' and False/None
@@ -26,7 +26,7 @@ config.jobmanager.remove_empty_directories = True
 
 #======================= Job defaults =================================================
 
-#After job is finished, pickle job object to jobname.job
+#After job is finished, pickle job object to [jobname].dill
 config.job.pickle = True
 
 #Define which files produced by executed job should be kept. See manual for details and possible values
@@ -36,7 +36,7 @@ config.job.save = 'all'
 #First line of produced runscripts
 config.job.runscript.shebang = '#!/bin/sh'
 
-#If set to True, '>jobname.out' is used in runscript. Otherwise python takes care of output redirection (set it to True if you want to peek output of job submitted to grid)
+#If set to True, '>[jobname].out' is used in runscript. Otherwise python takes care of output redirection (set it to True if you want to peek output of job submitted to grid)
 config.job.runscript.stdout_redirect = False
 
 #When files are imported into job's directory (by rerun prevention), they can be either copied or hardlinked, the following setting adjusts this behavior. On Windows it has no effect, files are always copied.

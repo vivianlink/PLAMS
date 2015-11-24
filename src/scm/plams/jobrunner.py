@@ -44,7 +44,7 @@ def _limit(func):
     return wrapper
 
 class _MetaRunner(type):
-    """Metaclass for |JobRunner|. Wraps :meth:`call` with :func:`_limit` decorator."""
+    """Metaclass for |JobRunner|. Wraps :meth:`~scm.plams.jobrunner.JobRunner.call` with :func:`_limit` decorator."""
     def __new__(meta, name, bases, dct):
         dct['call'] = _limit(dct['call'])
         return type.__new__(meta, name, bases, dct)
@@ -68,33 +68,21 @@ class JobRunner(object):
         self.parallel = parallel
         self.semaphore = threading.BoundedSemaphore(maxjobs) if maxjobs else None
 
-    @_in_thread
-    def _run_job(self, job, jobmanager):
-        """_run_job(job, jobmanager)
-        This method aggregates those parts of |run| that are supposed to be run in separate thread in case of parallel job execution. It is wrapped with :func:`_in_thread` decorator.
-
-        This method should not be overridden.
-        """
-        if job._prepare(jobmanager):
-            job._execute(self)
-            job._finalize()
 
     def call(self, runscript, workdir, out, err, **kwargs):
         """call(runscript, workdir, out, err, **kwargs)
-        Execute the *runscript* in the directory *workdir*. Redirect output and error streams to *out* and *err*, respectively.
+        Execute the *runscript* in the folder *workdir*. Redirect output and error streams to *out* and *err*, respectively.
+
+        Arguments mentioned above should be strings containing paths to corresponding files or folders
 
         Other keyword arguments are ignored here but they can be useful in |JobRunner| subclasses (see :meth:`GridRunner.call`).
+
+        Returns integer value indicating the exit code returned by execution of *runscript*.
 
         This method can be safely overridden in |JobRunner| subclasses. For example, in |GridRunner| it submits the runscript to a job scheduler instead of executing it locally.
 
         .. note::
             This method is used automatically during |run| and should never be explicitly called in your script.
-
-        :param str runscript: a path to a file with the shell script to execute.
-        :param str workdir: a path to a folder where *runscript* should be executed.
-        :param str out: a path to a file to which the standard output stream is redirected. If ``None``, no redirection occurs.
-        :param str err: a path to a file to which the standard error stream is redirected.
-        :return: the exit code returned by execution of *runscript*.
         """
         log('Executing %s' % runscript, 5)
         with open(opj(workdir, err), 'w') as e:
@@ -112,6 +100,16 @@ class JobRunner(object):
         log('Execution of %s finished with returncode %i' % (runscript, retcode), 5)
         return retcode
 
+    @_in_thread
+    def _run_job(self, job, jobmanager):
+        """_run_job(job, jobmanager)
+        This method aggregates these parts of |run| that are supposed to be run in a separate thread in case of parallel job execution. It is wrapped with :func:`_in_thread` decorator.
+
+        This method should not be overridden.
+        """
+        if job._prepare(jobmanager):
+            job._execute(self)
+            job._finalize()
 
 #===================================================================================================
 #===================================================================================================
@@ -165,23 +163,6 @@ class GridRunner(JobRunner):
             raise PlamsError("GridRunner: invalid 'grid' argument. 'grid' should be either a Settings instance (see documentations for details) or a string occurring in config.gridrunner or 'auto' for autodetection")
 
 
-    def _autodetect(self):
-        """Try to autodetect the type of installed job scheduler.
-
-        The autodetection mechanism is relatively simple. For each entry in ``config.gridrunner`` the submit command followed by ``--version`` is executed (for example ``qsub --version``). If the execution was successful (which is indicated by exit code 0) the job scheduler of corresponding type is present on the system and it gets chosen. So if there are multiple different job schedulers installed, only one is picked -- the one which "name" (indicated by a key in ``config.gridrunner``) is first in the lexicographical order.
-
-        Returned value is one of ``config.gridrunner`` branches. If autodetection was not successful, an exception is raised.
-        """
-        for grid in config.gridrunner:
-            with open(os.devnull, 'wb') as null:
-                try:
-                    retcode = subprocess.call([config.gridrunner[grid].commands.submit, '--version'], stdout=null, stderr=null)
-                except OSError: continue
-                if retcode == 0:
-                    log('Grid type autodetected as ' + grid, 5)
-                    return config.gridrunner[grid]
-        raise PlamsError('GridRunner: Failed to autodetect grid type')
-
 
     def call(self, runscript, workdir, out, err, runflags, **kwargs):
         """call(runscript, workdir, out, err, runflags, **kwargs)
@@ -231,13 +212,6 @@ class GridRunner(JobRunner):
 
         .. note::
             This method is used automatically during |run| and should never be explicitly called in your script.
-
-        :param dict runflags: a dictionary containing submit command options.
-        :param str runscript: a path to a file with the shell script to execute.
-        :param str workdir: a path to a folder where *runscript* should be executed.
-        :param str out: a path to a file to which the standard output stream is redirected. If ``None``, no redirection occurs.
-        :param str err: a path to a file to which the standard error stream is redirected.
-        :return: always 0
         """
 
         s = self.settings
@@ -269,3 +243,22 @@ class GridRunner(JobRunner):
 
         log('Execution of %s finished' % runscript, 5)
         return 0
+
+
+
+    def _autodetect(self):
+        """Try to autodetect the type of job scheduler.
+
+        The autodetection mechanism is very simple. For each entry in ``config.gridrunner`` the submit command followed by ``--version`` is executed (for example ``qsub --version``). If the execution was successful (which is indicated by exit code 0) the job scheduler of corresponding type is present on the system and it is chosen. So if there are multiple different job schedulers installed, only one is picked -- the one which "name" (indicated by a key in ``config.gridrunner``) is first in the lexicographical order.
+
+        Returned value is one of ``config.gridrunner`` branches. If autodetection was not successful, an exception is raised.
+        """
+        for grid in config.gridrunner:
+            with open(os.devnull, 'wb') as null:
+                try:
+                    retcode = subprocess.call([config.gridrunner[grid].commands.submit, '--version'], stdout=null, stderr=null)
+                except OSError: continue
+                if retcode == 0:
+                    log('Grid type autodetected as ' + grid, 5)
+                    return config.gridrunner[grid]
+        raise PlamsError('GridRunner: Failed to autodetect grid type')

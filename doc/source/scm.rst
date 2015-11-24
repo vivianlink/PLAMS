@@ -10,7 +10,7 @@ PLAMS offers interfaces to three main binaries of the ADF Suite: ADF, BAND and D
 ADF, BAND and DFTB
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ADF, BAND and DFTB are of course very different programs, but from our perspective they are relatively similar. Their input files follow a common structure of blocks and subblocks. They store results as binary files in KF format and print some of them to standard output. They also share command line arguments, error messages etc. Thanks to that Python code responsible for creating, running and examining jobs with ADF, BAND and DFTB jobs overlaps a lot and can be grouped together in abstract classes. |SCMJob| and |SCMResults| are subclasses of, respectively, |SingleJob| and |Results| and serve as bases for concrete classes: |ADFJob|, |BANDJob|, |DFTBJob|, |ADFResults|, |BANDResults| and |DFTBResults|. Code contained in these concrete classes describes small technical differences and is used only internally, so they are omitted in the API specification below. From user perspective they all follow the common interface defined by |SCMJob| and |SCMResults|. That means in your scripts you would create instances of |ADFJob|, |BANDJob| or |DFTBJob|, but methods that you can use with them (and their corresponding results) can be taken from |SCMJob| and |SCMResults|.
+ADF, BAND and DFTB are of course very different programs, but from our perspective they are rather similar. Their input files follow a common structure of blocks and subblocks. They store results as binary files in KF format and and they print human-readable summary of calculation to the standard output. They also share command line arguments, error messages etc. Thanks to that Python code responsible for creating, running and examining jobs with ADF, BAND and DFTB jobs overlaps a lot and can be grouped together in abstract classes. |SCMJob| and |SCMResults| are subclasses of, respectively, |SingleJob| and |Results| and serve as bases for concrete classes: |ADFJob|, |BANDJob|, |DFTBJob|, |ADFResults|, |BANDResults| and |DFTBResults|. Code contained in these concrete classes describes small technical differences and is used only internally, so they are omitted in the API specification below. From user perspective they all follow the common interface defined by |SCMJob| and |SCMResults|. That means in your scripts you would create instances of |ADFJob|, |BANDJob| or |DFTBJob|, but methods that you can use with them (and their corresponding results) can be taken from |SCMJob| and |SCMResults|.
 
 
 
@@ -117,7 +117,7 @@ Sometimes one needs to put more instances of the same key within one block, like
       Block residue
     End
 
-Finally, in some rare cases key and value pair in the input need to be printed in a form ``key=value`` instead of ``key value``. When value is a string starting with the equal sign, no space is inserted between key and value::
+Finally, in some rare cases key and value pair in the input needs to be printed in a form ``key=value`` instead of ``key value``. When value is a string starting with the equal sign, no space is inserted between key and value::
 
     >>> myjob.settings.input.block.key = '=value'
     #
@@ -194,7 +194,7 @@ Runscripts for ADF, BAND and DFTB are very simple - they are just single executi
 Results extraction
 ++++++++++++++++++
 
-All three programs print results to the standard output. The output file can be examined with standard text processing tools (:meth:`~scm.plams.results.Results.grep_output` and :meth:`~scm.plams.results.Results.awk_output`). Besides that all calculation details are saved in the binary file in KF format. This file is called ``TAPE21`` for ADF, ``RUNKF`` for BAND and ``dftb.rkf`` for DFTB. PLAMS renames those files to ``jobname.t21`` in case of ADF and ``jobname.rkf`` for other two programs. Data stored in those files can be accessed using additional methods defined in |SCMResults| class.
+All three programs print results to the standard output. The output file can be examined with standard text processing tools (:meth:`~scm.plams.results.Results.grep_output` and :meth:`~scm.plams.results.Results.awk_output`). Besides that all calculation details are saved in the binary file in KF format. This file is called ``TAPE21`` for ADF, ``RUNKF`` for BAND and ``dftb.rkf`` for DFTB. PLAMS renames those files to, respectively ``[jobname].t21``, ``[jobname].runkf`` and ``[jobname].rkf``. Data stored in those files can be accessed using additional methods defined in |SCMResults| class.
 
 
 API
@@ -206,7 +206,7 @@ API
 
 
 
-Other tools
+Other tools: Densf, FCF
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Apart from main computational programs mentioned above, ADFSuite offers a range of small utility tools that can be used to obtain more specific results. Those tools usually base on the prior run of one of the main programs and need the KF file produced by them as a part of the input.

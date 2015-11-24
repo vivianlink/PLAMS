@@ -8,9 +8,9 @@ Without any doubt job is the most important object in PLAMS library. Job is the 
 Various jobs may differ in details quite a lot, but they all follow the common set of rules defined in the abstract class |Job|.
 
 .. note::
-    Being an abstract class means that |Job| class has some abstract methods -- methods that are declared but not implemented (they do nothing). Those methods are supposed to be defined in subclasses of |Job|. When a subclass of an abstract class defines all required abstract methods it is called a *concrete class*. You should never create an instance of an abstract class, because when you try to use it, empty abstract methods are called and your script crashes.
+    Being an abstract class means that |Job| class has some abstract methods -- methods that are declared but not implemented (they do nothing). Those methods are supposed to be defined in subclasses of |Job|. When a subclass of an abstract class defines all required abstract methods, it is called a *concrete class*. You should never create an instance of an abstract class, because when you try to use it, empty abstract methods are called and your script crashes.
 
-Every job has its own unique name and a separate folder (called job folder, with the same name as the job) located in the main working folder. All files regarding that particular job (input, output, runscript, other files produced by the external binary) end up in its job folder.
+Every job has its own unique name and a separate folder (called job folder, with the same name as the job) located in the main working folder. All files regarding that particular job (input, output, runscript, other files produced by job execution) end up in the job folder.
 
 In general a job can be of one of two types: a single job or a multijob. These types are defined as subclasses of the |Job| class: |SingleJob| and |MultiJob|.
 
@@ -41,7 +41,7 @@ Those values do not need to be passed to the constructor, they can be set or cha
 
 Single jobs can be supplied with another keyword argument, ``molecule``. It is supposed to be a |Molecule| object. Multijobs, in turn, accept keyword argument ``children`` that stores the list of children jobs.
 
-The most meaningful part of each job object is its |Settings| instance. It is used to store information about contents of job's input file, runscript as well as general tweaks of job's behavior. Thanks to tree-like structure of |Settings|, this information is organized in a convenient way: the top level (``myjob.settings.``) stores general settings, ``myjob.settings.input.`` is a branch for specifying input settings, ``myjob.settings.runscript.`` holds information for runscript creation and so on. Some types of jobs will make use of their own ``myjob.settings`` branches and not every kind of job will always require ``input`` or ``runscript`` branches (like multijob for example). The nice thing is that all the unnecessary data present in job's settings is simply ignored, so accidentally plugging settings with too much data will not cause any problem (except some cases where the whole content of some branch is used, like for example the ``input`` branch in |SCMJob|).
+The most meaningful part of each job object is its |Settings| instance. It is used to store information about contents of job's input file, runscript as well as other tweaks of job's behavior. Thanks to tree-like structure of |Settings|, this information is organized in a convenient way: the top level (``myjob.settings.``) stores general settings, ``myjob.settings.input.`` is a branch for specifying input settings, ``myjob.settings.runscript.`` holds information for runscript creation and so on. Some types of jobs will make use of their own ``myjob.settings`` branches and not every kind of job will always require ``input`` or ``runscript`` branches (like multijob for example). The nice thing is that all the unnecessary data present in job's settings is simply ignored, so accidentally plugging settings with too much data will not cause any problem (except some cases where the whole content of some branch is used, like for example the ``input`` branch in |SCMJob|).
 
 .. _job-settings:
 
@@ -50,9 +50,9 @@ Contents of job's settings
 
 The following keys and branches of job's settings are meaningful for all kinds of jobs:
 
-    * ``myjob.settings.input.`` is a branch storing settings regarding input file of a job. The way data present in this branch is used depends on type of a job and is specified in respective subclasses of |Job|
+    * ``myjob.settings.input.`` is a branch storing settings regarding input file of a job. The way data present in this branch is used depends on the type of job and is specified in respective subclasses of |Job|.
     * ``myjob.settings.runscript.`` holds runscript information, either program-specific or general:
-        - ``myjob.settings.runscript.shebang`` -- the first line of the runscript, starting with ``#!``, describing shell to use
+        - ``myjob.settings.runscript.shebang`` -- the first line of the runscript, starting with ``#!``, describing interpreter to use
         - ``myjob.settings.runscript.pre`` -- an arbitrary string that will be placed in the runscript file just below the shebang line, before the actual contents
         - ``myjob.settings.runscript.post`` -- an arbitrary string to put at the end of the runscript.
         - ``myjob.settings.runscript.stdout_redirect`` -- boolean flag defining if standard output redirection should be handled inside the runscript. If set to ``False``, the redirection will be done by Python outside the runscript. If set to ``True``, standard output will be redirected inside the runscript using ``>``.
@@ -69,11 +69,10 @@ Default settings
 
 Every job instance has an attribute called ``default_settings`` that stores a list of |Settings| instances that serve as default templates for that job. Initially this list contains only one element, global defaults for all jobs stored in ``config.job``. You can add other templates just like adding elements to a list::
 
-    myjob.default_settings.append(sometemplate)
-    myjob.default_settings += [temp1, temp2]
+    >>> myjob.default_settings.append(sometemplate)
+    >>> myjob.default_settings += [temp1, temp2]
 
 During job execution (just after ``prerun()`` is finished) job's own ``settings`` are soft-updated with all elements of ``default_settings`` list, one by one, starting with **last**. That way if you want to adjust some setting for all jobs run in your script you don't need to go to each job and set it there every time, one change in ``config.job`` is enough. Similarly, if you have a group of jobs that need the same ``settings`` adjustments, you can create an empty |Settings| instance, put those adjustments in it and add it to each job's ``default_settings``. Keep in mind that :meth:`~scm.plams.settings.Settings.soft_update` is used so any key in a template in ``default_settings`` will end up in job's ``settings`` only if such a key is not yet present there. Thanks to that the order of templates in ``default_settings`` somehow defines their importance: data from a preceding template will never override the following one, it can only enrich it.
-
 
 
 .. _job-life-cycle:
@@ -100,7 +99,7 @@ The following steps are taken after the |run| method is called:
     9. After the execution is finished, result files produced by the job are collected and :meth:`~Job.check` is used to test if the execution was successful.
     10. The job folder is cleaned using ``myjob.settings.keep``. See |cleaning| for details.
     11. Job's |postrun| method is called.
-    12. If ``myjob.settings.pickle`` is true, the whole job instance gets pickled and saved to the ``.dill`` file in the job folder.
+    12. If ``myjob.settings.pickle`` is true, the whole job instance gets pickled and saved to the ``[jobname].dill`` file in the job folder.
 
 
 Name conflicts
@@ -116,7 +115,7 @@ PLAMS automatically resolves conflicts between jobs' names. During step 4. of th
 Prerun and postrun methods
 ++++++++++++++++++++++++++
 
-|prerun| and |postrun| methods are intended for further customization of your jobs. The can contain arbitrary pieces of code that are executed before and after the actual execution of your job. |prerun| takes place after job's folder is created but before hash checking. Here are some ideas what can be put there:
+|prerun| and |postrun| methods are intended for further customization of your jobs. They can contain arbitrary pieces of code that are executed before and after the actual execution of your job. |prerun| takes place after job's folder is created but before hash checking. Here are some ideas what can be put there:
 
     * adjusting job ``settings``
     * copying to job folder some files required for running
@@ -144,7 +143,7 @@ The other method, |postrun|, is called after job execution is finished, the resu
             >>> def prerun(self):
             >>>     #do stuff
 
-        That change affects all instances of ``MyJob``, even those created before the above code was executed (obviously it won't affect instances previously finished).
+        That change affects all instances of ``MyJob``, even those created before the above code was executed (obviously it won't affect instances previously run and finished).
 
     *   you can bind the method directly to an instance using |add_to_instance| decorator::
 
@@ -153,10 +152,18 @@ The other method, |postrun|, is called after job execution is finished, the resu
             >>> def prerun(self):
             >>>     #do stuff
 
-        Only one specified instance is affected this way. The downside is that method bound to an instance this way cannot be pickled and it gets removed before saving ``j`` to the file at the end of its execution. So when you load this file in future, information about what happened in |prerun| is lost (see |binding_decorators| for details).
+        Only one specified instance (``j``) is affected this way.
 
 All the above works for |postrun| as well.
 
+Preview mode
+++++++++++++++++++++++++++
+
+Preview mode is a special way of running jobs without the actual runscript execution. In this mode the procedure of running a job is interrupted just after input and runscript files are written to job folder. Preview mode can be used to check if your jobs generate proper input and runscript files, without having to run the full calculation.
+
+You can enable preview mode by putting the following line at the beginning of your script::
+
+    >>> config.preview = True
 
 
 Job API
@@ -181,7 +188,6 @@ Subclassing SingleJob
 
 Your new class has to, of course, be a subclass of |SingleJob| and define methods :meth:`~SingleJob.get_input` and :meth:`~SingleJob.get_runscript`::
 
-    >>> from scm.plams.basejob import SingleJob
     >>> class MyJob(SingleJob):
     >>>     def get_input(self):
     >>>         ...
@@ -200,7 +206,6 @@ This is sufficient for your new job to work properly with other PLAMS components
 
     *   if you wish to create a special |Results| subclass for results of your new job, make sure to let it know about it::
 
-            >>> from scm.plams.basejob import SingleJob
             >>> class MyResults(Results):
             >>>     def some_method(self, ...):
             >>>         ...
@@ -219,24 +224,22 @@ This is sufficient for your new job to work properly with other PLAMS components
 
             >>> def _get_ready(self):
             >>>     # do some stuff
-            >>>     super(MyJob, self)._get_ready()
+            >>>     SingleJob._get_ready()
             >>>     # do some other stuff
 
-.. technical::
-
-    Whenever you need to call some method from a parent class it is strongly advised to use :func:`super`. In other words, if ``Child`` is a subclass of ``Parent``, ``super(Child, self).method(args)`` is preferred over ``Parent.method(self, args)``. The result of both commands is almost always the same, apart from some cases of multiple inheritance, where only :func:`super` ensures the proper behavior. Currently there is no multiple inheritance in PLAMS, but it is just a good practice to always use :func:`super`.
 
 .. warning::
 
-    Whenever you are subclassing any kind of job, either single of multi, and you wish to override its constructor (``__init__`` method) it is **absolutely essential** to call the parent constructor and pass all unused keyword arguments to it:
+    Whenever you are subclassing any kind of job, either single of multi, and you wish to override its constructor (``__init__`` method) it is **absolutely essential** to call the parent constructor and pass all unused keyword arguments to it::
 
-::
+        >>> class MyJob(SomeOtherJob):
+        >>>     def __init__(self, myarg1, myarg2=default2, **kwargs):
+        >>>         SomeOtherJob.__init__(**kwargs)
+        >>>         # do stuff with myarg1 and myarg2
 
-    >>> class MyJob(SomeOtherJob):
-    >>>     def __init__(self, myarg1, myarg2=default2, **kwargs):
-    >>>         super(Myjob, self).__init__(**kwargs)
-    >>>         # do stuff with myarg1 and myarg2
+.. technical::
 
+    Usually when you need to call some method from a parent class it is a good idea to use :func:`super`. However, there exists a known bug in Python 3 that causes the dill package to crash when :func:`super` is used. For that reason, if you're using Python 3, please do not use :func:`super`.
 
 
 Multijobs
@@ -254,6 +257,6 @@ Since |MultiJob| is a concrete class, it can be used in two ways: either by crea
     >>> mj.children.append(job4)
     >>> mj.run(...)
 
-You can of course use it together with :ref:`prerun-postrun` to further customize the behavior of ``mj``
+You can of course use it together with :ref:`prerun-postrun` to further customize the behavior of ``mj``.
 
 More flexible way of using multijobs is subclassing. You can subclass directly from |MultiJob| or from any of its subclasses. Defining your own multijob is the best solution when you need to run many similar jobs and later compare their results. In that case |prerun| method can be used for populating ``children`` and |postrun| for extracting results and merging them.

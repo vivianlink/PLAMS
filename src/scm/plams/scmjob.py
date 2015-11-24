@@ -39,7 +39,7 @@ class SCMResults(Results):
         """readkf(section, variable)
         Read data from *section*/*variable* of the main KF file.
 
-        The type of the returned value depends od the type of *variable*. It can be either int, float, boolean or string (or list containing two or more elements of one of those types)."""
+        The type of the returned value depends on the type of *variable* defined inside KF file. It can be: single int, list of ints, single float, list of floats, single boolean, list of booleans or string. """
         return self._kf.read(section, variable) if self._kf else None
 
 
@@ -93,14 +93,14 @@ class SCMResults(Results):
 
     def _settings_reduce(self):
         """_settings_reduce()
-        When this object is present as a value in |Settings| and string representation is needed, use the absolute path to the main KF file.
+        When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path to the main KF file. See :meth:`Settings.__reduce__<scm.plams.settings.Settings.__reduce__>` for details.
         """
         return self._kfpath()
 
 
     def _export_attribute(self, attr, other):
         """_export_attribute(attr, other)
-        If *attr* is a KF file take care of a proper path. Otherwise use parent method.
+        If *attr* is a KF file take care of a proper path. Otherwise use parent method. See :meth:`Results._copy_to<scm.plams.results.Results._copy_to>` for details.
         """
         if isinstance(attr, KFFile):
             oldname = os.path.basename(attr.path)
@@ -130,9 +130,9 @@ class SCMJob(SingleJob):
 
 
     def get_input(self):
-        """Transform all contents of ``input`` branch of ``settings`` into string with blocks, keys and values.
+        """Transform all contents of ``setting.input`` branch into string with blocks, keys and values.
 
-        On the highest level alphabetic order of iteration is modified: keys occuring in class attribute ``_top`` are printed first.
+        On the highest level alphabetic order of iteration is modified: keys occuring in attribute ``_top`` are printed first.
 
         Automatic handling of ``molecule`` can be disabled with ``settings.ignore_molecule = True``.
         """
@@ -218,17 +218,17 @@ class SCMJob(SingleJob):
 
 
     def _parsemol(self):
-        """Process |Molecule| instance stored in ``molecule`` attribute and add it as relevant entries of ``settings.input.`` branch. Abstract method."""
+        """Process |Molecule| instance stored in ``molecule`` attribute and add it as relevant entries of ``settings.input`` branch. Abstract method."""
         raise PlamsError('Trying to run an abstract method SCMJob._parsemol()')
 
 
     def _removemol(self):
-        """Remove from ``settings.input.`` all entries added by :meth:`_parsemol`. Abstract method."""
+        """Remove from ``settings.input`` all entries added by :meth:`_parsemol`. Abstract method."""
         raise PlamsError('Trying to run an abstract method SCMJob._removemol()')
 
 
     def _settings_reduce(self):
-        """When this object is present as a value in |Settings| and string representation is needed, use the absolute path to the main KF file."""
+        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path to the main KF file. See :meth:`Settings.__reduce__<scm.plams.settings.Settings.__reduce__>` for details."""
         return self.results._kfpath()
 
 
@@ -276,7 +276,7 @@ class ADFJob(SCMJob):
 
 
 class BANDResults(SCMResults):
-    _kfext = '.rkf'
+    _kfext = '.runkf'
     _rename_map = {'RUNKF':'$JN'+_kfext}
 
     def _int2inp(self):

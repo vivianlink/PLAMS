@@ -9,11 +9,11 @@ Library contents
 PLAMS comes in form of a Python package compatible with both Python 2 and Python 3.
 The root folder of the package contains the following subfolders: ``src`` for source files of all the modules, ``utils`` for additional utilities (see below) and ``doc`` for the source of this documentation. If you wish to run PLAMS with your own Python, you need to add ``src`` subfolder to your ``$PYTHONPATH`` environmental variable (or make Python look for packages in that location in any other way).
 
-PLAMS requires the following Python packages to work properly: ``dill`` (enhanced pickling) and ``six`` (Python 2/3 compatibility). If you are using reasonably recent Python, these packages can be automatically fetched from official Python repositories by typing ``pip install dill six`` in your command line (on some systems you need to use ``pip2`` instead of ``pip`` to install packages for Python 2). More information about installing packages manually can be found `here <http://python-packaging-user-guide.readthedocs.org/en/latest/installing/>`_.
+PLAMS requires the following Python packages to work properly: `dill <https://pypi.python.org/pypi/dill>`_ (enhanced pickling) and `six <https://pypi.python.org/pypi/six>`_ (Python 2/3 compatibility). If you are using reasonably recent Python, these packages can be automatically fetched from official Python repositories by typing ``pip install dill six`` in your command line (on some systems you need to use ``pip2`` instead of ``pip`` to install packages for Python 2). More information about installing packages manually can be found `here <http://python-packaging-user-guide.readthedocs.org/en/latest/installing/>`_.
 
 .. adfsuite::
 
-    ADF Suite comes with a builtin Python 2 interpreter equipped with some preinstalled useful packages (including ``dill`` and ``six``) and configured to work with PLAMS out of the box. You can invoke this interpreter by typing ``startpython`` in your command line.
+    ADF Suite comes with a built-in Python 2 interpreter equipped with some preinstalled useful packages (including ``dill`` and ``six``) and configured to work with PLAMS out of the box. You can invoke this interpreter by typing ``startpython`` in your command line.
 
 
 Inside Python interpreter or in Python scripts PLAMS is visible as a subpackage of the ``scm`` package, so you can import it with::
