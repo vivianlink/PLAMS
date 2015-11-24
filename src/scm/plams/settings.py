@@ -18,7 +18,31 @@ class Settings(dict):
     Iteration follows lexicographical order (via :func:`sorted` function)
 
     Methods for displaying content (:meth:`~object.__str__` and :meth:`~object.__repr__`) are overridden to recursively show nested instances in easy-readable format.
+
+    Regular dictionaries (also multi-level ones) used as values (or passed to the constructor) are automatically transformed to |Settings| instances::
+
+        >>> s = Settings({'a': {1: 'a1', 2: 'a2'}, 'b': {1: 'b1', 2: 'b2'}})
+        >>> s.a[3] = {'x': {12: 'q', 34: 'w'}, 'y': 7}
+        >>> print(s)
+        a:
+          1:    a1
+          2:    a2
+          3:
+            x:
+              12:   q
+              34:   w
+            y:  7
+        b:
+          1:    b1
+          2:    b2
+
     """
+    def __init__(self, *args, **kwargs):
+        dict.__init__(self, *args, **kwargs)
+        for k,v in self.items():
+            if isinstance(v, dict):
+                self[k] = Settings(v)
+
 
 
     def __missing__(self, name):
@@ -44,6 +68,8 @@ class Settings(dict):
 
     def __setitem__(self, name, value):
         """Like regular __setitem__, but if name is a string, lowercase it."""
+        if isinstance(value, dict):
+            value = Settings(value)
         if isinstance(name, str):
             dict.__setitem__(self, name.lower(), value)
         else:

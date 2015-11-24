@@ -116,7 +116,10 @@ class Job(object):
         """Pickle this instance and save to a file indicated by *filename*. If ``None``, save to ``[jobname].dill`` in the job folder."""
         filename = filename or opj(self.path, self.name+'.dill')
         with open(filename, 'wb') as f:
-            pickle.dump(self, f, -1)
+            try:
+                pickle.dump(self, f, -1)
+            except:
+                log("Pickling of %s failed" % self.name, 1)
 
 
 
