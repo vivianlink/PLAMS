@@ -320,6 +320,7 @@ class Molecule (object):
             del atom.bro
         return m
 
+
     def separate(self):
     #all returned fragments have default spin, charge, props etc.
         frags = []
@@ -350,6 +351,43 @@ class Molecule (object):
 
         del clone
         return frags
+
+
+    def wrap_me(self, lenght, angle=2*numpy.pi, unit='angstrom'):
+    # Wraps a molecule along the x axis
+
+        # Convert all coordinates to the input unit:
+        original_units = [atom.unit for atom in self.atoms]
+        for atom in self.atoms:
+            atom.convert(unit)
+
+        xs = [atom.x for atom in self.atoms]
+        if max(xs)-min(xs) > lenght:
+            raise MoleculeError('wrap_me: x-extension of the molecule is larger than lenght')
+
+        if angle < 0 or angle > 2*numpy.pi:
+            raise MoleculeError('wrap_me: angle must be between 0 and 2*pi')
+
+        # Tranlate the molecule so that the center of mass is (0,0,0):
+        t = tuple([-i for i in self.get_center_of_mass()])
+        self.translate(t)
+
+        # Coodinate transformation:
+
+        r = lenght / angle
+
+        def map_ring_x (x, y):
+            return (r + y*(r+y)/r) * numpy.cos(2*numpy.pi*x/(lenght))
+        def map_ring_y (x, y):
+            return (r + y*(r-y)/r) * numpy.sin(2*numpy.pi*x/(lenght))
+
+        for atom in self.atoms:
+            atom.x, atom.y = map_ring_x(atom.x, atom.y), map_ring_y(atom.x, atom.y)
+
+        # Convert the coordinates back:
+        for atom, original_unit in zip(self.atoms, original_units):
+            atom.convert(original_unit)
+
 
 
 #===================================================================================================
