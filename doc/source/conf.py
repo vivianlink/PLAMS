@@ -35,11 +35,18 @@ class ADFSuite(BaseAdmonition):
             self.content, self.lineno, self.content_offset, self.block_text,
             self.state, self.state_machine)
 
+def modify_signature(app, what, name, obj, options, signature,
+                           return_annotation):
+    if signature:
+        signature = signature.replace("=u'","='")
+    return signature, return_annotation
+
 def setup(app):
     app.add_stylesheet('boxes.css')
     app.add_directive('technical', Technical)
     app.add_directive('adfsuite', ADFSuite)
     app.add_javascript('copybutton.js')
+    app.connect('autodoc-process-signature', modify_signature)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
