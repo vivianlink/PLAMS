@@ -98,8 +98,10 @@ def __slurm_finished(jobid):
         import subprocess32 as subprocess
     except ImportError:
         import subprocess
+    from .common import string
     cmd = ('squeue -j ' + jobid).split(' ')
     out = subprocess.check_output(cmd).split('\n')
+    out = string(out)
     return not (len(out) > 1 and out[1].find(jobid) != -1)
 
 config.gridrunner.slurm.commands.finished   = __slurm_finished

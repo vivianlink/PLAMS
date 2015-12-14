@@ -18,7 +18,7 @@ except ImportError:
 
 from os.path import join as opj
 
-from .common import log
+from .common import log, string
 from .errors import ResultsError, FileError
 
 __all__ = ['Results']
@@ -361,6 +361,7 @@ class Results(object):
                 output = subprocess.check_output(command + [filename], cwd=self.job.path)
             except subprocess.CalledProcessError:
                 return []
+            output = string(output)
             ret = output.split('\n')
             if ret[-1] == '':
                 ret = ret[:-1]

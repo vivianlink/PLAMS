@@ -199,3 +199,11 @@ def add_to_instance(instance):
 
 
 #===================================================================================================
+
+#remove me and all my calls after moving to Python3!!!
+def string(s):
+    from six import PY3
+    if PY3 and isinstance(s, bytes):
+        return s.decode()
+    return s
+

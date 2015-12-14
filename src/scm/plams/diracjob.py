@@ -14,6 +14,7 @@ from .results import Results
 from .settings import Settings
 from .utils import PT
 from .kftools import KFFile
+from .common import string
 
 __all__ = ['DiracJob', 'DiracResults']
 
@@ -31,6 +32,7 @@ class DiracResults(Results):
         Results.collect(self)
         pamfile = self.job._filename('out')
         s = subprocess.check_output(['grep', 'output file', pamfile], cwd=self.job.path)
+        s = string(s)
         diracfile = s.split(':')[-1].strip()
         if diracfile in self.files:
             pampath = opj(self.job.path, pamfile)

@@ -12,10 +12,11 @@ except ImportError:
 
 from os.path import join as opj
 
-from .common import log
+from .common import log, string
 from .errors import PlamsError
 from .settings import Settings
 from .basejob import SingleJob
+
 
 __all__ = ['JobRunner', 'GridRunner']
 
@@ -227,6 +228,7 @@ class GridRunner(JobRunner):
 
         log('Submitting %s with command %s' % (runscript, cmd), 5)
         subout = subprocess.check_output(cmd.split(' '))
+        subout = string(subout)
         log('Output of submit command: %s' % subout, 5)
         jobid = s.commands.getid(subout)
 
