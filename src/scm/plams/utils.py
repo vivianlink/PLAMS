@@ -5,6 +5,8 @@ from .errors import PTError, UnitsError
 __all__ = ['PeriodicTable', 'PT', 'Units']
 
 class PeriodicTable(object):
+    """Singleton class for periodic table of elements.
+    """
     data = [None] * 150
                #[symbol, mass, radius, connectors]
     data[  0] = [  '',   0.00000, 0.00 ,  0]
@@ -237,7 +239,7 @@ class PeriodicTable(object):
     symtonum['Cn']  = 112
 
     def __init__(self):
-        pass
+        raise PTError('Instances of PeriodicTable cannot be created')
 
     @classmethod
     def get_atomic_number (cls, symbol):
@@ -256,7 +258,7 @@ class PeriodicTable(object):
         return symbol
 
     @classmethod
-    def _get_pr (cls, arg, prop):
+    def _get_property (cls, arg, prop):
         if isinstance(arg, str):
             pr = cls.data[cls.get_atomic_number(arg)][prop]
         elif isinstance(arg, int):
@@ -268,19 +270,21 @@ class PeriodicTable(object):
 
     @classmethod
     def get_mass(cls, arg):
-        return cls._get_pr(arg, 1)
+        return cls._get_property(arg, 1)
 
     @classmethod
     def get_radius(cls, arg):
-        return cls._get_pr(arg, 2)
+        return cls._get_property(arg, 2)
 
     @classmethod
     def get_connectors(cls, arg):
-        return cls._get_pr(arg, 3)
+        return cls._get_property(arg, 3)
 
 PT = PeriodicTable
 
 class Units(object):
+    """Singleton class for units converter.
+    """
 
     dicts = []
 
@@ -327,7 +331,7 @@ class Units(object):
 #TODO:    mass, charge, force, frequency, constants ?
 
     def __init__(self):
-        pass
+        raise UnitsError('Instances of Units cannot be created')
 
     @classmethod
     def conversion(cls, inp, out):

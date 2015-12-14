@@ -418,7 +418,7 @@ class MultiJob(Job):
 
         This method is useful when some of children jobs are not known beforehand and need to be generated based on other children jobs, like for example in any kind of self-consistent procedure.
 
-        The goal of this method is to produce new portion of children jobs. Newly created jobs need to be manually added to ``self.children`` and (besides that) returned as a list at the end of this method. No adjustment of newly created jobs' ``parent`` attribute is needed. This method **cannot** modify ``_active_children`` attribute.
+        The goal of this method is to produce new portion of children jobs. Newly created jobs **have to** be manually added to ``self.children`` and, besides that, returned as a list by this method. No adjustment of newly created jobs' ``parent`` attribute is needed. This method **cannot** modify ``_active_children`` attribute.
 
         The method defined here is a default template, returning an empty list, which means no new children jobs are generated and the entire execution of the parent job consists only of running jobs initially found in ``self.children``. To modify this behavior you can override this method in |MultiJob| subclass or use one of |binding_decorators|, just like with :ref:`prerun-postrun`.
         """
