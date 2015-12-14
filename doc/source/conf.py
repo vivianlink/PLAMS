@@ -95,7 +95,7 @@ copyright = u'%i, Scientific Computing & Modelling'%(date.today().year)
 # built documents.
 #
 # The short X.Y version.
-version = '0.9'
+version = '1.0'
 # The full version, including alpha/beta/rc tags.
 release = 'beta'
 
