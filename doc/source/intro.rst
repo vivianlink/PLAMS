@@ -34,6 +34,8 @@ Most important features of PLAMS:
     * easy extendable for other programs, job schedulers, file formats etc.
 
 
+.. _simple_example:
+
 Simple example
 ----------------------------
 

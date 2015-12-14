@@ -13,6 +13,8 @@
 # serve to show the default.
 
 import sys
+from datetime import date
+
 from docutils.parsers.rst.directives.admonitions import BaseAdmonition
 from docutils import nodes
 from sphinx.util.compat import make_admonition
@@ -86,7 +88,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'PLAMS'
-copyright = u'2015, Scientific Computing & Modelling'
+copyright = u'%i, Scientific Computing & Modelling'%(date.today().year)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

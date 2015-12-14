@@ -254,7 +254,7 @@ class ADFJob(SCMJob):
         for i,atom in enumerate(self.molecule):
 
             smb = atom.symbol
-            if atom.ghost:
+            if hasattr(atom, 'ghost') and atom.ghost:
                 smb = ('Gh.'+smb).rstrip('.')
             if hasattr(atom, 'name'):
                 smb = (smb+'.'+str(atom.name)).lstrip('.')
