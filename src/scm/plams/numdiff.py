@@ -66,7 +66,7 @@ class NumGradJob(MultiJob):
                 for i in s.steps:
                     v = (s.step*i if axis=='x' else 0, s.step*i if axis=='y' else 0, s.step*i if axis=='z' else 0)
                     newmol = s.molecule.copy()
-                    newmol.atoms[at-1].move_by(v, s.unit)
+                    newmol.atoms[at-1].translate(v, s.unit)
                     newname = self.name + str(at) + axis + str(i)
                     self.children[(at,axis,i)] = s.jobtype(name=newname, molecule=newmol, settings=self.settings.child)
 

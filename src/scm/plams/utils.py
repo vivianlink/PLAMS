@@ -1,13 +1,27 @@
 from __future__ import unicode_literals
 
+import collections
+import math
+import numpy
+
 from .errors import PTError, UnitsError
 
 __all__ = ['PeriodicTable', 'PT', 'Units']
 
 class PeriodicTable(object):
     """Singleton class for periodic table of elements.
+
+    For each element the following properties are stores: atomic symbol, atomic mass, atomic radius and number of connectors.
+
+    Atomic mass is, strictly speaking, atomic weight, as present in Mathematica's ElementData function.
+
+    Atomic radius and number of connectors are used by :meth:`~scm.plams.basemol.Molecule.guess_bonds`. Note that values or radii are neither atomic radii nor covalent radii. They are someway "emprically optimized" for bond guessing algorithm.
+
+    .. note::
+
+        This class is visible in the main namespace as both ``PeriodicTable`` and ``PT``.
     """
-    data = [None] * 150
+    data = [None] * 113
                #[symbol, mass, radius, connectors]
     data[  0] = [  '',   0.00000, 0.00 ,  0]
     data[  1] = [ 'H',   1.00794, 0.30 ,  1]
@@ -95,9 +109,9 @@ class PeriodicTable(object):
     data[ 83] = ['Bi', 208.98038, 1.70 ,  8]
     data[ 84] = ['Po', 209.00000, 1.40 ,  8]
     data[ 85] = ['At', 210.00000, 1.40 ,  1]
-    data[ 86] = ['Rn', 222.00000, 2.40 ,  8]
+    data[ 86] = ['Rn', 222.00000, 2.40 ,  0]
     data[ 87] = ['Fr', 223.00000, 2.70 ,  8]
-    data[ 88] = ['Ra', 226.00000, 2.20 ,  0]
+    data[ 88] = ['Ra', 226.00000, 2.20 ,  8]
     data[ 89] = ['Ac', 227.00000, 2.00 ,  8]
     data[ 90] = ['Th', 232.03810, 1.79 ,  8]
     data[ 91] = ['Pa', 231.03588, 1.63 ,  8]
@@ -123,142 +137,54 @@ class PeriodicTable(object):
     data[111] = ['Rg', 280.00000, 2.00 ,  8]
     data[112] = ['Cn', 285.00000, 2.00 ,  8]
 
-    symtonum = {}
-    symtonum['Xx']  =   0
-    symtonum[ 'H']  =   1
-    symtonum['He']  =   2
-    symtonum['Li']  =   3
-    symtonum['Be']  =   4
-    symtonum[ 'B']  =   5
-    symtonum[ 'C']  =   6
-    symtonum[ 'N']  =   7
-    symtonum[ 'O']  =   8
-    symtonum[ 'F']  =   9
-    symtonum['Ne']  =  10
-    symtonum['Na']  =  11
-    symtonum['Mg']  =  12
-    symtonum['Al']  =  13
-    symtonum['Si']  =  14
-    symtonum[ 'P']  =  15
-    symtonum[ 'S']  =  16
-    symtonum['Cl']  =  17
-    symtonum['Ar']  =  18
-    symtonum[ 'K']  =  19
-    symtonum['Ca']  =  20
-    symtonum['Sc']  =  21
-    symtonum['Ti']  =  22
-    symtonum[ 'V']  =  23
-    symtonum['Cr']  =  24
-    symtonum['Mn']  =  25
-    symtonum['Fe']  =  26
-    symtonum['Co']  =  27
-    symtonum['Ni']  =  28
-    symtonum['Cu']  =  29
-    symtonum['Zn']  =  30
-    symtonum['Ga']  =  31
-    symtonum['Ge']  =  32
-    symtonum['As']  =  33
-    symtonum['Se']  =  34
-    symtonum['Br']  =  35
-    symtonum['Kr']  =  36
-    symtonum['Rb']  =  37
-    symtonum['Sr']  =  38
-    symtonum[ 'Y']  =  39
-    symtonum['Zr']  =  40
-    symtonum['Nb']  =  41
-    symtonum['Mo']  =  42
-    symtonum['Tc']  =  43
-    symtonum['Ru']  =  44
-    symtonum['Rh']  =  45
-    symtonum['Pd']  =  46
-    symtonum['Ag']  =  47
-    symtonum['Cd']  =  48
-    symtonum['In']  =  49
-    symtonum['Sn']  =  50
-    symtonum['Sb']  =  51
-    symtonum['Te']  =  52
-    symtonum[ 'I']  =  53
-    symtonum['Xe']  =  54
-    symtonum['Cs']  =  55
-    symtonum['Ba']  =  56
-    symtonum['La']  =  57
-    symtonum['Ce']  =  58
-    symtonum['Pr']  =  59
-    symtonum['Nd']  =  60
-    symtonum['Pm']  =  61
-    symtonum['Sm']  =  62
-    symtonum['Eu']  =  63
-    symtonum['Gd']  =  64
-    symtonum['Tb']  =  65
-    symtonum['Dy']  =  66
-    symtonum['Ho']  =  67
-    symtonum['Er']  =  68
-    symtonum['Tm']  =  69
-    symtonum['Yb']  =  70
-    symtonum['Lu']  =  71
-    symtonum['Hf']  =  72
-    symtonum['Ta']  =  73
-    symtonum[ 'W']  =  74
-    symtonum['Re']  =  75
-    symtonum['Os']  =  76
-    symtonum['Ir']  =  77
-    symtonum['Pt']  =  78
-    symtonum['Au']  =  79
-    symtonum['Hg']  =  80
-    symtonum['Tl']  =  81
-    symtonum['Pb']  =  82
-    symtonum['Bi']  =  83
-    symtonum['Po']  =  84
-    symtonum['At']  =  85
-    symtonum['Rn']  =  86
-    symtonum['Fr']  =  87
-    symtonum['Ra']  =  88
-    symtonum['Ac']  =  89
-    symtonum['Th']  =  90
-    symtonum['Pa']  =  91
-    symtonum[ 'U']  =  92
-    symtonum['Np']  =  93
-    symtonum['Pu']  =  94
-    symtonum['Am']  =  95
-    symtonum['Cm']  =  96
-    symtonum['Bk']  =  97
-    symtonum['Cf']  =  98
-    symtonum['Es']  =  99
-    symtonum['Fm']  = 100
-    symtonum['Md']  = 101
-    symtonum['No']  = 102
-    symtonum['Lr']  = 103
-    symtonum['Rf']  = 104
-    symtonum['Db']  = 105
-    symtonum['Sg']  = 106
-    symtonum['Bh']  = 107
-    symtonum['Hs']  = 108
-    symtonum['Mt']  = 109
-    symtonum['Ds']  = 110
-    symtonum['Rg']  = 111
-    symtonum['Cn']  = 112
+    symtonum = {d[0]:i for i,d in enumerate(data)}
+
 
     def __init__(self):
         raise PTError('Instances of PeriodicTable cannot be created')
 
+
     @classmethod
-    def get_atomic_number (cls, symbol):
+    def get_atomic_number(cls, symbol):
+        """Convert atomic symbol to atomic number."""
         try:
             number = cls.symtonum[symbol.capitalize()]
         except KeyError:
             raise PTError('trying to convert incorrect atomic symbol')
         return number
 
+
     @classmethod
-    def get_symbol (cls, atnum):
+    def get_symbol(cls, atnum):
+        """Convert atomic number to atomic symbol."""
         try:
             symbol = cls.data[atnum][0]
-        except KeyError:
+        except IndexError:
             raise PTError('trying to convert incorrect atomic number')
         return symbol
 
+
     @classmethod
-    def _get_property (cls, arg, prop):
+    def get_mass(cls, arg):
+        """Convert atomic symbol or atomic number to atomic mass."""
+        return cls._get_property(arg, 1)
+
+
+    @classmethod
+    def get_radius(cls, arg):
+        """Convert atomic symbol or atomic number to radius."""
+        return cls._get_property(arg, 2)
+
+
+    @classmethod
+    def get_connectors(cls, arg):
+        """Convert atomic symbol or atomic number to number of connectors."""
+        return cls._get_property(arg, 3)
+
+
+    @classmethod
+    def _get_property(cls, arg, prop):
+        """Get property of element described by either symbol or atomic number. Skeleton method for :meth`get_radius`, :meth`get_mass` and  :meth`get_connectors`."""
         if isinstance(arg, str):
             pr = cls.data[cls.get_atomic_number(arg)][prop]
         elif isinstance(arg, int):
@@ -268,83 +194,146 @@ class PeriodicTable(object):
                 raise PTError('trying to convert incorrect atomic number')
         return pr
 
-    @classmethod
-    def get_mass(cls, arg):
-        return cls._get_property(arg, 1)
 
-    @classmethod
-    def get_radius(cls, arg):
-        return cls._get_property(arg, 2)
-
-    @classmethod
-    def get_connectors(cls, arg):
-        return cls._get_property(arg, 3)
 
 PT = PeriodicTable
 
+
+#===================================================================================================
+#===================================================================================================
+#===================================================================================================
+
+
 class Units(object):
     """Singleton class for units converter.
+
+    All values are based on `2014 CODATA recommended values <http://physics.nist.gov/cuu/Constants>`_.
+
+    The following constants and units are supported:
+
+        *   constants:
+
+            *   ``speed_of_light`` (also ``c``)
+            *   ``elementary_charge`` (also ``e`` and ``electron_charge``)
+            *   ``avogadro_constant`` (also ``NA``)
+            *   ``bohr_radius``
+
+        *   distance:
+
+            *   ``Angstrom``, ``angstrom``, ``A``
+            *   ``bohr``, ``a0``, ``au``
+            *   ``nm``
+            *   ``pm``
+
+        *   angle:
+
+            *    ``degree``, ``deg``,
+            *    ``radian``, ``rad``,
+            *    ``grad``
+            *    ``circle``
+
+        *   energy:
+
+            *   ``au``, ``hartree``, ``Hartree``
+            *   ``ev``, ``eV``
+            *   ``kcal/mol``
+            *   ``kJ/mol``
+
+        *   dipole moment:
+
+            *   ``au``
+            *   ``Cm``
+            *   ``D``, ``Debye``, ``debye``
+
+
+    Example::
+
+        >>> print(Units.constants['speed_of_light'])
+        299792458
+        >>> print(Units.constants['e'])
+        1.6021766208e-19
+        >>> print(Units.convert(123, 'angstrom', 'bohr'))
+        232.436313431
+        >>> print(Units.convert(23.32, 'kJ/mol', 'kcal/mol'))
+        5.57361376673
+        >>> print(Units.conversion_ratio('kcal/mol', 'kJ/mol'))
+        4.184
+
+
     """
+
+    constants = {}
+    constants['bohr_radius'] = 0.52917721067   #http://physics.nist.gov/cgi-bin/cuu/Value?bohrrada0
+    constants['avogadro_constant'] = 6.022140857e23   #http://physics.nist.gov/cgi-bin/cuu/Value?na
+    constants['speed_of_light'] = 299792458   #http://physics.nist.gov/cgi-bin/cuu/Value?c
+    constants['electron_charge'] = 1.6021766208e-19   #http://physics.nist.gov/cgi-bin/cuu/Value?e
+
+    constants['NA'] = constants['avogadro_constant']
+    constants['c'] = constants['speed_of_light']
+    constants['e'] = constants['electron_charge']
+    constants['elementary_charge'] = constants['electron_charge']
 
     dicts = []
 
     distance = {}
-    distance['__'] = 'Distance'
-    distance['angstrom'] = 1.0
     distance['A'] = 1.0
-    distance['nm'] = 0.1
-    distance['pm'] = 100.0
-    distance['bohr'] = 1.88972598858
-    distance['a0'] = 1.88972598858
-    distance['au'] = 1.88972598858
+    distance['angstrom'] = distance['A']
+    distance['Angstrom'] = distance['A']
+    distance['nm'] = distance['A'] / 10.0
+    distance['pm'] = distance['A'] * 100.0
+    distance['bohr'] = 1.0 / constants['bohr_radius']
+    distance['a0'] = distance['bohr']
+    distance['au'] = distance['bohr']
     dicts.append(distance)
 
     energy = {}
-    energy['__'] = 'Energy'
     energy['au'] = 1.0
-    energy['hartree'] = 1.0
-    energy['Hartree'] = 1.0
-    energy['eV'] = 27.21138386
-    energy['ev'] = 27.21138386
-    energy['kcal/mol'] = 627.509469
-    energy['kJ/mol'] = 2625.49962
+    energy['hartree'] = energy['au']
+    energy['Hartree'] = energy['au']
+    energy['eV'] = 27.21138602   #http://physics.nist.gov/cgi-bin/cuu/Value?hrev
+    energy['ev'] = energy['eV']
+    energy['kJ/mol'] = 4.359744650e-21 * constants['NA']  #http://physics.nist.gov/cgi-bin/cuu/Value?hrj
+    energy['kcal/mol'] = energy['kJ/mol'] / 4.184
     dicts.append(energy)
 
     angle = {}
-    angle['__'] = 'Angle'
     angle['degree'] = 1.0
-    angle['deg'] = 1.0
-    angle['rad'] = 0.01745329251994
-    angle['radian'] = 0.01745329251994
-    angle['grad'] = 1.1111111111
-    angle['circle'] = 0.002777777777778
+    angle['deg'] = angle['degree']
+    angle['radian'] = math.pi / 180.0
+    angle['rad'] = angle['radian']
+    angle['grad'] = 100.0 / 90.0
+    angle['circle'] = 1.0 / 360.0
     dicts.append(angle)
 
     dipole = {}
-    dipole['__'] = 'Dipole Moment'
     dipole['au'] = 1.0
-    dipole['debye'] = 2.54174623105484
-    dipole['Debye'] = 2.54174623105484
-    dipole['D'] = 2.54174623105484
+    dipole['Cm'] = constants['e'] * constants['bohr_radius'] * 1e-10
+    dipole['Debye'] = dipole['Cm'] * constants['c']* 1e21
+    dipole['debye'] = dipole['Debye']
+    dipole['D'] = dipole['Debye']
     dicts.append(dipole)
-
-#TODO:    mass, charge, force, frequency, constants ?
 
     def __init__(self):
         raise UnitsError('Instances of Units cannot be created')
 
+
     @classmethod
-    def conversion(cls, inp, out):
+    def conversion_ratio(cls, inp, out):
+        """Return conversion ratio from unit *inp* to *out*."""
         for d in cls.dicts:
             if inp in d.keys() and out in d.keys():
                 return d[out]/d[inp]
-        raise UnitsError('Invalid conversion call: unsupported units')
+        raise UnitsError('Invalid conversion_ratio call: unsupported units')
+
 
     @classmethod
     def convert(cls, value, inp, out):
-        try:
-            val = float(value)
-        except (TypeError, ValueError):
-            raise UnitsError('Invalid conversion call: non-numerical value')
-        return val*cls.conversion(inp,out)
-
+        """Convert *value* from unit *inp* to *out*. *value* has to be either a single number or a container (list, tuple etc.) containing only numbers. In this case container of the same type and length is returned."""
+        r = cls.conversion_ratio(inp,out)
+        if isinstance(value, collections.Iterable):
+            t = type(value)
+            if t == numpy.ndarray:
+                t = numpy.array
+            v = [i*r for i in value]
+            return t(v)
+        return value * r
