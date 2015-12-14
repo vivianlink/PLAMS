@@ -1,12 +1,14 @@
 from __future__ import unicode_literals
 
 import copy
+import math
 import numpy
 import types
 
-from .utils import Units, PT
-from .pdbtools import PDBHandler, PDBRecord
 from .errors import MoleculeError, PTError, FileError
+from .pdbtools import PDBHandler, PDBRecord
+from .settings import Settings
+from .utils import Units, PT
 
 __all__ = ['Atom', 'Bond', 'Molecule']
 
@@ -15,37 +17,108 @@ __all__ = ['Atom', 'Bond', 'Molecule']
 #===================================================================================================
 
 class Atom(object):
-    def __init__(self, atnum=0, coords=None, unit='angstrom', bonds=None, mol=None, ghost=False, **other):
+    """A class representing a single atom in three dimensional space.
+
+    An instance of this class has the following attributes:
+
+        *   ``atnum`` -- atomic number (zero for "dummy atoms")
+        *   ``coords`` -- tuple of length 3 storing spatial coordinates
+        *   ``bonds`` -- list of bonds (see |Bond|) this atom is a part of
+        *   ``mol`` -- a |Molecule| this atom belongs to
+        *   ``properties`` -- a |Settings| instance storing all other information about this atom (initially it is populated with *\*\*other* keyword arguments passed to the constructor)
+
+        All the above attributes can be accessed either directly or using one of the following properties:
+
+        *   ``x``, ``y``, ``z`` -- allow to read or modify each coordinate separately
+        *   ``symbol`` -- allows to read or write atomic symbol directly. Atomic symbol is not stored as an attribute, instead of that atomic number (``atnum``) indicates the type of atom. In fact, ``symbol`` this is just a wrapper around ``atnum`` that uses |PeriodicTable| as a translator::
+
+                >>> a = Atom(atnum=8)
+                >>> print a.symbol
+                O
+                >>> a.symbol = 'Ca'
+                >>> print a.atnum
+                20
+
+        *   ``mass`` -- atomic mass, obtained from |PeriodicTable|, read only
+        *   ``radius`` -- atomic radius, obtained from |PeriodicTable|, read only
+        *   ``connectors`` -- number of connectors, obtained from |PeriodicTable|, read only
+
+        Values stored in ``coords`` tuple do not necessarily have to be numeric, you can also store any string there. This might come handy for programs that allow parametrization of coordinates in the input file (to enforce some geometry constraints for example)::
+
+            >>> a = Atom(atnum=6, coords=(1,2,3))
+            >>> print a
+                     C       1.00000       2.00000       3.00000
+            >>> a.y = 'param1'
+            >>> print a
+                     C       1.00000        param1       3.00000
+
+        However, non-numerical coordinates cannot be used together with some methods (for example :meth:`distance_to` or :meth:`move_by`). Trying to do this will raise an exception.
+
+        Internally, atomic coordinates are always expressed in angstroms. Most of methods that read or modify atomic coordinates accept keyword argument ``unit`` allowing to choose unit in which results and/or arguments are expressed (see |Units| for details). Throughout the entire code angstrom is the default length unit. If you don't specify ``unit`` parameter in any place of your script, all automatic unit handling described above boils down to occasional multiplication/division by 1.0.
+    """
+    def __init__(self, atnum=0, coords=None, unit='angstrom', bonds=None, mol=None, **other):
         self.atnum = atnum
-        self.unit = unit
         self.mol = mol
-        self.ghost = ghost
         self.bonds = bonds or []
-        self.properties = other
+        self.properties = Settings(other)
 
         if coords is None:
             self.coords = (0.0, 0.0, 0.0)
         elif len(coords) == 3:
-            try:
-                self.coords = tuple(map(float,coords))
-            except:
-                self.coords = tuple(coords)
+            tmp = []
+            for i in coords:
+                try:
+                    i = Units.convert(float(i), unit, 'angstrom')
+                except ValueError: pass
+                tmp.append(i)
+            self.coords = tuple(tmp)
         else:
-            raise TypeError('__init__: Invalid coords passed')
+            raise TypeError('Atom: Invalid coordinates passed')
 
 
-    def str(self, symbol=True, suffix=''):
+    def str(self, symbol=True, suffix='', unit='angstrom', space=14, decimal=6):
+        """Return a string representation of this atom.
+
+        Returned string is a single line (no newline characters) that always contains atomic coordinates (and maybe more). Each atomic coordinate is printed using *space* characters, with *decimal* characters reserved for decimal digits. Coordinates values are expressed in *unit*.
+
+        If *symbol* is ``True``, atomic symbol is added at the beginning of the line. If *symbol* is a string, this exact string is printed there.
+
+        *suffix* is an arbitrary string that is appended at the end of returned line. It can contain identifiers in curly brackets (like for example ``f={fragment}``) that will be replaced by values of corresponding attributes (in this case ``self.fragment``). It is done via new string formatting and entire ``self.__dict__`` is passed to formating method. See :ref:`new-string-formatting` for details.
+
+        Example:
+
+            >>> a = Atom(atnum=6, coords=(1,1.5,2))
+            >>> print a.str()
+                     C      1.000000      1.500000      2.000000
+            >>> print a.str(unit='bohr')
+                     C      1.889726      2.834589      3.779452
+            >>> print a.str(symbol=False)
+                  1.000000      1.500000      2.000000
+            >>> print a.str(symbol='C2.13')
+                 C2.13      1.000000      1.500000      2.000000
+            >>> print a.str(suffix='protein1')
+                     C      1.000000      1.500000      2.000000 protein1
+            >>> a.info = 'membrane'
+            >>> print a.str(suffix='subsystem={info}')
+                     C      1.000000      1.500000      2.000000 subsystem=membrane
+
+        """
+        strformat = '{:>%is}'%space
+        numformat = '{:>%i.%if}'%(space,decimal)
+        f = lambda x: numformat.format(Units.convert(x, 'angstrom', unit)) if isinstance(x, (int,float)) else strformat.format(str(x))
+        if symbol is False:
+            return ('{0}{1}{2} '+suffix).format(*map(f,self.coords), **self.__dict__)
         if symbol is True:
             symbol = self.symbol
-        f = lambda x: '{:>14s}'.format(x) if isinstance(x, str) else '{:>14.5f}'.format(x)
-        if symbol:
-            return ('{0:>10s}{1}{2}{3} '+suffix).format(symbol, *map(f,self.coords), **self.__dict__)
-        return ('{0}{1}{2} '+suffix).format(*map(f,self.coords), **self.__dict__)
+        return ('{0:>10s}{1}{2}{3} '+suffix).format(symbol, *map(f,self.coords), **self.__dict__)
 
     def __str__(self):
-        if hasattr(self,'_bondstrid'):
-            return str(self._bondstrid)
+        """Return a string representation of this atom. Simplified version of :meth:`str` to work as a magic method."""
         return self.str()
+
+    def __iter__(self):
+        """Iteration through atom yields coordinates. Thanks to that instances of |Atom| can be passed to any method requiring point or vector as an argument"""
+        return iter(self.coords)
 
     def _setx(self, value): self.coords = (value, self.coords[1], self.coords[2])
     def _sety(self, value): self.coords = (self.coords[0], value, self.coords[2])
@@ -75,49 +148,64 @@ class Atom(object):
         return PT.get_connectors(self.atnum)
     connectors = property(_getconnectors)
 
-    def _check_coords(self):
-        for i in self.coords:
-            if not isinstance(i, (int, float, complex)):
-                raise TypeError('Atom: to use this method coords should be a tuple of three numerical values')
-
-    def convert(self, unit):
-        self._check_coords()
-        ratio = Units.conversion(self.unit, unit)
-        self.coords = tuple(i*ratio for i in self.coords)
-        self.unit = unit
-
-
     def move_by(self, vector, unit='angstrom'):
-        self._check_coords()
-        ratio = Units.conversion(unit, self.unit)
-        self.coords = tuple(i + j*ratio for i,j in zip(self.coords, vector))
+        """Move this atom in space by *vector*, expressed in *unit*.
+
+        *vector* should be an iterable container of length 3 (usually tuple, list or numpy array). *unit* describes unit of values stored in *vector*.
+
+        This method requires all coordinates to be numerical values, :exc:`~exceptions.TypeError` is raised otherwise.
+        """
+        ratio = Units.conversion(unit, 'angstrom')
+        self.coords = tuple(i + j*ratio for i,j in zip(self, vector))
 
 
-    def move_to(self, coords, unit='angstrom'):
-        self._check_coords()
-        ratio = Units.conversion(unit, self.unit)
-        self.coords = tuple(i*ratio for i in coords)
+    def move_to(self, point, unit='angstrom'):
+        """Move this atom to a given *point* in space, expressed in *unit*.
+
+        *point* should be an iterable container of length 3 (for example: tuple, |Atom|, list, numpy array). *unit* describes unit of values stored in *point*.
+
+        This method requires all coordinates to be numerical values, :exc:`~exceptions.TypeError` is raised otherwise.
+        """
+        ratio = Units.conversion(unit, 'angstrom')
+        self.coords = tuple(i*ratio for i in point)
 
 
-    def distance_to(self, atom):
-    #in self.unit
-        self._check_coords()
-        ratio = Units.conversion(atom.unit, self.unit)
-        res = (atom.x*ratio - self.x)**2 + (atom.y*ratio - self.y)**2 + (atom.z*ratio - self.z)**2
-        return res**(0.5)
+    def distance_to(self, point, unit='angstrom', result_unit='angstrom'):
+        """Measure the distance between this atom and *point*.
+
+        *point* should be an iterable container of length 3 (for example: tuple, |Atom|, list, numpy array). *unit* describes unit of values stored in *point*. Returned value is expressed in *result_unit*.
+
+        This method requires all coordinates to be numerical values, :exc:`~exceptions.TypeError` is raised otherwise.
+        """
+        ratio = Units.conversion(unit, 'angstrom')
+        res = 0.0
+        for i,j in zip(self,point):
+            res += (i - j*ratio)**2
+        return Units.convert(math.sqrt(res), 'angstrom', result_unit)
 
 
-    def vector_to(self, atom):
-    #in self.unit
-        self._check_coords()
-        ratio = Units.conversion(atom.unit, self.unit)
-        return ((atom.x*ratio - self.x), (atom.y*ratio - self.y), (atom.z*ratio - self.z))
+    def vector_to(self, point, unit='angstrom', result_unit='angstrom'):
+        """Calculate a vector from this atom to *point*.
+
+        *point* should be an iterable container of length 3 (for example: tuple, |Atom|, list, numpy array). *unit* describes unit of values stored in *point*. Returned value is expressed in *result_unit*.
+
+        This method requires all coordinates to be numerical values, :exc:`~exceptions.TypeError` is raised otherwise.
+        """
+        ratio = Units.conversion(unit, 'angstrom')
+        resultratio = Units.conversion('angstrom', result_unit)
+        return tuple((i*ratio-j)*resultratio for i,j in zip(point, self))
 
 
-    def distance_square(self, atom):
-    #fast but does not care about units or safety; be careful
-        return (self.x - atom.x)**2 + (self.y - atom.y)**2 + (self.z - atom.z)**2
+    def angle(self, point1, point2, point1unit='angstrom', point2unit='angstrom',result_unit='radian'):
+        """Calculate an angle between vectors pointing from this atom to *point1* and *point2*.
 
+        *point1* and *point2* should be iterable containers of length 3 (for example: tuple, |Atom|, list, numpy array). Values stored in them are expressed in, respectively, *point1unit* and *point2unit*. Returned value is expressed in *result_unit*.
+
+        This method requires all coordinates to be numerical values, :exc:`~exceptions.TypeError` is raised otherwise.
+        """
+        num = numpy.dot(self.vector_to(point1, point1unit), self.vector_to(point2, point2unit))
+        den = self.distance_to(point1, point1unit) * self.distance_to(point2, point2unit)
+        return Units.convert(math.acos(num/den), 'radian', unit)
 
 
 #===================================================================================================
@@ -125,30 +213,50 @@ class Atom(object):
 #===================================================================================================
 
 class Bond (object):
+    """A class representing a bond between two atoms.
+
+    An instance of this class has the following attributes:
+
+        *   ``atom1`` and ``atom2`` -- two instances of |Atom| that form this bond
+        *   ``order`` -- order of the bond. It is either an integer number or the floating point value stored in ``Bond.AR``, indicating aromatic bond
+        *   ``mol`` -- a |Molecule| this bond belongs to
+        *   ``properties`` -- a |Settings| instance storing all other  information about this bond (initially it is populated with *\*\*other* keyword arguments passed to the constructor)
+    """
     AR = 1.5
     def __init__(self, atom1, atom2, order=1, mol=None, **other):
         self.atom1 = atom1
         self.atom2 = atom2
         self.order = order
         self.mol = mol
-        self.properties = other
+        self.properties = Settings(other)
 
 
     def __str__(self):
+        """Return string representation of this bond."""
         return '(%s)--%1.1f--(%s)'%(str(self.atom1), self.order, str(self.atom2))
 
 
+    def __iter__(self):
+        """Iterate over bonded atoms (``atom1`` first, then ``atom2``)."""
+        yield self.atom1
+        yield self.atom2
+
+
     def is_aromatic(self):
+        """Check if this bond is aromatic."""
         return self.order == Bond.AR
 
 
-    def length(self):
-    #in units of atom1
-        return self.atom1.distance_to(self.atom2)
+    def length(self, unit='angstrom'):
+        """Return bond's length, expressed in *unit*."""
+        return self.atom1.distance_to(self.atom2, result_unit=unit)
 
 
     def other_end(self, atom):
-    #'hard' identity required
+        """Return the atom on the other end of this bond with respect to *atom*.
+
+        *atom* has to be either ``atom1`` or ``atom2``, otherwise an exception is raised.
+        """
         if atom is self.atom1:
             return self.atom2
         elif atom is self.atom2:
@@ -158,9 +266,13 @@ class Bond (object):
 
 
     def resize(self, atom, length, unit='angstrom'):
-        ratio = 1.0 - Units.convert(length, unit, self.atom1.unit)/self.length()
+        """Change the length of the bond to *length*.
+
+        This method works in the following way: one of two atoms forming this bond is moved along the bond in such a way that new length is *length*, in *unit* (direction of the bond in space does not change). Atom indicated by *atom* has to be one of bond's atoms and it is the atom that is **not** moved.
+        """
+        ratio = 1.0 - Units.convert(length, unit, 'angstrom')/self.length()
         moving = self.other_end(atom)
-        moving.move_by(tuple(i*ratio for i in moving.vector_to(atom)), moving.unit)
+        moving.move_by(tuple(i*ratio for i in moving.vector_to(atom)))
 
 
 #===================================================================================================
@@ -182,19 +294,35 @@ class Molecule (object):
 
 
     def __len__(self):
+        """Return the number of atoms."""
         return len(self.atoms)
 
     def __str__(self):
+        """Return string representation of this molecule.
+
+        Information about atoms are printed in ``.xyz`` format fashion -- each atom in a separate, enumerated line. Then, if the molecule contains any bonds, they are printed. Each bond is printed in a separate line, with information about both atoms and bond order. Example::
+
+                  Atoms:
+                    1         N       0.00000       0.00000       0.38321
+                    2         H       0.94218       0.00000      -0.01737
+                    3         H      -0.47109       0.81595      -0.01737
+                    4         H      -0.47109      -0.81595      -0.01737
+                  Bonds:
+                    (1)----1----(2)
+                    (1)----1----(3)
+                    (1)----1----(4)
+        """
         s = '  Atoms: \n'
         for i,atom in enumerate(self.atoms):
             s += ('%5i'%(i+1)) + str(atom) + '\n'
-            atom._bondstrid = i+1
         if len(self.bonds) > 0:
+            for j,atom in enumerate(self.atoms):
+                atom._tmpid = j+1
             s += '  Bonds: \n'
             for bond in self.bonds:
-                s += str(bond) + '\n'
-        for atom in self.atoms:
-            del atom._bondstrid
+                s += '(%d)--%1.1f--(%d)\n'%(bond.atom1._tmpid, bond.order, bond.atom2._tmpid)
+            for atom in self.atoms:
+                del atom._tmpid
         if self.lattice:
             s += "  Lattice:\n"
             for vec in self.lattice:
@@ -203,12 +331,21 @@ class Molecule (object):
 
 
     def __iter__(self):
+        """Iterate over atoms."""
         return iter(self.atoms)
 
     def __getitem__(self, key):
+        """Bracket notation (``mymol[i]``) can be used to access the atom list directly. Read only."""
+        #allow key to be an atom
         return self.atoms[key]
 
+        #__setitem__ __delitem__
+
     def __add__(self, other):
+        """Create new molecule that is a sum of this molecule and *other*.
+
+        Both base molecules are copied, so the newly created "sum-molecule" has atoms, bonds and all other
+        """
         m = copy.deepcopy(self)
         m += other
         return m
@@ -227,11 +364,17 @@ class Molecule (object):
         self.properties.update(othercopy.properties)
         return self
 
-
-    def __copy__(self):
+    def copy(self, atoms=None):
+    #TOFIX
         return copy.deepcopy(self)
 
-    copy = __copy__
+    def deepcopy(self, atoms=None):
+        if atoms is None:
+            return copy.deepcopy(self)
+
+    def __copy__(self):
+        return self.copy(atoms=None)
+
 
 
 
@@ -735,24 +878,40 @@ class Molecule (object):
         return tuple(center)
 
 
-
-    def distance(self, other):
+#============== RETHINK AND REWRITE ME================================
+    def distance_to_mol(self, other, ghosts=True):
         dist = float('inf')
         for at1 in self.atoms:
-            for at2 in other.atoms:
-                dist = min(dist, (at1.x-at2.x)**2 + (at1.y-at2.y)**2 + (at1.z-at2.z)**2)
+            if ghosts or not at1.ghost:
+                for at2 in other.atoms:
+                    if not at2.ghost:
+                        dist = min(dist, (at1.x-at2.x)**2 + (at1.y-at2.y)**2 + (at1.z-at2.z)**2)
         return dist**(0.5)
 
 
 
     def distance_to_point(self, point, ghosts=True):
+        if isinstance(point, Atom):
+            point = point.coords
         dist = float('inf')
         for at in self.atoms:
             if ghosts or not at.ghost:
                 dist = min(dist, (at.x-point[0])**2 + (at.y-point[1])**2 + (at.z-point[2])**2)
         return dist**(0.5)
 
+    def closest_atom(self, point, ghosts=True):
+        if isinstance(point, Atom):
+            point = point.coords
+        dist = float('inf')
+        for at in self.atoms:
+            if ghosts or not at.ghost:
+                newdist = (at.x-point[0])**2 + (at.y-point[1])**2 + (at.z-point[2])**2
+                if newdist < dist:
+                    dist = newdist
+                    ret = at
+        return ret
 
+#====================================================================
 
     def translate(self, vec, unit='angstrom'):
         for at in self.atoms:
@@ -864,7 +1023,7 @@ class Molecule (object):
         self.delete_all_bonds()
 
         dmax = 1.28
-        dmax2 = dmax**2
+
         cubesize = dmax*2.1*max([at.radius for at in self.atoms])
 
         cubes = {}
@@ -891,8 +1050,8 @@ class Molecule (object):
             if at1.free > 0:
                 for at2 in neighbors[at1.cube]:
                     if (at2.free > 0) and (at1._id < at2._id):
-                        ratio = at1.distance_square(at2)/((at1.radius+at2.radius)**2)
-                        if (ratio < dmax2):
+                        ratio = at1.distance_to(at2)/(at1.radius+at2.radius)
+                        if (ratio < dmax):
                             heap.append(element(0, ratio, at1, at2))
                             #I hate to do this, but I guess there's no other way :/ [MH]
                             if (at1.atnum == 16 and at2.atnum == 8):
