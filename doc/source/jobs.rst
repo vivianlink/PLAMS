@@ -29,7 +29,7 @@ The first step to run a job using PLAMS is to create a job object. You need to p
 
 Various keyword arguments (arguments of the form ``arg=value``, like ``name`` in the example above) can be passed to a job constructor, depending on the type of your job. However, the following keyword arguments are common for all types of jobs:
 
-    * ``name`` -- a string containing the name of the job. If not supplied, default name ``plamsjob`` is used.
+    * ``name`` -- a string containing the name of the job. If not supplied, default name ``plamsjob`` is used. Job's name cannot contain path separator (``\`` in Linux, ``/`` in Windows).
     * ``settings`` -- a |Settings| instance to be used by this job. It gets copied (using :meth:`~scm.plams.settings.Settings.copy`) so you can pass the same instance to several different jobs and changes made afterwards won't interfere. Any instance of |Job| can be also passed as a value of this argument. In that case |Settings| associated with the passed job are copied.
     * ``depend`` -- a list of jobs that need to be finished before this job can start. This is useful when you want to execute your jobs in parallel. Usually there is no need to use this argument, since dependencies between jobs are resolved automatically (see |parallel|). However, sometimes one needs to explicitly state such a dependency and this option is then helpful.
 

@@ -57,6 +57,8 @@ class Job(object):
     _result_type = Results
 
     def __init__(self, name='plamsjob', settings=None, depend=None):
+        if os.path.sep in name:
+            raise PlamsError('Job name cannot contain %s'%os.path.sep)
         self.status = 'created'
         self.results = self.__class__._result_type(self)
         self.name = name
