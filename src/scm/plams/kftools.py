@@ -98,17 +98,17 @@ class KFReader(object):
 
         one = b[80:84]
 
-        if struct.unpack('32s',b[48:80])[0] == b'SUPERINDEX                      ':
+        if struct.unpack(b'32s',b[48:80])[0] == b'SUPERINDEX                      ':
             self.word = 'i'
-        elif struct.unpack('32s',b[64:96])[0] == b'SUPERINDEX                      ':
+        elif struct.unpack(b'32s',b[64:96])[0] == b'SUPERINDEX                      ':
             self.word = 'q'
             one = b[96:104]
         else:
             log('KFFile._autodetect: Unable to detect integer size and endian of %s. Using defaults (4 bytes and little endian)' % self.path, 3)
             return
 
-        for e in ['<', '>']:
-            if struct.unpack(e+self.word, one)[0] == 1:
+        for e in [b'<', b'>']:
+            if struct.unpack(str(e+self.word), one)[0] == 1:
                 self.endian = e
                 d = {'q':'8 bytes','i':'4 bytes','<':'little endian','>':'big endian',}
                 log(('Format of {0} detected to {'+self.word+'} and {'+self.endian+'}').format(self.path, **d), 7)
@@ -135,7 +135,7 @@ class KFReader(object):
 
         ret = []
         while step <= len(block):
-            new = struct.unpack(formatstring, block[:step])
+            new = struct.unpack(str(formatstring), block[:step])
             new = tuple(map(lambda x: x.decode() if isinstance(x,bytes) else x, new))
             ret.append(new)
             block = block[step:]
