@@ -107,7 +107,7 @@ class KFReader(object):
             log('KFFile._autodetect: Unable to detect integer size and endian of %s. Using defaults (4 bytes and little endian)' % self.path, 3)
             return
 
-        for e in [b'<', b'>']:
+        for e in ['<', '>']:
             if struct.unpack(str(e+self.word), one)[0] == 1:
                 self.endian = e
                 d = {'q':'8 bytes','i':'4 bytes','<':'little endian','>':'big endian',}
