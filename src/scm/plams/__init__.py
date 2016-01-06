@@ -1,6 +1,7 @@
 from .basejob import *
 from .basemol import *
 from .common import *
+from .errors import *
 from .jobrunner import *
 from .kftools import *
 from .pdbtools import *
