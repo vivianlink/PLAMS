@@ -238,6 +238,7 @@ class Units(object):
             *   ``ev``, ``eV``
             *   ``kcal/mol``
             *   ``kJ/mol``
+            *   ``cm^-1``
 
         *   dipole moment:
 
@@ -294,6 +295,7 @@ class Units(object):
     energy['ev'] = energy['eV']
     energy['kJ/mol'] = 4.359744650e-21 * constants['NA']  #http://physics.nist.gov/cgi-bin/cuu/Value?hrj
     energy['kcal/mol'] = energy['kJ/mol'] / 4.184
+    energy['cm^-1'] = 219474.6313702   #http://physics.nist.gov/cgi-bin/cuu/Value?hrminv
     dicts.append(energy)
 
     angle = {}
