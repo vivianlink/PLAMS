@@ -322,6 +322,9 @@ class DFTBJob(SCMJob):
     def _parsemol(self):
         for i,atom in enumerate(self.molecule):
             self.settings.input.system.atoms['_'+str(i+1)] = atom.str()
+        if self.molecule.lattice:
+            for i,vec in enumerate(self.molecule.lattice):
+                self.settings.input.system.lattice['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
 
     def _removemol(self):
         if 'system' in self.settings.input and 'atoms' in self.settings.input.system:
