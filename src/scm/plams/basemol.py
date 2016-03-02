@@ -370,7 +370,7 @@ class Molecule (object):
 
     .. note::
 
-        Numbering of atoms withing a molecule starts with 1.
+        Numbering of atoms within a molecule starts with 1.
 
 
     However, if you feel more familiar with identifying atoms by natural numbers, you can use :meth:`set_atoms_id` to equip each atom of the molecule with ``id`` attribute equal to atom's position within ``atoms`` list. This method can also be helpful to track changes in your molecule during tasks that can reorder atoms.
@@ -955,8 +955,12 @@ class Molecule (object):
 
         """
         if isinstance(key, int):
+            if key == 0:
+                raise MoleculeError('Numbering of atoms starts with 1')
             return self.atoms[key-1]
         if isinstance(key, tuple) and len(key) == 2:
+            if key[0] == 0 or key[1] == 0:
+                raise MoleculeError('Numbering of atoms starts with 1')
             return self.find_bond(self.atoms[key[0]-1], self.atoms[key[1]-1])
 
     def __add__(self, other):
