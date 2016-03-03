@@ -219,7 +219,7 @@ class Atom(object):
         """
         num = numpy.dot(self.vector_to(point1, point1unit), self.vector_to(point2, point2unit))
         den = self.distance_to(point1, point1unit) * self.distance_to(point2, point2unit)
-        return Units.convert(math.acos(num/den), 'radian', unit)
+        return Units.convert(math.acos(num/den), 'radian', result_unit)
 
     def rotate(self, matrix):
         """Rotate this atom according to rotation *matrix*.
