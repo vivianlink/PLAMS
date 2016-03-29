@@ -12,7 +12,10 @@ if 'ADFBIN' in os.environ:
     if not os.path.exists(command):
         # This might be a windows machine
         command = opj(os.path.expandvars('$ADFBIN'), 'pythonbase', 'Scripts', 'sphinx-build.exe')
-        if not os.path.exists(command):
+        if os.path.exists(command):
+            # starting sphinx-build on windows is tricky...
+            command = ['sh', opj(os.path.expandvars('$ADFBIN'), 'startpython'), '-m', 'sphinx']
+        else:
             print('Warning: ADFBIN found in environment, but failed to locate sphinx-build')
             command = ""
 if command == "":
@@ -41,4 +44,8 @@ if len(sys.argv) > 1:
 else:
     target = opj(location, 'build')
 
-subprocess.call([command, source, target])
+if isinstance(command, list):
+    # on windows command is a list of multiple items
+    subprocess.call(command + [source, target])
+else:
+    subprocess.call([command, source, target])
