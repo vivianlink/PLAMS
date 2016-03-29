@@ -5,10 +5,17 @@ import subprocess
 import sys
 from os.path import join as opj
 
+command = ""
 #Try to locate sphinx-build executable
-if 'ADFHOME' in os.environ:
-    command = opj(os.path.expandvars('$ADFHOME'), 'bin' ,'pythonbase', 'bin', 'sphinx-build')
-else:
+if 'ADFBIN' in os.environ:
+    command = opj(os.path.expandvars('$ADFBIN'), 'pythonbase', 'bin', 'sphinx-build')
+    if not os.path.exists(command):
+        # This might be a windows machine
+        command = opj(os.path.expandvars('$ADFBIN'), 'pythonbase', 'Scripts', 'sphinx-build.exe')
+        if not os.path.exists(command):
+            print('Warning: ADFBIN found in environment, but failed to locate sphinx-build')
+            command = ""
+if command == "":
     null = open(os.devnull, 'wb')
     try:
         subprocess.call(['sphinx-build','--version'], stdout=null, stderr=null)
