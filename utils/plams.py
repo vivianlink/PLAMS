@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+from scm.plams import *
+
+plams_namespace = globals().copy()
+
 import os
 import sys
 import argparse
@@ -30,9 +34,6 @@ for _X_input_file in _X_args.file:
         sys.exit(1)
 
 
-
-from scm.plams import *
-
 #normpath prevents crash when f ends with slash
 init(path=_X_args.p, folder=(os.path.normpath(_X_args.f) if _X_args.f else None))
 
@@ -42,7 +43,7 @@ with open(config.jm.restart, 'w') as f:
     f.write(_X_input)
 
 try:
-    exec(compile(open(config.jm.input).read(), config.jm.input, 'exec'))
+    exec(compile(open(config.jm.input).read(), config.jm.input, 'exec'), plams_namespace)
 except KeyboardInterrupt:
     sys.exit(0)
 except Exception as e:
