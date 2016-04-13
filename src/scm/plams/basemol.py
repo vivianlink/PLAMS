@@ -231,7 +231,7 @@ class Atom(object):
             This method does not check if supplied matrix is a proper rotation matrix.
         """
         matrix = numpy.array(matrix).reshape(3,3)
-        self.coords = tuple(numpy.dot(rotmat, numpy.array(self.coords)))
+        self.coords = tuple(numpy.dot(matrix, numpy.array(self.coords)))
 
 
 
