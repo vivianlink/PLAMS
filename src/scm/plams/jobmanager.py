@@ -19,7 +19,6 @@ class JobManager(object):
     """Class responsible for jobs and files management.
 
     Every instance has the following attributes:
-
         *   ``folder`` -- the working folder name.
         *   ``path`` -- the absolute path to the directory with the working folder.
         *   ``workdir`` -- the absolute path to the working folder (``path/folder``).
@@ -31,10 +30,9 @@ class JobManager(object):
     ``path`` and ``folder`` can be adjusted with constructor arguments *path* and *folder*. If not supplied, Python current working directory and string ``plams.`` appended with PID of the current process are used.
 
     ``settings`` attribute is directly set to the value of *settings* argument (unlike in other classes where they are copied) and it should be a |Settings| instance with the following keys:
-
-        * ``hashing`` -- chosen hashing method (see |RPM|).
-        * ``counter_len`` -- length of number appended to the job name in case of name conflict.
-        * ``remove_empty_directories`` -- if ``True``, all empty subdirectories of the working folder are removed on |finish|.
+        *   ``hashing`` -- chosen hashing method (see |RPM|).
+        *   ``counter_len`` -- length of number appended to the job name in case of name conflict.
+        *   ``remove_empty_directories`` -- if ``True``, all empty subdirectories of the working folder are removed on |finish|.
     """
 
     def __init__(self, settings, path=None, folder=None):

@@ -191,7 +191,6 @@ As seen in the above example, it is extremely important to properly configure jo
 
 
 To sum up all the above considerations, here is the rule of thumb how to write properly working parallel PLAMS scripts:
-
     1.  Request results as late as possible, preferably just before using them.
     2.  If possible, avoid requesting results in the main thread.
     3.  Place the result request in the thread in which this data is later used.
@@ -210,7 +209,6 @@ First cleaning is done during job execution, just after :meth:`~scm.plams.basejo
 In the majority of cases it is sufficient to use second cleaning, which is performed at the end of your script, when |finish| method is called. It is adjusted by ``myjob.settings.save``. You can use second cleaning to remove files that you no longer need after you extracted relevant data earlier in your script.
 
 The argument passed to :meth:`~Results._clean` (in other words the value that is supposed to be kept in ``myjob.settings.keep`` and ``myjob.settings.save``) can be one of the following:
-
     *   ``'all'`` -- nothing is removed, cleaning is skipped.
     *   ``'none'`` or ``[]`` or ``None`` -- everything is removed from the job folder.
     *   list of strings -- list of filenames to be kept. Shortcut ``$JN`` can be used here, as well as \*-wildcards. For example ``['geo.*', '$JN.out', 'logfile']`` will keep ``[jobname].out``, ``logfile`` and all files whose names start with ``geo.`` and remove everything else from the job folder.

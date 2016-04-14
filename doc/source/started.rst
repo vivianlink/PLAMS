@@ -28,10 +28,9 @@ All PLAMS modules are then imported and all useful identifiers are added to the 
 
 
 Besides regular modules PLAMS consists of three following files located in the ``utils`` subfolder:
-
-    * defaults file: ``plams_defaults.py``
-    * master script: ``plams.py`` (executable)
-    * restart script: ``plams_restart.py`` (executable)
+    *   defaults file: ``plams_defaults.py``
+    *   master script: ``plams.py`` (executable)
+    *   restart script: ``plams_restart.py`` (executable)
 
 
 The defaults file contains a list of commands that adjust various aspects of PLAMS behavior. If you wish to globally change some setting you can do it by modifying this file. Defaults file is self-explanatory in such a way that each command is preceded with a comment describing what it does. It is a good idea to read this file at some point to have an overview of what and how can be tweaked. See also |init| if you wish to use several different defaults files.
@@ -138,10 +137,9 @@ the standard output will be::
     [output of "do something"]
 
 Three important things to keep in mind about ``-v`` parameter:
-
-    * no spaces around equal sign,
-    * each variable requires separate ``-v``,
-    * the type of the variable is **always** string (like in the example above). If you want to pass some numerical values make sure to convert them from strings to numbers inside your script.
+    *   no spaces around equal sign,
+    *   each variable requires separate ``-v``,
+    *   the type of the variable is **always** string (like in the example above). If you want to pass some numerical values make sure to convert them from strings to numbers inside your script.
 
 Finally, the master script can be called with more than one positional argument, like for example::
 

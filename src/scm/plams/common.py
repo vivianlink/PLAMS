@@ -22,11 +22,10 @@ def init(path=None, folder=None):
     """Initialize PLAMS environment. Create global ``config`` and default |JobManager|.
 
     An empty |Settings| instance is created and added to :mod:`public<__builtin__>` namespace as ``config``. Then it is populated with default settings by executing ``plams_defaults.py``. The following locations are used to search for the defaults file, in order of precedence:
-
-        * If ``$PLAMSDEFAULTS`` variable is in your environment and it points to a file, this file is used (executed as Python script).
-        * If ``$PLAMSHOME`` variable is in your environment and ``$PLAMSHOME/utils/plams_defaults.py`` exists, it is used.
-        * If ``$ADFHOME`` variable is in your environment and ``$ADFHOME/scripting/plams/utils/plams_defaults.py`` exists, it is used.
-        * Otherwise, the path ``../../../utils/plams_defaults.py`` relative to the current file (``common.py``) is checked. If defaults file is not found there, an exception is raised.
+        *   If ``$PLAMSDEFAULTS`` variable is in your environment and it points to a file, this file is used (executed as Python script).
+        *   If ``$PLAMSHOME`` variable is in your environment and ``$PLAMSHOME/utils/plams_defaults.py`` exists, it is used.
+        *   If ``$ADFHOME`` variable is in your environment and ``$ADFHOME/scripting/plams/utils/plams_defaults.py`` exists, it is used.
+        *   Otherwise, the path ``../../../utils/plams_defaults.py`` relative to the current file (``common.py``) is checked. If defaults file is not found there, an exception is raised.
 
     Next, a |JobManager| instance is created as ``config.jm`` using *path* and *folder* to determine the main working directory. Settings used by this instance are directly linked from ``config.jobmanager``. If *path* is not supplied, the current directory is used. If *folder* is not supplied, the string ``plams.`` followed by PID of the current process is used.
 

@@ -210,42 +210,40 @@ class Units(object):
     All values are based on `2014 CODATA recommended values <http://physics.nist.gov/cuu/Constants>`_.
 
     The following constants and units are supported:
-
         *   constants:
 
-            *   ``speed_of_light`` (also ``c``)
-            *   ``elementary_charge`` (also ``e`` and ``electron_charge``)
-            *   ``avogadro_constant`` (also ``NA``)
-            *   ``bohr_radius``
+            -   ``speed_of_light`` (also ``c``)
+            -   ``elementary_charge`` (also ``e`` and ``electron_charge``)
+            -   ``avogadro_constant`` (also ``NA``)
+            -   ``bohr_radius``
 
         *   distance:
 
-            *   ``Angstrom``, ``angstrom``, ``A``
-            *   ``bohr``, ``a0``, ``au``
-            *   ``nm``
-            *   ``pm``
+            -   ``Angstrom``, ``angstrom``, ``A``
+            -   ``bohr``, ``a0``, ``au``
+            -   ``nm``
+            -   ``pm``
 
         *   angle:
 
-            *    ``degree``, ``deg``,
-            *    ``radian``, ``rad``,
-            *    ``grad``
-            *    ``circle``
+            -    ``degree``, ``deg``,
+            -    ``radian``, ``rad``,
+            -    ``grad``
+            -    ``circle``
 
         *   energy:
 
-            *   ``au``, ``hartree``, ``Hartree``
-            *   ``ev``, ``eV``
-            *   ``kcal/mol``
-            *   ``kJ/mol``
-            *   ``cm^-1``
+            -   ``au``, ``hartree``, ``Hartree``
+            -   ``ev``, ``eV``
+            -   ``kcal/mol``
+            -   ``kJ/mol``
+            -   ``cm^-1``
 
         *   dipole moment:
 
-            *   ``au``
-            *   ``Cm``
-            *   ``D``, ``Debye``, ``debye``
-
+            -   ``au``
+            -   ``Cm``
+            -   ``D``, ``Debye``, ``debye``
 
     Example::
 

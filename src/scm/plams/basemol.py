@@ -26,7 +26,6 @@ class Atom(object):
     """A class representing a single atom in three dimensional space.
 
     An instance of this class has the following attributes:
-
         *   ``atnum`` -- atomic number (zero for "dummy atoms")
         *   ``coords`` -- tuple of length 3 storing spatial coordinates
         *   ``bonds`` -- list of bonds (see |Bond|) this atom is a part of
@@ -34,7 +33,6 @@ class Atom(object):
         *   ``properties`` -- a |Settings| instance storing all other information about this atom (initially it is populated with *\*\*other* keyword arguments passed to the constructor)
 
     All the above attributes can be accessed either directly or using one of the following properties:
-
         *   ``x``, ``y``, ``z`` -- allow to read or modify each coordinate separately
         *   ``symbol`` -- allows to read or write atomic symbol directly. Atomic symbol is not stored as an attribute, instead of that atomic number (``atnum``) indicates the type of atom. In fact, ``symbol`` this is just a wrapper around ``atnum`` that uses |PeriodicTable| as a translator::
 
@@ -245,7 +243,6 @@ class Bond (object):
     """A class representing a bond between two atoms.
 
     An instance of this class has the following attributes:
-
         *   ``atom1`` and ``atom2`` -- two instances of |Atom| that form this bond
         *   ``order`` -- order of the bond. It is either an integer number or the floating point value stored in ``Bond.AR``, indicating aromatic bond
         *   ``mol`` -- a |Molecule| this bond belongs to
@@ -320,7 +317,6 @@ class Molecule (object):
     """A class representing basic molecule object.
 
     An instance of this class has the following attributes:
-
         *   ``atoms`` -- list of |Atom| objects that belong to this molecule
         *   ``bonds`` -- list of |Bond| objects between atoms listed in ``atoms``
         *   ``properties`` -- a |Settings| instance storing all other information about this molecule
@@ -767,11 +763,11 @@ class Molecule (object):
     def rotate(self, matrix):
         """Rotate this molecule according to rotation *matrix*.
 
-            *matrix* should be a container with 9 numerical values. It can be a list (tuple, numpy array etc.) listing matrix elements row-wise, either flat (``[1,2,3,4,5,6,7,8,9]``) or in two-level fashion (``[[1,2,3],[4,5,6],[7,8,9]]``).
+        *matrix* should be a container with 9 numerical values. It can be a list (tuple, numpy array etc.) listing matrix elements row-wise, either flat (``[1,2,3,4,5,6,7,8,9]``) or in two-level fashion (``[[1,2,3],[4,5,6],[7,8,9]]``).
 
-            .. note::
+        .. note::
 
-                This method does not check if supplied matrix is a proper rotation matrix.
+            This method does not check if supplied matrix is a proper rotation matrix.
         """
         for at in self.atoms:
             at.rotate(matrix)
@@ -827,12 +823,11 @@ class Molecule (object):
 
     def wrap(self, length, angle=2*math.pi, length_unit='angstrom', angle_unit='radian'):
         """wrap(self, length, angle=2*pi, length_unit='angstrom', angle_unit='radian')
-        Transform the molecule wrapping its x-axis around z-axis.
 
-        This method is useful for building nanotubes or molecular wedding rings.
+        Transform the molecule wrapping its x-axis around z-axis. This method is useful for building nanotubes or molecular wedding rings.
+
         Atomic coordinates are transformed in the following way:
-
-            *   z coordinates remain untouched
+            *   zzzzz coordinates remain untouched
             *   x axis gets wrapped around the circle centered in the origin of new coordinate system. Each segment of x axis of length *length* ends up as an arc of a circle subtended by an angle *angle*. The radius of this circle is R = *length*/*angle*.
             *   part of the plane between the x axis and the line y=R is transformed into the interior of the circle, with line y=R being squashed into a single point - the center of the circle.
             *   part of the plane above line y=R is dropped
