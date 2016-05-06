@@ -5,7 +5,7 @@ config.preview = False
 config.sleepstep = 1 #1 for devmode: default should be probably sth 10-20
 
 #Allows to try to obtain results of failed/crashed jobs. Could be disasterous, so beware :)
-config.ignore_failure = False
+config.ignore_failure = True
 
 #If set to True, all threads started by JobRunner are daemon threads. Daemon threads are terminated when the main thread finishes and hence allow immediate end of the whole script when Ctrl-C is pressed.
 config.daemon_threads = True
