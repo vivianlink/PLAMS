@@ -134,21 +134,26 @@ class KFReader(object):
             formatstring += str(a) + t
 
         ret = []
-        while step <= len(block):
-            new = struct.unpack(str(formatstring), block[:step])
-            new = tuple(map(lambda x: x.decode() if isinstance(x,bytes) else x, new))
-            ret.append(new)
-            block = block[step:]
+        if step > 0:
+            while step <= len(block):
+                new = struct.unpack(str(formatstring), block[:step])
+                new = tuple(map(lambda x: x.decode() if isinstance(x,bytes) else x, new))
+                ret.append(new)
+                block = block[step:]
         return ret
 
 
     def _get_data(self, datablock):
-        """Extract all data from a single data block. Returned value is a 4-tuple of lists, on list for each data type (respectively: int, float, str, bool).
+        """Extract all data from a single data block. Returned value is a 4-tuple of lists, one list for each data type (respectively: int, float, str, bool).
         """
         hlen = 4 * self._sizes[self.word]
         i,d,s,b = self._parse(datablock[:hlen],[(4,self.word)])[0]
-        ret = list(self._parse(datablock[hlen:], zip((i,d,s,b),(self.word,'d','s',self.word)))[0])
-        return ret[:i], ret[i:i+d], ret[i+d], map(bool,ret[i+d+1:])
+        contents = self._parse(datablock[hlen:], zip((i,d,s,b),(self.word,'d','s',self.word)))
+        if contents:
+            ret = list(contents[0])
+            return ret[:i], ret[i:i+d], ret[i+d], map(bool,ret[i+d+1:])
+        else:
+            return [], [], [], []
 
 
     def _create_index(self):
@@ -205,7 +210,8 @@ class KFReader(object):
                 yield ret
                 ret += 1
             i += 1
-            _, ret, last = lst[i]
+            if i < len(lst):
+                _, ret, last = lst[i]
 
 
 #===================================================================================================
