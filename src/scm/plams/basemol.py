@@ -774,7 +774,47 @@ class Molecule (object):
 
 
     def rotate_bond(self, bond, atom, angle, unit='radian'):
-        pass
+        """Rotate given *bond* by an *angle* expressed in *unit*.
+
+        *bond* should be chosen in such a way, that it divides the molecule into two parts (using a bond being part of a ring results in an error). *atom* has to belong to *bond* and is used to pick which "half" of the molecule is rotated. Positive angle denotes counterclockwise rotation (looking along the bond, from the stationary part of the molecule).
+        """
+        if atom not in bond:
+            raise MoleculeError('rotate_bond: atom has to belong to the bond')
+
+        atoms_to_rotate = {atom}
+
+        def dfs(v):
+            for e in v.bonds:
+                if e is not bond:
+                    u = e.other_end(v)
+                    if u not in atoms_to_rotate:
+                        atoms_to_rotate.add(u)
+                        dfs(u)
+
+        dfs(atom)
+
+        if len(atoms_to_rotate) == len(self):
+            raise MoleculeError('rotate_bond: chosen bond does not divide molecule')
+
+        other_end = bond.other_end(atom)
+        v = numpy.array(other_end.vector_to(atom))
+        v /= numpy.linalg.norm(v)
+
+        W = numpy.array([[0, -v[2], v[1]],
+                         [v[2], 0, -v[0]],
+                         [-v[1], v[0], 0]])
+
+        angle = Units.convert(angle, unit, 'radian')
+        a1 = math.sin(angle)
+        a2 = 2 * math.pow(math.sin(0.5 * angle), 2)
+
+        rotmat = numpy.identity(3) + a1 * W + a2 * numpy.dot(W,W)
+
+        trans = numpy.array(other_end.vector_to((0,0,0)))
+        for at in atoms_to_rotate:
+            at.translate(trans)
+            at.rotate(rotmat)
+            at.translate(-trans)
 
 
     def closest_atom(self, point, unit='angstrom'):
