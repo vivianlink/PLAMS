@@ -223,6 +223,7 @@ class Settings(dict):
                     self[name].soft_update(other[name])
             elif name not in self:
                 self[name] = other[name]
+        return self
 
 
 
