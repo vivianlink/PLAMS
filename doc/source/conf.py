@@ -134,6 +134,10 @@ rst_epilog = """
 
 global_conf_relative_path = '../../../'
 
+autodoc_default_flags = ['members', 'private-members', 'special-members']
+autodoc_member_order = 'bysource'
+
+
 if os.path.isfile(os.path.join(global_conf_relative_path,'global_conf.py')):
     sys.path.insert(0, os.path.abspath(global_conf_relative_path))
     from global_conf import *
@@ -142,19 +146,14 @@ if os.path.isfile(os.path.join(global_conf_relative_path,'global_conf.py')):
 
     extensions.append('sphinx.ext.autodoc')
     extensions.append('sphinx.ext.intersphinx')
-    extensions.append('sphinx.ext.todo')
     extensions.append('sphinx.ext.viewcode')
 
 else:
     extensions = [
         'sphinx.ext.autodoc',
         'sphinx.ext.intersphinx',
-        'sphinx.ext.todo',
         'sphinx.ext.viewcode'
     ]
-
-    autodoc_default_flags = ['members', 'private-members', 'special-members']
-    autodoc_member_order = 'bysource'
 
     # Add any paths that contain templates here, relative to this directory.
     templates_path = ['_templates']
@@ -295,24 +294,24 @@ else:
 
     # -- Options for LaTeX output ---------------------------------------------
 
-    latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    #'papersize': 'letterpaper',
+    # latex_elements = {
+    # # The paper size ('letterpaper' or 'a4paper').
+    # #'papersize': 'letterpaper',
 
-    # The font size ('10pt', '11pt' or '12pt').
-    #'pointsize': '10pt',
+    # # The font size ('10pt', '11pt' or '12pt').
+    # #'pointsize': '10pt',
 
-    # Additional stuff for the LaTeX preamble.
-    #'preamble': '',
-    }
+    # # Additional stuff for the LaTeX preamble.
+    # #'preamble': '',
+    # }
 
     # Grouping the document tree into LaTeX files. List of tuples
-    # (source start file, target name, title,
-    #  author, documentclass [howto, manual, or own class]).
-    latex_documents = [
-      ('index', 'PLAMS.tex', u'PLAMS Documentation',
-       u'Scientific Computing \& Modelling', 'manual'),
-    ]
+    # # (source start file, target name, title,
+    # #  author, documentclass [howto, manual, or own class]).
+    # latex_documents = [
+    #   ('index', 'PLAMS.tex', u'PLAMS Documentation',
+    #    u'Scientific Computing \& Modelling', 'manual'),
+    # ]
 
     # The name of an image file (relative to this directory) to place at the top of
     # the title page.
@@ -338,11 +337,11 @@ else:
     # -- Options for manual page output ---------------------------------------
 
     # One entry per manual page. List of tuples
-    # (source start file, name, description, authors, manual section).
-    man_pages = [
-        ('index', 'plams', u'PLAMS Documentation',
-         [u'Scientific Computing & Modelling'], 1)
-    ]
+    # # (source start file, name, description, authors, manual section).
+    # man_pages = [
+    #     ('index', 'plams', u'PLAMS Documentation',
+    #      [u'Scientific Computing & Modelling'], 1)
+    # ]
 
     # If true, show URL addresses after external links.
     #man_show_urls = False
@@ -353,11 +352,11 @@ else:
     # Grouping the document tree into Texinfo files. List of tuples
     # (source start file, target name, title, author,
     #  dir menu entry, description, category)
-    texinfo_documents = [
-      ('index', 'PLAMS', u'PLAMS Documentation',
-       u'Scientific Computing & Modelling', 'PLAMS', 'One line description of project.',
-       'Miscellaneous'),
-    ]
+    # texinfo_documents = [
+    #   ('index', 'PLAMS', u'PLAMS Documentation',
+    #    u'Scientific Computing & Modelling', 'PLAMS', 'One line description of project.',
+    #    'Miscellaneous'),
+    # ]
 
     # Documents to append as an appendix to all manuals.
     #texinfo_appendices = []
