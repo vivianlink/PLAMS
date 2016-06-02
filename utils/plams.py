@@ -17,11 +17,11 @@ _X_parser.add_argument('-v', action='append', type=str, default=[], help="Declar
 _X_parser.add_argument('file', nargs='+', type=str, help='file with PLAMS script')
 _X_args = _X_parser.parse_args()
 
-#add -v variables to the global namespace
+#add -v variables to the plams_namespace
 for _X_pair in _X_args.v:
     if '=' in _X_pair:
         var, val = _X_pair.split('=')
-        globals()[var] = val
+        plams_namespace[var] = val
 
 #read and concatenate input file(s)
 _X_input = ''
@@ -34,7 +34,7 @@ for _X_input_file in _X_args.file:
         sys.exit(1)
 
 
-#normpath prevents crash when f ends with slash
+#normpath prevents crash when f ends with /
 init(path=_X_args.p, folder=(os.path.normpath(_X_args.f) if _X_args.f else None))
 
 with open(config.jm.input, 'w') as f:

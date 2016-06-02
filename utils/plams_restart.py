@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+from scm.plams import *
+
+plams_namespace = globals().copy()
+
 import os
 import sys
 import argparse
@@ -10,11 +14,11 @@ _X_parser.add_argument('-v', action='append', type=str, default=[], help="Declar
 _X_parser.add_argument('folder', nargs=1, type=str, help='the main working folder of the script to restart')
 _X_args = _X_parser.parse_args()
 
-#add -v variables to the global namespace
+#add -v variables to the plams_namespace
 for _X_pair in _X_args.v:
     if '=' in _X_pair:
         var, val = _X_pair.split('=')
-        globals()[var] = val
+        plams_namespace[var] = val
 
 #check folder and file
 _X_folder = _X_args.folder[0]
@@ -44,7 +48,6 @@ _X_name = _X_restartname(_X_name)
 
 
 
-from scm.plams import *
 init(path=_X_path, folder=_X_name)
 load_all(_X_folder)
 
@@ -54,7 +57,7 @@ with open(config.jm.restart, 'w') as f:
     f.write(_X_input)
 
 try:
-    exec(compile(open(config.jm.input).read(), config.jm.input, 'exec'))
+    exec(compile(open(config.jm.input).read(), config.jm.input, 'exec'), plams_namespace)
 except KeyboardInterrupt:
     sys.exit(0)
 except Exception as e:
