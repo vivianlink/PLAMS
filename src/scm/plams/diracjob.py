@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import os
-import copy
 try:
     import subprocess32 as subprocess
 except ImportError:
@@ -13,7 +12,6 @@ from .basejob import SingleJob
 from .results import Results
 from .settings import Settings
 from .utils import PT
-from .kftools import KFFile
 from .common import string
 
 __all__ = ['DiracJob', 'DiracResults']
