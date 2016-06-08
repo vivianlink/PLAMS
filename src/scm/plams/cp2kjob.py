@@ -4,37 +4,37 @@ from .basejob  import SingleJob
 from .results  import Results
 from .settings import Settings
 
-import mmap
+#import mmap
 import os
-import subprocess
+try:
+    import subprocess32 as subprocess
+except ImportError:
+    import subprocess
+
 # ======================<>===========================
 
 
 class Cp2kJob(SingleJob):
     """
-    class for result of computation done with `C2P2K <https://www.cp2k.org/>`
+    A class representing a single computational job with `CP2K <https://www.cp2k.org/>`
     """
 
     def __init__(self, **kwargs):
         SingleJob.__init__(self, **kwargs)
-        self.settings.runscript.cp2k
-        self.settings.pickle = False
+        self.settings.runscript.cp2k   #$% Again, why create this guy and why here?
+        self.settings.pickle = False   #$% Why not pickle? Is dill having problems with dumping this class?
         try:
             self.settings.input.force_eval.dft.basis_set_file_name = os.environ['BASISCP2K']
             self.settings.input.force_eval.dft.potential_file_name = os.environ['POTENTIALCP2K']
+        #$% This seems like a bit awkward way of passing the data (and it can be problematic when you need to use different files for different jobs created in threads). Maybe just constructor arguments: def __init__(self, basispath, potentialpath, **kwargs): ?
 
         except KeyError:
-            msg = """The environmental variables BASISCP2K and POTENTIALCPK containing
-                  the path to the Cp2k basis and potential basis, respectively,
-                  Must be defined"""
+            msg = 'The environmental variables BASISCP2K and POTENTIALCPK containing the path to the Cp2k basis and potential basis, respectively, must be defined'
             raise NameError(msg)
 
     def _get_ready(self):
         """
-        Before generating runscript and input with parent method
-        :meth:`SingleJob._get_ready<scm.plams.basejob.SingleJob._get_ready>`
-        add proper ``mol`` and ``inp`` entries to ``self.settings.runscript.cp2k``.
-        If already present there, ``mol`` will not be added.
+        Before generating runscript and input with parent method :meth:`SingleJob._get_ready<scm.plams.basejob.SingleJob._get_ready>` add proper ``mol`` and ``inp`` entries to ``self.settings.runscript.cp2k``. If already present there, ``mol`` will not be added.
         """
         s = self.settings.runscript.cp2k
         path = os.path.join(self.path, self.name + '.xyz')
@@ -44,15 +44,15 @@ class Cp2kJob(SingleJob):
                 for atom in self.molecule:
                     suffix = 'b={block}' if hasattr(atom, 'block') else ''
                     f.write(atom.str(suffix=suffix) + '\n')
+        #$% The above is just a copypaste from diracjob.py and it probably has no reason to be here ??
+
         s.i = self._filename('inp')
-        s.o = self._filename('out')
+        s.o = self._filename('out') #$% it's better to set -i and -o parameters can in get_runscript(), especially considering the fact that this method is probably going to be removed?
         SingleJob._get_ready(self)
 
     def get_input(self):
         """
-        Transform all contents of ``input`` branch of ``settings`` into string
-        with blocks, subblocks, keys and values.
-        :returns: String containing the input
+        Transform all contents of ``input`` branch of ``settings`` into string with blocks, subblocks, keys and values.
         """
 
         _reserved_keywords = ["KIND", "XC", "JOB"]
@@ -117,9 +117,7 @@ class Cp2kJob(SingleJob):
 
     def get_runscript(self):
         """
-        Run parallel version of Cp2k using srun. Returned string is a ``srun cp2k.popt``
-        call followed by option flags generated based on ``self.settings.runscript.cp2k``
-        contents.
+        Run parallel version of Cp2k using srun. Returned string is a ``srun cp2k.popt`` call followed by option flags generated based on ``self.settings.runscript.cp2k`` contents.
         """
         r = self.settings.runscript.cp2k
         # try to cp2k using srun
@@ -133,14 +131,14 @@ class Cp2kJob(SingleJob):
             if v is not None:
                 ret += ' -{} {}'.format(k, v)
             else:
-                ret += ' -{}'.format(k)
+                ret += ' -{}'.format(k)   #$% Usually in PLAMS if something like that comes ("just key, without a value"), True is used as value.
 
         if self.settings.runscript.stdout_redirect:
             ret += ' >{}'.format(self._filename('out'))
         ret += '\n\n'
         return ret
 
-    def check(self):
+    def check(self):  #$% This needs to be fixed or removed.
         """Check if the calculation was successful."""
         return True
         # outFile = self._filename('out')
@@ -157,13 +155,4 @@ class Cp2kJob(SingleJob):
         #         else:
         #             return False
 
-class Cp2kResults(Results):
-    """
-    A class representing a single computational job with CP2K.
-    """
-
-    def collect(self):
-        """Collect files present in the job folder Using parent method from |Results|.
-        """
-        Results.collect(self)
 
