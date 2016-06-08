@@ -1,18 +1,20 @@
 from __future__ import unicode_literals
 
 from .basejob import SingleJob
-from .results import Results
+from .common import string
 from .settings import Settings
-from .utils import flatten
 
-import subprocess as sp
-import sys
+try:
+    import subprocess32 as subprocess
+except ImportError:
+    import subprocess
+
 # ======================<>===========================
 
 
 class ORCAJob(SingleJob):
     """
-    class for result of computation done with
+    A class representing a single computational job with ORCA
     `Orca <https://orcaforum.cec.mpg.de>`
     todo:
        * print molecule in internal coordinates
@@ -21,21 +23,19 @@ class ORCAJob(SingleJob):
 
     def __init__(self, **kwargs):
         SingleJob.__init__(self, **kwargs)
-        self.settings.runscript.orca
+        self.settings.runscript.orca   #$% what is this good for?
 
     def get_input(self):
         """
-        Transform all contents of ``input`` branch of  ``settings`` into string
-        with blocks, subblocks, keys and values.
-        The branch self.settings.input.main corresponds to the lines starting
-        with the special character ! in the Orca input.
-        :returns: String containing the input
+        Transform all contents of ``input`` branch of  ``settings`` into string with blocks, subblocks, keys and values. The branch self.settings.input.main corresponds to the lines starting with the special character ! in the Orca input.
         """
         def get_end(s):
             if (not isinstance(s, Settings)) or ('_end' not in s):
                 return s
             else:
                 return '{} end'.format(s['_end'])
+
+        #$% a few words of explanation what's going with this _end and how to use it would be nice here
 
         def pretty_print_inner(s, indent):
             inp = ''
@@ -78,40 +78,33 @@ class ORCAJob(SingleJob):
         """
         mol = self.molecule
         if mol:
-            charge = mol.properties.charge
-            charge = (charge if isinstance(charge, int) else 0)
-            multi = mol.properties.multiplicity
-            multi = (multi if isinstance(multi, int) else 1)
-            xs = flatten(
-                '  {:3s}{:>11.5}{:>11.5}{:>11.5}\n'.format(at.symbol, *at.coords)
-                for at in mol.atoms)
-            return '* xyz {} {}\n{}*\n\n'.format(charge, multi, xs)
+            if 'charge' in mol.properties and isinstance(mol.properties.charge, int):
+                charge = mol.properties.charge
+            else:
+                charge = 0
+            if 'multiplicity' in mol.properties and isinstance(mol.properties.multiplicity, int):
+                multi = mol.properties.multiplicity
+            else:
+                multi = 1
+            xyz = ''.join(at.str(symbol=True, space=11, decimal=5) for at in mol.atoms)
+            return '* xyz {} {}\n{}*\n\n'.format(charge, multi, xyz)
         else:
             return ''
+
 
     def get_runscript(self):
         """
         Running orca is straightforward, simply:
         */absolute/path/to/orca myinput.inp*
         """
-        path = sp.check_output(['which', 'orca']).rstrip()
-        if sys.version_info >= (3, 0):
-            path = path.decode()
+        path = string(subprocess.check_output(['which', 'orca'])).rstrip()
         return '{} {}'.format(path, self._filename('inp'))
+
 
     def check(self):
         """
         Look for the normal termination signal in Orca output
         """
         s = self.results.grep_output("ORCA TERMINATED NORMALLY")
-        if s is not None:
-            return True
-        else:
-            return False
+        return len(s) > 0
 
-
-class OrcaResults(Results):
-    """
-    A class representing a single computational job with CP2K.
-    """
-    pass
