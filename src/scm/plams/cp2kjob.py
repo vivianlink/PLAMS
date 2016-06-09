@@ -15,11 +15,6 @@ class Cp2kJob(SingleJob):
     """
     A class representing a single computational job with `CP2K <https://www.cp2k.org/>`
     """
-
-    def __init__(self, **kwargs):
-        SingleJob.__init__(self, **kwargs)
-        self.settings.pickle = False
-
     def get_input(self):
         """
         Transform all contents of ``input`` branch of ``settings`` into string
