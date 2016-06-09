@@ -97,3 +97,10 @@ class Cp2kJob(SingleJob):
         ret += ' -i {} -o {}'.format(self._filename('inp'), self._filename('out'))
 
         return ret
+
+    def check(self):
+        """
+        Look for the normal termination signal in Orca output
+        """
+        s = self.results.grep_output("PROGRAM STOPPED IN")
+        return len(s) > 0
