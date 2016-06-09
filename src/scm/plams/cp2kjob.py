@@ -21,38 +21,12 @@ class Cp2kJob(SingleJob):
 
     def __init__(self, **kwargs):
         SingleJob.__init__(self, **kwargs)
-        self.settings.runscript.cp2k   #$% Again, why create this guy and why here?
-        self.settings.pickle = False   #$% Why not pickle? Is dill having problems with dumping this class?
-        try:
-            self.settings.input.force_eval.dft.basis_set_file_name = os.environ['BASISCP2K']
-            self.settings.input.force_eval.dft.potential_file_name = os.environ['POTENTIALCP2K']
-        #$% This seems like a bit awkward way of passing the data (and it can be problematic when you need to use different files for different jobs created in threads). Maybe just constructor arguments: def __init__(self, basispath, potentialpath, **kwargs): ?
-
-        except KeyError:
-            msg = 'The environmental variables BASISCP2K and POTENTIALCPK containing the path to the Cp2k basis and potential basis, respectively, must be defined'
-            raise NameError(msg)
-
-    def _get_ready(self):
-        """
-        Before generating runscript and input with parent method :meth:`SingleJob._get_ready<scm.plams.basejob.SingleJob._get_ready>` add proper ``mol`` and ``inp`` entries to ``self.settings.runscript.cp2k``. If already present there, ``mol`` will not be added.
-        """
-        s = self.settings.runscript.cp2k
-        path = os.path.join(self.path, self.name + '.xyz')
-        if self.molecule is not None:
-            with open(path, 'w') as f:
-                f.write(str(len(self.molecule)) + '\n\n')
-                for atom in self.molecule:
-                    suffix = 'b={block}' if hasattr(atom, 'block') else ''
-                    f.write(atom.str(suffix=suffix) + '\n')
-        #$% The above is just a copypaste from diracjob.py and it probably has no reason to be here ??
-
-        s.i = self._filename('inp')
-        s.o = self._filename('out') #$% it's better to set -i and -o parameters can in get_runscript(), especially considering the fact that this method is probably going to be removed?
-        SingleJob._get_ready(self)
+        self.settings.pickle = False
 
     def get_input(self):
         """
-        Transform all contents of ``input`` branch of ``settings`` into string with blocks, subblocks, keys and values.
+        Transform all contents of ``input`` branch of ``settings`` into string
+        with blocks, subblocks, keys and values.
         """
 
         _reserved_keywords = ["KIND", "XC", "JOB"]
@@ -117,9 +91,10 @@ class Cp2kJob(SingleJob):
 
     def get_runscript(self):
         """
-        Run parallel version of Cp2k using srun. Returned string is a ``srun cp2k.popt`` call followed by option flags generated based on ``self.settings.runscript.cp2k`` contents.
+        Run parallel version of Cp2k using srun. Returned string is a
+        ``srun cp2k.popt`` call followed by option flags generated based on
+        ``self.settings.runscript.cp2k`` contents.
         """
-        r = self.settings.runscript.cp2k
         # try to cp2k using srun
         try:
             subprocess.run(["srun", "--help"], stdout=subprocess.DEVNULL)
@@ -127,32 +102,17 @@ class Cp2kJob(SingleJob):
         except OSError:
             ret = 'cp2k.popt'
 
-        for k, v in r.items():
-            if v is not None:
-                ret += ' -{} {}'.format(k, v)
-            else:
-                ret += ' -{}'.format(k)   #$% Usually in PLAMS if something like that comes ("just key, without a value"), True is used as value.
+        ret += ' -i {} -o {}'.format(self._filename('inp'), self._filename('out'))
 
-        if self.settings.runscript.stdout_redirect:
-            ret += ' >{}'.format(self._filename('out'))
-        ret += '\n\n'
         return ret
 
-    def check(self):  #$% This needs to be fixed or removed.
-        """Check if the calculation was successful."""
-        return True
-        # outFile = self._filename('out')
-        # path_file = os.path.join(self.path, outFile)
-        # with open("plams_out", "a") as f:
-        #     f.write("Filename: {}\n".format(path_file))
-        #     f.write("File Exist: {}\n".format(os.path.exists(path_file)))
-        # if not os.path.exists(path_file):
-        #     return False
-        # else:
-        #     with open(outFile, 'r') as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as s:
-        #         if s.find(b'PROGRAM ENDED AT') != -1:
-        #             return True
-        #         else:
-        #             return False
 
+class Cp2kResults(Results):
+    """
+    A class representing a single computational job with CP2K.
+    """
 
+    def collect(self):
+        """Collect files present in the job folder Using parent method from |Results|.
+        """
+        Results.collect(self)
