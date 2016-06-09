@@ -83,9 +83,7 @@ class Cp2kJob(SingleJob):
 
     def get_runscript(self):
         """
-        Run parallel version of Cp2k using srun. Returned string is a
-        ``srun cp2k.popt`` call followed by option flags generated based on
-        ``self.settings.runscript.cp2k`` contents.
+        Run parallel version of Cp2k using srun.
         """
         # try to cp2k using srun
         try:
@@ -100,7 +98,7 @@ class Cp2kJob(SingleJob):
 
     def check(self):
         """
-        Look for the normal termination signal in Orca output
+        Look for the normal termination signal in Cp2k output
         """
         s = self.results.grep_output("PROGRAM STOPPED IN")
         return len(s) > 0
