@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 from .basejob  import SingleJob
-from .results  import Results
 from .settings import Settings
 
 try:
