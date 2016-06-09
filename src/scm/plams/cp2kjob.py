@@ -4,8 +4,6 @@ from .basejob  import SingleJob
 from .results  import Results
 from .settings import Settings
 
-#import mmap
-import os
 try:
     import subprocess32 as subprocess
 except ImportError:
@@ -105,14 +103,3 @@ class Cp2kJob(SingleJob):
         ret += ' -i {} -o {}'.format(self._filename('inp'), self._filename('out'))
 
         return ret
-
-
-class Cp2kResults(Results):
-    """
-    A class representing a single computational job with CP2K.
-    """
-
-    def collect(self):
-        """Collect files present in the job folder Using parent method from |Results|.
-        """
-        Results.collect(self)
