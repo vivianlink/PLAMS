@@ -23,7 +23,7 @@ class PeriodicTable(object):
     """
     data = [None] * 113
                #[symbol, mass, radius, connectors]
-    data[  0] = [  '',   0.00000, 0.00 ,  0]
+    data[  0] = ['Xx',   0.00000, 0.00 ,  0]
     data[  1] = [ 'H',   1.00794, 0.30 ,  1]
     data[  2] = ['He',   4.00260, 0.99 ,  0]
     data[  3] = ['Li',   6.94100, 1.52 ,  8]
