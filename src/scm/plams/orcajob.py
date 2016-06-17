@@ -21,21 +21,43 @@ class ORCAJob(SingleJob):
        * print xyz including different basis set
     """
 
-    def __init__(self, **kwargs):
-        SingleJob.__init__(self, **kwargs)
-        self.settings.runscript.orca   #$% what is this good for?
-
     def get_input(self):
         """
-        Transform all contents of ``input`` branch of  ``settings`` into string with blocks, subblocks, keys and values. The branch self.settings.input.main corresponds to the lines starting with the special character ! in the Orca input.
+        Transform all contents of ``input`` branch of  ``settings``
+        into string with blocks, subblocks, keys and values. The branch
+        self.settings.input.main corresponds to the lines starting with
+        the special character ! in the Orca input.
+        
+        Orca *end* keyword is mandatory for only a subset of sections,
+        For instance the following orca input shows the keywords *methods*
+        and *basis* use of end.
+
+            ! UKS B3LYP/G SV(P) SV/J TightSCF Direct Grid3 FinalGrid4 
+
+            %method SpecialGridAtoms 26
+                    SpecialGridIntAcc 7
+                    end
+            %basis NewGTO 26 "CP(PPP)" end
+                   NewAuxGTO 26 "TZV/J" end
+                   end 
+        
+        In order to specify when the *end* keyword must be used,
+        the following syntasis can be used.
+
+        
+        job = Orca(molecule=Molecule(<Path/to/molecule>))
+        job.settings.input.main = "UKS B3LYP/G SV(P) SV/J TightSCF Direct Grid3 FinalGrid4"
+        job.settings.input.method.SpecialGridAtoms = 26
+        job.settings.input.method.SpecialGridIntAcc = 7
+
+        job.settings.input.basis.NewGTO._end = "26 \"CP(PPP)\""
+        job.settings.input.basis.NewAuxGTO._end = "26 \"TZV/J\""
         """
         def get_end(s):
             if (not isinstance(s, Settings)) or ('_end' not in s):
                 return s
             else:
                 return '{} end'.format(s['_end'])
-
-        #$% a few words of explanation what's going with this _end and how to use it would be nice here
 
         def pretty_print_inner(s, indent):
             inp = ''
@@ -91,7 +113,6 @@ class ORCAJob(SingleJob):
         else:
             return ''
 
-
     def get_runscript(self):
         """
         Running orca is straightforward, simply:
@@ -99,7 +120,6 @@ class ORCAJob(SingleJob):
         """
         path = string(subprocess.check_output(['which', 'orca'])).rstrip()
         return '{} {}'.format(path, self._filename('inp'))
-
 
     def check(self):
         """
