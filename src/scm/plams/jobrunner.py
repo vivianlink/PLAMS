@@ -227,6 +227,7 @@ class GridRunner(JobRunner):
         subout = string(subout)
         log('Output of submit command: %s' % subout, 5)
         jobid = s.commands.getid(subout)
+        log('%s submitted successfully as job %s' % (runscript, jobid), 3)
 
         if 'finished' in s.commands:
             while not s.commands.finished(jobid):
