@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from .basejob  import SingleJob
 from .settings import Settings
 
+import os
 try:
     import subprocess32 as subprocess
 except ImportError:
@@ -87,7 +88,8 @@ class Cp2kJob(SingleJob):
         """
         # try to cp2k using srun
         try:
-            subprocess.run(["srun", "--help"], stdout=subprocess.DEVNULL)
+            with open(os.devnull, 'wb') as null:
+                subprocess.run(["srun", "--help"], stdout=null)
             ret = 'srun cp2k.popt'
         except OSError:
             ret = 'cp2k.popt'
