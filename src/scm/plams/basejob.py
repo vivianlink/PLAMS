@@ -229,13 +229,13 @@ class Job(object):
                     self.postrun()
                     log('%s.postrun() finished' % self.name, 5)
                     self.status = 'successful'
-                    self.results.done.set()
                     log('Pickling %s' % self.name, 7)
                     if self.settings.pickle:
                         self.pickle()
                 else:
                     log('%s.check() failed' % self.name, 7)
                     self.status = 'failed'
+                self.results.done.set()
         else:
             self.status = 'preview'
 
