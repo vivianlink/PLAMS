@@ -227,12 +227,12 @@ This is sufficient for your new job to work properly with other PLAMS components
 
         >>> class MyJob(SomeOtherJob):
         >>>     def __init__(self, myarg1, myarg2=default2, **kwargs):
-        >>>         SomeOtherJob.__init__(**kwargs)
+        >>>         SomeOtherJob.__init__(self, **kwargs)
         >>>         # do stuff with myarg1 and myarg2
 
 .. technical::
 
-    Usually when you need to call some method from a parent class it is a good idea to use :func:`super`. However, there exists a known bug in Python 3 that causes the dill package to crash when :func:`super` is used. For that reason, if you're using Python 3, please do not use :func:`super`.
+    Usually when you need to call some method from a parent class it is a good idea to use :func:`super`. However, there exists a known bug in Python 3 that causes the ``dill`` package to crash when :func:`super` is used. For that reason, if you're using Python 3, please do not use :func:`super`.
 
 
 Multijobs
