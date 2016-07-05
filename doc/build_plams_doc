@@ -29,7 +29,6 @@ if command == "":
             command = 'sphinx-build2'
         except OSError:
             print('Error: Sphinx executable not found!')
-            print('Make sure ')
             null.close()
             sys.exit(0)
     null.close()
