@@ -5,6 +5,7 @@ import heapq
 import math
 import numpy
 import types
+import uuid
 
 from .common import log
 from .errors import MoleculeError, PTError, FileError
@@ -373,11 +374,11 @@ class Molecule (object):
     """
 
 
-    def __init__(self, filename=None, inputformat=None, geometry=1):
+    def __init__(self, filename=None, inputformat=None, geometry=1,**other):
         self.atoms = []
         self.bonds = []
         self.lattice = []
-        self.properties = Settings()
+        self.properties = Settings(other)
 
         if filename is not None :
             self.read(filename, inputformat, geometry)
@@ -992,6 +993,8 @@ class Molecule (object):
         if isinstance(key, int):
             if key == 0:
                 raise MoleculeError('Numbering of atoms starts with 1')
+            if key < 0:
+                return self.atoms[key]
             return self.atoms[key-1]
         if isinstance(key, tuple) and len(key) == 2:
             if key[0] == 0 or key[1] == 0:
@@ -1359,3 +1362,125 @@ class Molecule (object):
     _readformat = {'xyz':readxyz, 'mol':readmol, 'mol2':readmol2, 'pdb':readpdb}
     _writeformat = {'xyz':writexyz, 'mol':writemol, 'mol2':writemol2, 'pdb': writepdb}
 
+#===================================================================================================
+#==== JSON IO ======================================================================================
+#===================================================================================================
+
+
+    def as_dict(self):
+        """
+        The Molecule information is stored in a dict based on the mol
+        `file format <http://onlinelibrarystatic.wiley.com/marvin/help/FF/19693841.html>`
+        :returns: JSON object
+
+        """
+        # def create_atom_ids(mol):
+        #     """
+        #     Generate unique identifier for each atom
+        #     :parameter mol: Molecule object containing the atoms
+        #     :type      mol: |Molecule|
+        #     """
+        #     ds = []
+        #     for i,self.assertTrue() in enumerate(mol.atoms):
+        #         idx  = "atom_" + str(i)
+        #         ds.append(idx)
+        #     return ds
+
+        def create_atom_block(mol):
+            """
+            In this block are stored the atomic number, coordinates,
+            atomic symbols and others properties that are passed as a *Setting* object.
+            :parameter mol: Molecule object containing the atoms
+            :type      mol: |Molecule|
+            :parameter ids: List of unique identifier
+            :type      ids: [Int]
+            """
+            return [{'coords': at.coords, 'symbol': at.symbol,
+                     'atnum': at.atnum, 'properties': at.properties} for at in mol.atoms]
+
+        def create_bond_block(mol):
+            """
+            :parameter mol: Molecule object containing the atoms
+            :type      mol: |Molecule|
+            :parameter ids: List of unique identifier
+            :type      ids: [Int]
+
+            The data list on table bellow is used to store
+            information related to the bonds.
+
+            =================   =====================
+            Meaning             Value
+            ==================  =====================
+            First atom number   Int
+            Second atom number  Int
+            Bond type           Int (float for aromatic)
+                                #. Single
+                                #. Double
+                                #. Triple
+                                #. Aromatic
+            Properties          Settings
+            ==================  =====================
+            """
+            def get_bond_order(bond):
+                if bond.order:
+                    return bond.order
+                elif bond.AR:
+                    return bond.AR
+                else:
+                    msg = "bond does not contain order attribute"
+                    raise AttributeError(msg)
+
+            # Represent the atoms involved in the bond like references
+            # to the unique identifiers stored in the ``atomBlock``
+            # dict_atom2id = {at: idx for (at, idx) in zip(mol.atoms, ids)}
+            bonds_list = []
+            for i, b in enumerate(mol.bonds):
+                atom1 = mol.atoms.index(b.atom1)
+                atom2 = mol.atoms.index(b.atom2)
+                order = get_bond_order(b)
+                bond  = {'atom1': atom1, 'atom2': atom2,
+                         'order': order, 'properties': b.properties}
+                bonds_list.append(bond)
+
+            return bonds_list
+
+        d              = dict()
+        d["atomBlock"] = create_atom_block(self)
+        d["bondBlock"] = create_bond_block(self)
+
+        return d
+
+    @classmethod
+    def from_dict(cls, atomBlock, bondBlock):
+        """
+        Generate a new Molecule instance using the data stored
+        in the dictionary representing the JSON serialized data
+        :parameter ds: Dict containing the JSON serialized molecule
+        :type      ds: Dict
+        :returns: |Molecule|
+        """
+        # New Molecule instance
+        mol     = cls()
+        # dict from unique atom identifiers to numeration
+        # inside the molecule
+
+        # Reconstruct the Atom instances using the Json data
+        for at in atomBlock:
+            atnum     = at["atnum"]
+            coords    = at["coords"]
+            symbol    = at["symbol"]
+            props     = at["properties"]
+            mol.add_atom(Atom(atnum=atnum, coords=coords, symbol=symbol,
+                              properties=props))
+        # Reconstruct the bonds using the internal numeration of the molecule
+        # build in  the previous step.
+        for b in bondBlock:
+            id_atom1 = b["atom1"]
+            id_atom2 = b["atom2"]
+            atom1    = mol[id_atom1]
+            atom2    = mol[id_atom2]
+            bond = Bond(atom1=atom1, atom2=atom2, order=b["order"],
+                        properties=b["properties"])
+            mol.add_bond(bond)
+
+        return mol

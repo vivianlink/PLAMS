@@ -58,8 +58,14 @@ class KFReader(object):
             self._create_index()
 
         try:
-            vtype, vlb, vstart, vlen = self._sections[section][variable]
+            tmp = self._sections[section]
         except KeyError:
+            log('KFReader.read: Section %s not present in %s. Returning None as value' % (section, self.path), 1)
+            return None
+        try:
+            vtype, vlb, vstart, vlen = tmp[variable]
+        except KeyError:
+            log('KFReader.read: Variable %s not present in section %s of %s. Returning None as value' % (variable, section, self.path))
             return None
 
         ret = []

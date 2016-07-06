@@ -1,8 +1,8 @@
 #Preview mode: no calculations are actually run, only inputs and runscripts are prepared.
 config.preview = False
 
-#Defines a 'quantum' of time used whenever one needs to wait (i.e. for job executed in separate thread or submited to a grid system)
-config.sleepstep = 1 #1 for devmode: default should be probably sth 10-20
+#Defines a 'quantum' of time used whenever some action needs to be repeated until a certain condition is met (i.e. querying queue manager about the job submitted to a grid system)
+config.sleepstep = 5
 
 #Allows to try to obtain results of failed/crashed jobs. Could be disasterous, so beware :)
 config.ignore_failure = True
@@ -99,10 +99,15 @@ def __slurm_finished(jobid):
     except ImportError:
         import subprocess
     from .common import string
+    import os
     cmd = ('squeue -j ' + jobid).split(' ')
-    out = subprocess.check_output(cmd).split('\n')
-    out = string(out)
-    return not (len(out) > 1 and out[1].find(jobid) != -1)
+    try:
+        with open(os.devnull, 'wb') as null:
+            out = subprocess.check_output(cmd, stderr=null)
+    except subprocess.CalledProcessError:
+        return True
+    lines = string(out).split('\n')
+    return not (len(lines) > 1 and lines[1].find(jobid) != -1)
 
 config.gridrunner.slurm.commands.finished   = __slurm_finished
 

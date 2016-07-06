@@ -40,7 +40,9 @@ class SCMResults(Results):
         Read data from *section*/*variable* of the main KF file.
 
         The type of the returned value depends on the type of *variable* defined inside KF file. It can be: single int, list of ints, single float, list of floats, single boolean, list of booleans or string. """
-        return self._kf.read(section, variable) if self._kf else None
+        if self._kf:
+            return self._kf.read(section, variable)
+        raise FileError('KFFile of %s not present in %s' % (self.job.name, self.job.path))
 
 
     def newkf(self, filename):
