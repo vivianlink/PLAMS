@@ -35,8 +35,7 @@ def setup(app):
 # ==================================================================================
 
 if tags.has('scm_theme'):
-    #global_conf_relative_path = '../../../'
-    global_conf_relative_path = '/home/michal/userdoc/trunk'
+    global_conf_relative_path = '../../../'
     sys.path.insert(0, os.path.abspath(global_conf_relative_path))
     from global_conf import *
 
