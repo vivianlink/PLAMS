@@ -13,7 +13,9 @@ class Settings(dict):
         *   begin with a letter or underscore
         *   don't both begin and end with two or more underscores.
 
-    Strings used as keys always get lowercased, so ``s.basis``, ``s.BASIS`` and ``s.Basis`` all refer to the same value.
+    .. warning::
+
+        As of PLAMS v1.1 strings used as keys do **NOT** get lowercased, they are used as is.
 
     Iteration follows lexicographical order (via :func:`sorted` function)
 
@@ -60,27 +62,11 @@ class Settings(dict):
 
 
 
-    def __getitem__(self, name):
-        """Like regular __getitem__, but if name is a string, lowercase it."""
-        if isinstance(name, str):
-            return dict.__getitem__(self, name.lower())
-        return dict.__getitem__(self, name)
-
     def __setitem__(self, name, value):
-        """Like regular __setitem__, but if name is a string, lowercase it."""
+        """Like regular __setitem__, but if the value is a dict, convert it to |Settings|."""
         if isinstance(value, dict):
             value = Settings(value)
-        if isinstance(name, str):
-            dict.__setitem__(self, name.lower(), value)
-        else:
-            dict.__setitem__(self, name, value)
-
-    def __delitem__(self, name):
-        """Like regular __delitem__, but if name is a string, lowercase it."""
-        if isinstance(name, str):
-            dict.__delitem__(self, name.lower())
-        else:
-            dict.__delitem__(self, name)
+        dict.__setitem__(self, name, value)
 
 
 
@@ -275,6 +261,21 @@ class Settings(dict):
         ret = self.copy()
         ret.soft_update(other)
         return ret
+
+
+
+    def as_dict(self):
+        """
+        Transform a |Settings| object into a dict.
+        """
+        d = {}
+        for k, v in self.items():
+            if not isinstance(v, Settings):
+                d[k] = v
+            else:
+                d[k] = v.as_dict()
+
+        return d
 
 
     __iadd__ = soft_update

@@ -7,27 +7,12 @@ import sys
 import os
 from datetime import date
 
-from docutils.parsers.rst.directives.admonitions import BaseAdmonition
-from docutils import nodes
-from sphinx.util.compat import make_admonition
+from docutils.parsers.rst.directives.admonitions import Important,Danger,Attention
+from sphinx.locale import admonitionlabels
 
-class Technical(BaseAdmonition):
-    node_class = nodes.admonition
-    def run(self):
-        self.options['class'] = ['technical']
-        return make_admonition(
-            nodes.admonition, self.name, ["Technical"], self.options,
-            self.content, self.lineno, self.content_offset, self.block_text,
-            self.state, self.state_machine)
-
-class ADFSuite(BaseAdmonition):
-    node_class = nodes.admonition
-    def run(self):
-        self.options['class'] = ['adfsuite']
-        return make_admonition(
-            nodes.admonition, self.name, ["ADF Suite"], self.options,
-            self.content, self.lineno, self.content_offset, self.block_text,
-            self.state, self.state_machine)
+admonitionlabels['important'] = 'Technical'
+admonitionlabels['attention'] = 'ADF Suite'
+admonitionlabels['danger'] = 'Warning'
 
 def modify_signature(app, what, name, obj, options, signature,
                            return_annotation):
@@ -38,8 +23,9 @@ def modify_signature(app, what, name, obj, options, signature,
 def setup(app):
     if not tags.has('scm_theme'):
         app.add_stylesheet('boxes.css')
-    app.add_directive('technical', Technical)
-    app.add_directive('adfsuite', ADFSuite)
+    app.add_directive('warning', Danger)
+    app.add_directive('technical', Important)
+    app.add_directive('adfsuite', Attention)
     app.connect('autodoc-process-signature', modify_signature)
 
 
