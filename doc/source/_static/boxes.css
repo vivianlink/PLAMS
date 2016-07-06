@@ -1,19 +1,19 @@
-.technical code {
+.important code {
     background: #d8c876;
 }
 
-div.technical {
+div.important {
     background-color: #f0e099;
     border: 1px solid #b07400;
 }
 
 
 
-.warning code {
+.danger code {
     background: #f2b5b5;
 }
 
-div.warning {
+div.danger {
     background-color: #ffd6d6;
     border: 1px solid #f66;
 }
@@ -31,11 +31,11 @@ div.note {
 
 
 
-.adfsuite code {
+.attention code {
     background: #85c5f2;
 }
 
-div.adfsuite {
+div.attention {
     background-color: #a6e6ff;
     border: 1px solid #66f;
 }

@@ -134,7 +134,7 @@ The following special text formatting appears within this document:
 
 .. note::
 
-    Usually used to stress especially important piece of information that user needs to keep in mind while using a particular object or mechanism.
+    Usually used to stress some important piece of information that user needs to keep in mind while using a particular object or mechanism.
 
 .. warning::
 
@@ -147,7 +147,6 @@ The following special text formatting appears within this document:
 .. adfsuite::
 
     Information for users who obtained PLAMS as a part of ADF Modeling Suite. Describes how PLAMS is integrated with other tools from the suite.
-
 
 It is assumed that the reader has some basic understanding of Python programming language. Gentle introduction to Python can be found in the excellent :ref:`Python Tutorial<tutorial-index>` and other parts of the official Python documentation.
 
