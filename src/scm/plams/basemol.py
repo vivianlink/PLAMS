@@ -1396,7 +1396,7 @@ class Molecule (object):
             :type      ids: [Int]
             """
             return [{'coords': at.coords, 'symbol': at.symbol,
-                     'atnum': at.atnum, 'properties': at.properties} for at in mol.atoms]
+                     'atnum': at.atnum, 'properties': at.properties.as_dict()} for at in mol.atoms]
 
         def create_bond_block(mol):
             """
@@ -1439,7 +1439,7 @@ class Molecule (object):
                 atom2 = mol.atoms.index(b.atom2)
                 order = get_bond_order(b)
                 bond  = {'atom1': atom1, 'atom2': atom2,
-                         'order': order, 'properties': b.properties}
+                         'order': order, 'properties': b.properties.as_dict()}
                 bonds_list.append(bond)
 
             return bonds_list
@@ -1471,16 +1471,16 @@ class Molecule (object):
             symbol    = at["symbol"]
             props     = at["properties"]
             mol.add_atom(Atom(atnum=atnum, coords=coords, symbol=symbol,
-                              properties=props))
+                              **props))
         # Reconstruct the bonds using the internal numeration of the molecule
         # build in  the previous step.
         for b in bondBlock:
             id_atom1 = b["atom1"]
             id_atom2 = b["atom2"]
-            atom1    = mol[id_atom1]
-            atom2    = mol[id_atom2]
+            atom1    = mol.atoms[id_atom1]
+            atom2    = mol.atoms[id_atom2]
             bond = Bond(atom1=atom1, atom2=atom2, order=b["order"],
-                        properties=b["properties"])
+                        **b["properties"])
             mol.add_bond(bond)
 
         return mol
