@@ -13,3 +13,4 @@ from .results import *
 from .scmjob import *
 from .settings import *
 from .utils import *
+from .gamessjob import *
