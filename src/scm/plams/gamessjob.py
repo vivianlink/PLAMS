@@ -86,7 +86,22 @@ class GamessJob(SingleJob):
         inp = [parse(item, self.settings.input[item])
                for item in self.settings.input]
 
-        return reduce(lambda x, y: x + y, inp)
+        return self.print_molecule() + reduce(lambda x, y: x + y, inp)
+
+    def print_molecule(self):
+        """
+        pretty print a molecule in the GAMESS format.
+        """
+        mol = self.molecule
+        if mol:
+            # xyz = '\n'.join(at.str(symbol=True, space=11, decimal=5) for at in mol.atoms)
+            ret = ' $data\ntitle\nC1\n'
+            for at in mol.atoms:
+                ret += "{} {}   {}\n".format(at.symbol, at.atnum, at.str(symbol=False, space=14, decimal=10))
+            ret += " $end\n"
+            return ret
+        else:
+            return '\n'
 
     def get_runscript(self):
         """
