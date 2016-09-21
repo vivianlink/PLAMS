@@ -1447,11 +1447,12 @@ class Molecule (object):
         d              = dict()
         d["atomBlock"] = create_atom_block(self)
         d["bondBlock"] = create_bond_block(self)
+        d["properties"] = self.properties
 
         return d
 
     @classmethod
-    def from_dict(cls, atomBlock, bondBlock):
+    def from_dict(cls, atomBlock, bondBlock, properties):
         """
         Generate a new Molecule instance using the data stored
         in the dictionary representing the JSON serialized data
@@ -1482,5 +1483,7 @@ class Molecule (object):
             bond = Bond(atom1=atom1, atom2=atom2, order=b["order"],
                         **b["properties"])
             mol.add_bond(bond)
+
+        mol.properties = properties
 
         return mol
