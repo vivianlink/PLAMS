@@ -94,10 +94,15 @@ class GamessJob(SingleJob):
         """
         mol = self.molecule
         if mol:
-            # xyz = '\n'.join(at.str(symbol=True, space=11, decimal=5) for at in mol.atoms)
-            ret = ' $data\ntitle\nC1\n'
+            # Read Symmetry from properties otherwise use C1
+            if 'symmetry' in mol.properties.keys():
+                sym = mol.properties['symmetry']
+            else:
+                sym = 'C1'
+            ret = ' $data\ntitle\n{}\n\n'.format(sym)
             for at in mol.atoms:
-                ret += "{} {}   {}\n".format(at.symbol, at.atnum, at.str(symbol=False, space=14, decimal=10))
+                ret += "{} {}   {}\n".format(at.symbol, at.atnum,
+                                             at.str(symbol=False, space=14, decimal=10))
             ret += " $end\n"
             return ret
         else:
