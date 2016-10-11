@@ -50,7 +50,7 @@ def init(path=None, folder=None):
     else:
         defaults = opj(dirname(dirname(dirname(dirname(__file__)))), 'utils', 'plams_defaults.py')
         if not isfile(defaults):
-            raise PlamsError('plams_defaults.py not found, please set PLAMSDEFUALTS or PLAMSHOME in your environment')
+            defaults = opj('defaults', 'plams_defaults.py')
     exec(compile(open(defaults).read(), defaults, 'exec'))
 
 
