@@ -7,7 +7,7 @@ setup(
     author='Michal Handzlik',
     author_email='handzlik@scm.com',
     package_dir={'': 'src/scm'},
-    packages=['plams'],
+    packages=['plams', 'plams.defaults'],
     url='https://www.scm.com/doc/plams/',
     license='',
     description='Python Library for Automating Molecular Simulations',
