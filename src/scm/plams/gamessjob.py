@@ -97,10 +97,11 @@ class GamessJob(SingleJob):
             # Read Symmetry from properties otherwise use C1
             if 'symmetry' in mol.properties.keys():
                 sym = mol.properties['symmetry']
-                ret = ' $data\ntitle\n{}\n\n'.format(sym)
             else:
                 sym = 'C1'
-                ret = ' $data\ntitle\n{}\n'.format(sym)
+            if sym != 'C1':
+                sym += '\n'
+            ret = ' $data\ntitle\n{}\n'.format(sym)
             for at in mol.atoms:
                 ret += "{} {}   {}\n".format(at.symbol, at.atnum,
                                              at.str(symbol=False, space=14, decimal=10))
