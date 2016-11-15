@@ -57,7 +57,7 @@ class JobManager(object):
         if not os.path.exists(self.workdir):
             os.mkdir(self.workdir)
         else:
-            raise PlamsError('Directory %s already exists' % self.workdir)
+            log('WARNING: Folder %s already exists. It is strongly advised to use a fresh folder for every run. If you experience problems check config.jobmanager.jobfolder_exists setting in plams_defaults.py' % self.workdir)
 
 
     def _register_name(self, job):

@@ -59,7 +59,6 @@ def init(path=None, folder=None):
     from .jobmanager import JobManager
     config.jm = JobManager(config.jobmanager, path, folder)
 
-
     log('PLAMS running with Python %i' % sys.version_info[0], 5)
     log('PLAMS environment initialized', 5)
     log('PLAMS working folder: %s' % config.jm.workdir, 1)
@@ -138,7 +137,7 @@ def log(message, level=0):
         if level <= config.log.stdout:
             with _stdlock:
                 print(message)
-        if level <= config.log.file:
+        if level <= config.log.file and 'jm' in config:
             with _filelock, open(config.jm.logfile, 'a') as f:
                 f.write(message + '\n')
 
