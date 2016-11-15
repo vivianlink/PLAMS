@@ -24,6 +24,9 @@ config.jobmanager.hashing = 'input'
 #Removes all empty subdirectories in working directory at the end of the script
 config.jobmanager.remove_empty_directories = True
 
+#Defines what action to take when a particular jobfolder already exists in the filesystem. Possible values are: None (throw exception), 'remove', 'rename' (to *.old). Relevant only when running using an existing main working folder.
+config.jobmanager.jobfolder_exists = None
+
 #======================= Job defaults =================================================
 
 #After job is finished, pickle job object to [jobname].dill
