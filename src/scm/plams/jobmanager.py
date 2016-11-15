@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 
+import glob
 import os
+import shutil
 import threading
 try:
     import dill as pickle
@@ -88,6 +90,18 @@ class JobManager(object):
                 job.path = opj(job.parent.path, job.name)
             else:
                 job.path = opj(self.workdir, job.name)
+        if os.path.exists(job.path):
+            if self.settings.jobfolder_exists == 'remove':
+                shutil.rmtree(job.path)
+            elif self.settings.jobfolder_exists == 'rename':
+                i = 1
+                while os.path.exists(job.path + '.old' + str(i)):
+                    i += 1
+                newname = job.path + '.old' + str(i)
+                os.rename(job.path, newname)
+                log('Folder %s already present. Renaming it to %s'%(job.path, newname), 1)
+            else:
+                raise PlamsError('Folder %s already present in the filesystem. Consider using a fresh working folder or adjusting config.jobmanager.jobfolder_exists'%job.path)
         os.mkdir(job.path)
 
         self.jobs.append(job)
