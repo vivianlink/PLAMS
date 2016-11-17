@@ -141,7 +141,7 @@ class SCMJob(SingleJob):
     _result_type = SCMResults
     _top = ['title','units','define']
     _command = ''
-    _subblock_end = 'SubEnd'
+    _subblock_end = 'subend'
 
 
 
@@ -155,7 +155,6 @@ class SCMJob(SingleJob):
 
         def parse(key, value, indent=''):
             ret = ''
-            key = key.title()
             if isinstance(value, Settings):
                 ret += indent + key
                 if '_h' in value:
@@ -172,7 +171,7 @@ class SCMJob(SingleJob):
                         ret += parse(el, value[el], indent+'  ')
 
                 if indent == '':
-                    ret += 'End\n'
+                    ret += 'end\n'
                 else:
                     ret += indent + self._subblock_end + '\n'
             elif isinstance(value, list):
@@ -200,7 +199,7 @@ class SCMJob(SingleJob):
         for item in self.settings.input:
             if item not in self._top:
                 inp += parse(item, self.settings.input[item]) + '\n'
-        inp += 'End Input\n'
+        inp += 'end input\n'
         if use_molecule:
             self._removemol()
         return inp
@@ -333,7 +332,7 @@ class DFTBJob(SCMJob):
     _result_type = DFTBResults
     _command = 'dftb'
     _top = ['units', 'task']
-    _subblock_end = 'End'
+    _subblock_end = 'end'
 
     def _parsemol(self):
         for i,atom in enumerate(self.molecule):
