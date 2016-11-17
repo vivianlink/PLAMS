@@ -3,12 +3,12 @@ from __future__ import unicode_literals
 import glob
 import os
 import shutil
-import sys
 import threading
 import time
 import types
 
 from os.path import join as opj
+from six import PY3
 
 from .errors import PlamsError
 from .settings import Settings
@@ -33,7 +33,7 @@ def init(path=None, folder=None):
       This function **must** be called before any other PLAMS command can be executed. Trying to do anything without it results in a crash. See also :ref:`master-script`.
     """
 
-    if sys.version_info >= (3, 0):
+    if PY3:
         import builtins as btins
     else:
         import __builtin__ as btins
@@ -59,7 +59,7 @@ def init(path=None, folder=None):
     from .jobmanager import JobManager
     config.jm = JobManager(config.jobmanager, path, folder)
 
-    log('PLAMS running with Python %i' % sys.version_info[0], 5)
+    log('PLAMS running with Python %i' % (3 if PY3 else 2), 5)
     log('PLAMS environment initialized', 5)
     log('PLAMS working folder: %s' % config.jm.workdir, 1)
 
@@ -202,7 +202,6 @@ def add_to_instance(instance):
 
 #remove me and all my calls after moving to Python3!!!
 def string(s):
-    from six import PY3
     if PY3 and isinstance(s, bytes):
         return s.decode()
     return s
