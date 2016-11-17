@@ -9,6 +9,11 @@ import types
 
 from os.path import join as opj
 from six import PY3
+if PY3:
+    import builtins
+else:
+    import __builtin__ as builtins
+
 
 from .errors import PlamsError
 from .settings import Settings
@@ -33,12 +38,7 @@ def init(path=None, folder=None):
       This function **must** be called before any other PLAMS command can be executed. Trying to do anything without it results in a crash. See also :ref:`master-script`.
     """
 
-    if PY3:
-        import builtins as btins
-    else:
-        import __builtin__ as btins
-    btins.config = Settings()
-
+    builtins.config = Settings()
 
     from os.path import isfile, expandvars, dirname
     if 'PLAMSDEFAULTS' in os.environ and isfile(expandvars('$PLAMSDEFAULTS')):
@@ -124,22 +124,23 @@ def log(message, level=0):
 
     Logs are printed independently to both text file and standard output. If *level* is equal or lower than verbosity (defined by ``config.log.file`` or ``config.log.stdout``) the message is printed. Date and/or time can be added based on ``config.log.date`` and ``config.log.time``. All logging activity is thread safe.
     """
-    if level <= config.log.file or level <= config.log.stdout:
-        message = str(message)
-        prefix = ''
-        if config.log.date:
-            prefix += '%d.%m|'
-        if config.log.time:
-            prefix += '%H:%M:%S'
-        if prefix:
-            prefix = '[' + prefix.rstrip('|') + '] '
-            message = time.strftime(prefix) + message
-        if level <= config.log.stdout:
-            with _stdlock:
-                print(message)
-        if level <= config.log.file and 'jm' in config:
-            with _filelock, open(config.jm.logfile, 'a') as f:
-                f.write(message + '\n')
+    if 'config' in vars(builtins):
+        if level <= config.log.file or level <= config.log.stdout:
+            message = str(message)
+            prefix = ''
+            if config.log.date:
+                prefix += '%d.%m|'
+            if config.log.time:
+                prefix += '%H:%M:%S'
+            if prefix:
+                prefix = '[' + prefix.rstrip('|') + '] '
+                message = time.strftime(prefix) + message
+            if level <= config.log.stdout:
+                with _stdlock:
+                    print(message)
+            if level <= config.log.file and 'jm' in config:
+                with _filelock, open(config.jm.logfile, 'a') as f:
+                    f.write(message + '\n')
 
 
 #===================================================================================================
