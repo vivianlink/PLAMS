@@ -25,14 +25,28 @@ class SCMResults(Results):
 
 
     def collect(self):
-        """Collect files present in the job folder.
-
-        Use parent method from |Results|, then create an instance of |KFFile| for the main KF file and store it as ``_kf`` attribute.
+        """Collect files present in the job folder. Use parent method from |Results|, then create an instance of |KFFile| for the main KF file and store it as ``_kf`` attribute.
         """
         Results.collect(self)
         kfname = self.job.name + self.__class__._kfext
         if kfname in self.files:
             self._kf = KFFile(opj(self.job.path, kfname))
+
+
+    def refresh(self):
+        """Refresh the contents of ``files`` list. Use parent method from |Results|, then look at all attributes that are instances of |KFFile| and check if they point to existing files. If not, try to reinstantiate them with current job path (that can happen while loading a pickled job after the entire job folder was moved).
+        """
+        Results.refresh(self)
+        to_remove = []
+        for attr,val in self.__dict__.items():
+            if isinstance(val, KFFile) and os.path.dirname(val.path) != self.job.path:
+                guessnewpath = opj(self.job.path, os.path.basename(val.path))
+                if os.path.isfile(guessnewpath):
+                    self.__dict__[attr] = KFFile(guessnewpath)
+                else:
+                    to_remove.append(attr)
+        for i in to_remove:
+            del self.__dict__[i]
 
 
     def readkf(self, section, variable):
