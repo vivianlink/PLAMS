@@ -4,6 +4,7 @@ import copy
 import heapq
 import math
 import numpy
+import os
 import types
 import uuid
 
@@ -336,7 +337,9 @@ class Molecule (object):
 
         >>> mol = Molecule('xyz/Benzene.xyz')
 
-    Constructor of a |Molecule| object accepts three arguments that can be used to supply this information from a file in your filesystem. *filename* should be a string with a path (absolute or relative) to such a file. *inputformat* describes the format of the file. Currently, the following formats are supported: ``xyz``, ``mol``, ``mol2`` and ``pdb``. If *inputformat* argument is not supplied, PLAMS will try to deduce it by examining the extension of the provided file, so in most of cases it is not needed to use *inputformat*, if only the file has the proper extension. Some formats (``xyz`` and ``pdb``) allow to store more than one geometry of a particular molecule within a single file. In such cases *geometry* argument can be used to indicate which (in order of appearance in the file) geometry to import.
+    Constructor of a |Molecule| object accepts three arguments that can be used to supply this information from a file in your filesystem. *filename* should be a string with a path (absolute or relative) to such a file. *inputformat* describes the format of the file. Currently, the following formats are supported: ``xyz``, ``mol``, ``mol2`` and ``pdb``. If *inputformat* argument is not supplied, PLAMS will try to deduce it by examining the extension of the provided file, so in most of cases it is not needed to use *inputformat*, if only the file has the proper extension. Some formats (``xyz`` and ``pdb``) allow to store more than one geometry of a particular molecule within a single file. In such cases *geometry* argument can be used to indicate which (in order of appearance in the file) geometry to import. *other* keyword arguments passed to the constructor are used to populate ``properties`` |Settings|.
+
+    If a |Molecule| is initialized from an external file, the path to this file (*filename* argument) is stored in ``properties.source``. The base name of the file without extension is kept in ``properties.name``.
 
     It is also possible to write a molecule to a file in one of the formats mentioned above. See :meth:`write` for details.
 
@@ -374,7 +377,7 @@ class Molecule (object):
     """
 
 
-    def __init__(self, filename=None, inputformat=None, geometry=1,**other):
+    def __init__(self, filename=None, inputformat=None, geometry=1, **other):
         self.atoms = []
         self.bonds = []
         self.lattice = []
@@ -382,6 +385,8 @@ class Molecule (object):
 
         if filename is not None :
             self.read(filename, inputformat, geometry)
+            self.properties.source = filename
+            self.properties.name = os.path.splitext(os.path.basename(filename))[0]
 
 
 #===================================================================================================
