@@ -194,10 +194,11 @@ class SCMJob(SingleJob):
         if use_molecule:
             self._parsemol()
         for item in self._top:
+            item = self.settings.input.find_case(item)
             if item in self.settings.input:
                 inp += parse(item, self.settings.input[item]) + '\n'
         for item in self.settings.input:
-            if item not in self._top:
+            if item.lower() not in self._top:
                 inp += parse(item, self.settings.input[item]) + '\n'
         inp += 'end input\n'
         if use_molecule:
@@ -335,15 +336,22 @@ class DFTBJob(SCMJob):
     _subblock_end = 'end'
 
     def _parsemol(self):
+        s = self.settings.input
         for i,atom in enumerate(self.molecule):
-            self.settings.input.system.atoms['_'+str(i+1)] = atom.str()
+            s[s.find_case('system')]['atoms']['_'+str(i+1)] = atom.str()
         if self.molecule.lattice:
             for i,vec in enumerate(self.molecule.lattice):
-                self.settings.input.system.lattice['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
+                s[s.find_case('system')]['lattice']['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
 
     def _removemol(self):
-        if 'system' in self.settings.input and 'atoms' in self.settings.input.system:
-            del self.settings.input.system.atoms
+        s = self.settings.input
+        system = s.find_case('system')
+        if system in s:
+            if 'atoms' in s[system]:
+                del s[system]['atoms']
+            if 'lattice' in s[system]:
+                del s[system]['lattice']
+
 
 
 #===================================================================================================
