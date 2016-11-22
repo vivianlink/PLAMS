@@ -64,7 +64,6 @@ class JobManager(object):
         self.workdir = opj(self.path, self.foldername)
         self.logfile = opj(self.workdir, self.foldername+'.log')
         self.input = opj(self.workdir, self.foldername+'.inp')
-        self.restart = opj(self.workdir, self.foldername+'.res')
         if not os.path.exists(self.workdir):
             os.mkdir(self.workdir)
         else:

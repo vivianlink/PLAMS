@@ -39,8 +39,6 @@ init(path=_X_args.p, folder=(os.path.normpath(_X_args.f) if _X_args.f else None)
 
 with open(config.jm.input, 'w') as f:
     f.write(_X_input)
-with open(config.jm.restart, 'w') as f:
-    f.write(_X_input)
 
 try:
     exec(compile(open(config.jm.input).read(), config.jm.input, 'exec'), plams_namespace)
