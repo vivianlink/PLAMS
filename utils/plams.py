@@ -4,42 +4,77 @@ from scm.plams import *
 
 plams_namespace = globals().copy()
 
-import os
-import sys
+VERSION = 1.2
+
 import argparse
+import os
+import shutil
+import sys
 import threading
 import traceback
+from os.path import join as opj
 
-_X_parser = argparse.ArgumentParser(description='PLAMS environment execution tool (master script)')
-_X_parser.add_argument('-p', type=str, default=None, help='place where the main working folder is created', metavar='path')
-_X_parser.add_argument('-f', type=str, default=None, help='name of the main working folder', metavar='name')
-_X_parser.add_argument('-v', action='append', type=str, default=[], help="Declare a variable 'var' with a value 'value' in the global namespace. Multiple variables can be set this way, but each one requires separate '-v'", metavar='var=value')
-_X_parser.add_argument('file', nargs='+', type=str, help='file with PLAMS script')
-_X_args = _X_parser.parse_args()
+parser = argparse.ArgumentParser(description='PLAMS environment execution tool ("master script")')
+parser.add_argument('--version', action='version', version='PLAMS '+str(VERSION), help='show version number and exit')
+parser.add_argument('-p', '--path', type=str, default=None, help='place where the main working folder is created', metavar='path', dest='path')
+parser.add_argument('-f', '--folder', type=str, default=None, help='name of the main working folder', metavar='name', dest='folder')
+parser.add_argument('-v', '--var',  action='append', type=str, default=[], help="declare a variable 'var' with a value 'value' in the global namespace. Multiple variables can be set this way, but each one requires a separate '-v'", metavar='var=value', dest='vars')
+parser.add_argument('-l', '--load', action='append', type=str, default=[], help="load all jobs from the given location before executing the script. Multiple paths can be given, but each one requires a separate '-l'", metavar='path', dest='load')
+parser.add_argument('-r', '--restart', action='store_true', help='perform a restart run (import all jobs from the folder given by -f argument and use the same folder for the current run)', dest='restart')
+parser.add_argument('file', nargs='+', type=str, help='file with PLAMS script')
+args = parser.parse_args()
+
 
 #add -v variables to the plams_namespace
-for _X_pair in _X_args.v:
-    if '=' in _X_pair:
-        var, val = _X_pair.split('=')
+for pair in args.vars:
+    if '=' in pair:
+        var, val = pair.split('=')
         plams_namespace[var] = val
 
+
 #read and concatenate input file(s)
-_X_input = ''
-for _X_input_file in _X_args.file:
-    if os.path.isfile(_X_input_file):
-        with open(_X_input_file, 'r') as f:
-            _X_input += f.read()
+inputscript = ''
+for input_file in args.file:
+    if os.path.isfile(input_file):
+        with open(input_file, 'r') as f:
+            inputscript += f.read()
     else:
-        print('Error: File %s not found'%_X_input_file)
+        print('Error: File %s not found' % input_file)
         sys.exit(1)
 
 
-#normpath prevents crash when f ends with /
-init(path=_X_args.p, folder=(os.path.normpath(_X_args.f) if _X_args.f else None))
+#handle restart
+restart_backup = None
+if args.restart:
+    if args.folder:
+        restartdir = opj(args.path, args.folder) if args.path else args.folder
+        if os.path.isdir(restartdir):
+            if os.listdir(restartdir):
+                restart_backup = restartdir + '.res'
+                n = 1
+                while os.path.exists(restart_backup):
+                    n += 1
+                    restart_backup = restartdir + '.res' + str(n)
+                os.rename(restartdir, restart_backup)
+                args.load.append(restart_backup)
+        else:
+            print('WARNING: The folder specified for restart does not exist. Ignoring -r flag.')
+    else:
+        print('WARNING: To perform a restart run you need to specify the folder with -f flag. Ignoring -r flag.')
 
+
+#initialize PLAMS (normpath prevents crash when f ends with /)
+init(path=args.path, folder=args.folder)
+
+#write down input script
 with open(config.jm.input, 'w') as f:
-    f.write(_X_input)
+    f.write(inputscript)
 
+#load jobs from -l folders
+for path in args.load:
+    load_all(path)
+
+#execute input script
 try:
     exec(compile(open(config.jm.input).read(), config.jm.input, 'exec'), plams_namespace)
 except KeyboardInterrupt:
@@ -59,4 +94,8 @@ except Exception as e:
         err_msg += '\n----------------------------------------------------'
     log(err_msg)
 
+#clean the environment
 finish()
+if restart_backup:
+    shutil.rmtree(restart_backup)
+

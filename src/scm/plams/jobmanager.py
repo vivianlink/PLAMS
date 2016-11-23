@@ -59,7 +59,7 @@ class JobManager(object):
                 self.foldername = basename + '_' + str(i)
                 i += 1
         else:
-            self.foldername = folder
+            self.foldername = os.path.normpath(folder) #normpath removes trailing /
 
         self.workdir = opj(self.path, self.foldername)
         self.logfile = opj(self.workdir, self.foldername+'.log')
