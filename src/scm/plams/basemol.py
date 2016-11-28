@@ -1297,7 +1297,10 @@ class Molecule (object):
                 x = float(i.value[0][24:32])
                 y = float(i.value[0][32:40])
                 z = float(i.value[0][40:48])
-                atnum = PT.get_atomic_number(i.value[0][70:72].strip())
+                try:
+                    atnum = PT.get_atomic_number(i.value[0][70:72].strip())
+                except PTError:
+                    atnum = PT.get_atomic_number(i.value[0][6:8].strip())
                 self.add_atom(Atom(atnum=atnum,coords=(x,y,z)))
 
         return pdb
