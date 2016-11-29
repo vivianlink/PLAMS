@@ -1095,7 +1095,7 @@ class Molecule (object):
                     else:
                         break
         if not nohead and fr > 0:
-            raise MoleculeError('readxyz: There are only %i frames in %s' % (frame - fr, f.name))
+            raise FileError('readxyz: There are only %i frames in %s' % (frame - fr, f.name))
 
 
     def writexyz(self, f):
@@ -1112,7 +1112,7 @@ class Molecule (object):
 
     def readmol(self, f, frame):
         if frame != 1:
-            raise MoleculeError('readmol: .mol files do not support multiple geometries')
+            raise FileError('readmol: .mol files do not support multiple geometries')
 
         comment = []
         for i in range(4):
@@ -1141,7 +1141,7 @@ class Molecule (object):
                         self.add_bond(Bond(atom1=at1, atom2=at2, order=ordr))
                     break
                 elif spl[len(spl)-1] == 'V3000':
-                    raise MoleculeError('readmol: Molfile V3000 not supported. Please convert')
+                    raise FileError('readmol: Molfile V3000 not supported. Please convert')
                 else:
                     comment.append(line)
         if comment:
@@ -1192,7 +1192,7 @@ class Molecule (object):
             elif line[0] == '@':
                 line = line.partition('>')[2]
                 if not line:
-                    raise MoleculeError('readmol2: Error in %s line %i: invalid @ record' % (f.name, str(i+1)))
+                    raise FileError('readmol2: Error in %s line %i: invalid @ record' % (f.name, str(i+1)))
                 mode = (line, i)
 
             elif mode[0] == 'MOLECULE':
@@ -1211,7 +1211,7 @@ class Molecule (object):
             elif mode[0] == 'ATOM':
                 spl = line.split()
                 if len(spl) < 6:
-                    raise MoleculeError('readmol2: Error in %s line %i: not enough values in line' % (f.name, str(i+1)))
+                    raise FileError('readmol2: Error in %s line %i: not enough values in line' % (f.name, str(i+1)))
                 symb = spl[5].partition('.')[0]
                 try:
                     num = PT.get_atomic_number(symb)
@@ -1232,12 +1232,12 @@ class Molecule (object):
             elif mode[0] == 'BOND':
                 spl = line.split()
                 if len(spl) < 4:
-                    raise MoleculeError('readmol2: Error in %s line %i: not enough values in line' % (f.name, str(i+1)))
+                    raise FileError('readmol2: Error in %s line %i: not enough values in line' % (f.name, str(i+1)))
                 try:
                     atom1 = self.atoms[int(spl[1])-1]
                     atom2 = self.atoms[int(spl[2])-1]
                 except IndexError:
-                    raise MoleculeError('readmol2: Error in %s line %i: wrong atom ID' % (f.name, str(i+1)))
+                    raise FileError('readmol2: Error in %s line %i: wrong atom ID' % (f.name, str(i+1)))
                 newbond = Bond(atom1, atom2, order=bondorders[spl[3]])
                 if len(spl) > 4:
                     for flag in spl[4].split('|'):
@@ -1290,17 +1290,22 @@ class Molecule (object):
         pdb = PDBHandler(f)
         models = pdb.get_models()
         if frame > len(models):
-            raise MoleculeError('readpdb: There are only %i frames in %s' % (len(models), f.name))
+            raise FileError('readpdb: There are only %i frames in %s' % (len(models), f.name))
 
+        symbol_columns = [70,6,7,8]
         for i in models[frame-1]:
             if i.name in ['ATOM  ','HETATM']:
                 x = float(i.value[0][24:32])
                 y = float(i.value[0][32:40])
                 z = float(i.value[0][40:48])
-                try:
-                    atnum = PT.get_atomic_number(i.value[0][70:72].strip())
-                except PTError:
-                    atnum = PT.get_atomic_number(i.value[0][6:8].strip())
+                for n in symbol_columns:
+                    symbol = i.value[0][n:n+2].strip()
+                    try:
+                        atnum = PT.get_atomic_number(symbol)
+                        break
+                    except PTError:
+                        if n == symbol_columns[-1]:
+                            raise FileError('readpdb: Unable to deduce the atomic symbol in the following line:\n%s'%(i.name+i.value[0]))
                 self.add_atom(Atom(atnum=atnum,coords=(x,y,z)))
 
         return pdb
@@ -1334,11 +1339,8 @@ class Molecule (object):
             else:
                 inputformat = 'xyz'
         if inputformat in self.__class__._readformat:
-            try:
-                with open(filename, 'rU') as f:
-                    ret = self._readformat[inputformat](self, f, frame)
-            except:
-                raise FileError('read: Error reading file %s' % filename)
+            with open(filename, 'rU') as f:
+                ret = self._readformat[inputformat](self, f, frame)
             return ret
         else:
             raise MoleculeError('read: Unsupported file format')
