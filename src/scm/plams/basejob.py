@@ -189,6 +189,7 @@ class Job(object):
                 self.status = prev.status
             if self.settings.pickle:
                 self.pickle()
+            self.results.done.set()
             if self.parent:
                 self.parent._notify()
         else:
