@@ -10,9 +10,9 @@ import uuid
 
 from .common import log
 from .errors import MoleculeError, PTError, FileError
-from .pdbtools import PDBHandler, PDBRecord
 from .settings import Settings
-from .utils import Units, PT
+from ..tools.pdbtools import PDBHandler, PDBRecord
+from ..tools.utils import Units, PT
 
 __all__ = ['Atom', 'Bond', 'Molecule']
 

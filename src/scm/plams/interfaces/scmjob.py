@@ -5,12 +5,11 @@ import copy
 
 from os.path import join as opj
 
-from .basejob import SingleJob
-from .results import Results
-from .settings import Settings
-from .utils import PT
-from .kftools import KFFile
-from .errors import PlamsError
+from ..core.basejob import SingleJob
+from ..core.results import Results
+from ..core.settings import Settings
+from ..core.errors import PlamsError
+from ..tools.kftools import KFFile
 
 __all__ = ['ADFJob', 'ADFResults', 'BANDJob', 'BANDResults', 'DFTBJob', 'DFTBResults', 'FCFJob', 'FCFResults', 'DensfJob', 'DensfResults']
 

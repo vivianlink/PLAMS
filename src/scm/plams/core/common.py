@@ -48,7 +48,7 @@ def init(path=None, folder=None):
     elif 'ADFHOME' in os.environ and isfile(opj(expandvars('$ADFHOME'), 'scripting', 'plams', 'src', 'scm', 'plams', 'plams_defaults')):
         defaults = opj(expandvars('$ADFHOME'), 'scripting', 'plams', 'src', 'scm', 'plams', 'plams_defaults')
     else:
-        defaults = opj(dirname(__file__), 'plams_defaults')
+        defaults = opj(dirname(dirname(__file__)), 'plams_defaults')
         if not isfile(defaults):
             raise PlamsError('plams_defaults not found, please set PLAMSDEFAULTS or PLAMSHOME in your environment')
     exec(compile(open(defaults).read(), defaults, 'exec'))

@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from .errors import PlamsError, FileError
+from ..core.errors import PlamsError, FileError
 
 __all__ = ['PDBRecord', 'PDBHandler']
 

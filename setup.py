@@ -28,6 +28,6 @@ setup(
         'six',
     ],
     package_dir={'': 'src/scm'},
-    packages=['plams'],
+    packages=['plams', 'plams.core', 'plams.tools', 'plams.interfaces'],
     package_data={'plams':['plams_defaults']}
 )
