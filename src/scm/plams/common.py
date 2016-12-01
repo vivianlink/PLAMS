@@ -43,16 +43,14 @@ def init(path=None, folder=None):
     from os.path import isfile, expandvars, dirname
     if 'PLAMSDEFAULTS' in os.environ and isfile(expandvars('$PLAMSDEFAULTS')):
         defaults = expandvars('$PLAMSDEFAULTS')
-    elif 'PLAMSHOME' in os.environ and isfile(opj(expandvars('$PLAMSHOME'), 'utils', 'plams_defaults.py')):
-        defaults = opj(expandvars('$PLAMSHOME'), 'utils', 'plams_defaults.py')
-    elif 'ADFHOME' in os.environ and isfile(opj(expandvars('$ADFHOME'), 'scripting', 'plams', 'utils', 'plams_defaults.py')):
-        defaults = opj(expandvars('$ADFHOME'), 'scripting', 'plams', 'utils', 'plams_defaults.py')
+    elif 'PLAMSHOME' in os.environ and isfile(opj(expandvars('$PLAMSHOME'), 'src', 'scm', 'plams', 'plams_defaults')):
+        defaults = opj(expandvars('$PLAMSHOME'), 'src', 'scm', 'plams', 'plams_defaults')
+    elif 'ADFHOME' in os.environ and isfile(opj(expandvars('$ADFHOME'), 'scripting', 'plams', 'src', 'scm', 'plams', 'plams_defaults')):
+        defaults = opj(expandvars('$ADFHOME'), 'scripting', 'plams', 'src', 'scm', 'plams', 'plams_defaults')
     else:
-        defaults = opj(dirname(dirname(dirname(dirname(__file__)))), 'utils', 'plams_defaults.py')
+        defaults = opj(dirname(__file__), 'plams_defaults')
         if not isfile(defaults):
-            defaults = opj(dirname(__file__), 'defaults', 'plams_defaults.py')
-            if not isfile(defaults):
-                raise PlamsError('plams_defaults.py not found, please set PLAMSDEFUALTS or PLAMSHOME in your environment')
+            raise PlamsError('plams_defaults not found, please set PLAMSDEFAULTS or PLAMSHOME in your environment')
     exec(compile(open(defaults).read(), defaults, 'exec'))
 
 
