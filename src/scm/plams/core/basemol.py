@@ -319,8 +319,9 @@ class Molecule (object):
     """A class representing basic molecule object.
 
     An instance of this class has the following attributes:
-        *   ``atoms`` -- list of |Atom| objects that belong to this molecule
-        *   ``bonds`` -- list of |Bond| objects between atoms listed in ``atoms``
+        *   ``atoms`` -- a list of |Atom| objects that belong to this molecule
+        *   ``bonds`` -- a list of |Bond| objects between atoms listed in ``atoms``
+        *   ``lattice`` -- a list of lattice vectors, in case of periodic structures
         *   ``properties`` -- a |Settings| instance storing all other information about this molecule
 
     .. note::
@@ -343,6 +344,24 @@ class Molecule (object):
 
     It is also possible to write a molecule to a file in one of the formats mentioned above. See :meth:`write` for details.
 
+    ``lattice`` attribute is used to store information about lattice vectors in case of periodic structures. Some job types (|BANDJob|, |DFTBJob|) will automatically use that data while constructing input files. ``lattice`` should be a list of up to 3 vectors (for different types of periodicity: chain, slab or bulk), each of which needs to be a list or a tuple of 3 numbers.
+
+    Lattice vectors can be directly read and written to ``xyz`` files using the following convention (please mind the fact that this is an unofficial extension to the XYZ format)::
+
+        3
+
+            H      0.000000      0.765440     -0.008360
+            O      0.000000      0.000000      0.593720
+            H      0.000000     -0.765440     -0.008360
+        VEC1       3.000000      0.000000      0.000000
+        VEC2       0.000000      3.000000      0.000000
+        VEC3       0.000000      0.000000      3.000000
+
+    For 1D (2D) periodicity please supply only ``VEC1`` (``VEC1`` and ``VEC2``). Writing lattice vectors to ``xyz`` files can be disabled by simply reseting the ``lattice`` attribute::
+
+        >>> mol.lattice = []
+
+    |hspace|
 
     Below the detailed description of available methods is presented. Many of these methods require passing atoms belonging to the molecule as arguments. It can by done by using a reference to an |Atom| object present it ``atoms`` list, but not by passing a number of an atom (its position within ``atoms`` list). Unlike some other tools, PLAMS does not use integer numbers as primary identifiers of atoms. It is done to prevent problems when atoms within a molecule are reordered or some atoms are deleted. References to |Atom| or |Bond| objects can be obtained directly from ``atoms`` or ``bonds`` lists, or with dictionary-like bracket notation::
 
@@ -1113,6 +1132,8 @@ class Molecule (object):
         f.write('\n')
         for at in self.atoms:
             f.write(str(at) + '\n')
+        for i,vec in enumerate(self.lattice):
+            f.write('VEC'+str(i+1) + '%14.6f %14.6f %14.6f\n'%tuple(vec))
 
 
     def readmol(self, f, frame):
