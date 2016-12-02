@@ -1,7 +1,7 @@
 Job runners
 -------------
 
-.. currentmodule:: scm.plams.jobrunner
+.. currentmodule:: scm.plams.core.jobrunner
 
 Job runners have already been mentioned in previous chapters, in parts regarding job running. The aim of this chapter is to sum up all this information and to introduce various subclasses of |JobRunner|.
 

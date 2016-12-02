@@ -1,7 +1,7 @@
 Utilities
 -------------------------
 
-.. currentmodule:: scm.plams.utils
+.. currentmodule:: scm.plams.tools.utils
 
 Presented here is a small set of useful utility tools that can come handy in various contexts in your scripts. They are simple, standalone objects always present in the main namespace.
 

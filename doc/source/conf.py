@@ -206,58 +206,57 @@ autodoc_default_flags = ['members', 'private-members', 'special-members']
 autodoc_member_order = 'bysource'
 
 rst_epilog = """
-.. |init| replace:: :func:`~scm.plams.common.init`
-.. |log| replace:: :func:`~scm.plams.common.log`
-.. |load| replace:: :func:`~scm.plams.common.load`
-.. |load_all| replace:: :func:`~scm.plams.common.load_all`
-.. |finish| replace:: :func:`~scm.plams.common.finish`
-.. |add_to_class| replace:: :func:`~scm.plams.common.add_to_class`
-.. |add_to_instance| replace:: :func:`~scm.plams.common.add_to_instance`
+.. |init| replace:: :func:`~scm.plams.core.common.init`
+.. |log| replace:: :func:`~scm.plams.core.common.log`
+.. |load| replace:: :func:`~scm.plams.core.common.load`
+.. |load_all| replace:: :func:`~scm.plams.core.common.load_all`
+.. |finish| replace:: :func:`~scm.plams.core.common.finish`
+.. |add_to_class| replace:: :func:`~scm.plams.core.common.add_to_class`
+.. |add_to_instance| replace:: :func:`~scm.plams.core.common.add_to_instance`
 
-.. |PlamsError| replace:: :exc:`~scm.plams.errors.PlamsError`
-.. |FileError| replace:: :exc:`~scm.plams.errors.FileError`
-.. |ResultsError| replace:: :exc:`~scm.plams.errors.ResultsError`
-.. |PTError| replace:: :exc:`~scm.plams.errors.PTError`
-.. |UnitsError| replace:: :exc:`~scm.plams.errors.UnitsError`
-.. |MoleculeError| replace:: :exc:`~scm.plams.errors.MoleculeError`
+.. |PlamsError| replace:: :exc:`~scm.plams.core.errors.PlamsError`
+.. |FileError| replace:: :exc:`~scm.plams.core.errors.FileError`
+.. |ResultsError| replace:: :exc:`~scm.plams.core.errors.ResultsError`
+.. |PTError| replace:: :exc:`~scm.plams.core.errors.PTError`
+.. |UnitsError| replace:: :exc:`~scm.plams.core.errors.UnitsError`
+.. |MoleculeError| replace:: :exc:`~scm.plams.core.errors.MoleculeError`
 
-.. |Job| replace:: :class:`~scm.plams.basejob.Job`
-.. |SingleJob| replace:: :class:`~scm.plams.basejob.SingleJob`
-.. |MultiJob| replace:: :class:`~scm.plams.basejob.MultiJob`
-.. |run| replace:: :meth:`~scm.plams.basejob.Job.run`
-.. |prerun| replace:: :meth:`~scm.plams.basejob.Job.prerun`
-.. |postrun| replace:: :meth:`~scm.plams.basejob.Job.postrun`
+.. |Job| replace:: :class:`~scm.plams.core.basejob.Job`
+.. |SingleJob| replace:: :class:`~scm.plams.core.basejob.SingleJob`
+.. |MultiJob| replace:: :class:`~scm.plams.core.basejob.MultiJob`
+.. |run| replace:: :meth:`~scm.plams.core.basejob.Job.run`
+.. |prerun| replace:: :meth:`~scm.plams.core.basejob.Job.prerun`
+.. |postrun| replace:: :meth:`~scm.plams.core.basejob.Job.postrun`
 
-.. |Atom| replace:: :class:`~scm.plams.basemol.Atom`
-.. |Bond| replace:: :class:`~scm.plams.basemol.Bond`
-.. |Molecule| replace:: :class:`~scm.plams.basemol.Molecule`
-.. |BigMolecule| replace:: :class:`~scm.plams.bigmol.BigMolecule`
+.. |Atom| replace:: :class:`~scm.plams.core.basemol.Atom`
+.. |Bond| replace:: :class:`~scm.plams.core.basemol.Bond`
+.. |Molecule| replace:: :class:`~scm.plams.core.basemol.Molecule`
 
-.. |PeriodicTable| replace:: :class:`~scm.plams.utils.PeriodicTable`
-.. |Units| replace:: :class:`~scm.plams.utils.Units`
+.. |PeriodicTable| replace:: :class:`~scm.plams.tools.utils.PeriodicTable`
+.. |Units| replace:: :class:`~scm.plams.tools.utils.Units`
 
-.. |JobManager| replace:: :class:`~scm.plams.jobmanager.JobManager`
-.. |load_job| replace:: :meth:`~scm.plams.jobmanager.JobManager.load_job`
+.. |JobManager| replace:: :class:`~scm.plams.core.jobmanager.JobManager`
+.. |load_job| replace:: :meth:`~scm.plams.core.jobmanager.JobManager.load_job`
 
-.. |JobRunner| replace:: :class:`~scm.plams.jobrunner.JobRunner`
-.. |GridRunner| replace:: :class:`~scm.plams.jobrunner.GridRunner`
+.. |JobRunner| replace:: :class:`~scm.plams.core.jobrunner.JobRunner`
+.. |GridRunner| replace:: :class:`~scm.plams.core.jobrunner.GridRunner`
 
-.. |Settings| replace:: :class:`~scm.plams.settings.Settings`
-.. |Results| replace:: :class:`~scm.plams.results.Results`
-.. |KFReader| replace:: :class:`~scm.plams.kftools.KFReader`
-.. |KFFile| replace:: :class:`~scm.plams.kftools.KFFile`
+.. |Settings| replace:: :class:`~scm.plams.core.settings.Settings`
+.. |Results| replace:: :class:`~scm.plams.core.results.Results`
+.. |KFReader| replace:: :class:`~scm.plams.tools.kftools.KFReader`
+.. |KFFile| replace:: :class:`~scm.plams.tools.kftools.KFFile`
 
-.. |SCMJob| replace:: :class:`~scm.plams.scmjob.SCMJob`
-.. |SCMResults| replace:: :class:`~scm.plams.scmjob.SCMResults`
-.. |ADFJob| replace:: :class:`ADFJob<scm.plams.scmjob.ADFJob>`
-.. |ADFResults| replace:: :class:`ADFResults<scm.plams.scmjob.ADFResults>`
-.. |BANDJob| replace:: :class:`BANDJob<scm.plams.scmjob.BANDJob>`
-.. |BANDResults| replace:: :class:`BANDResults<scm.plams.scmjob.BANDResults>`
-.. |DFTBJob| replace:: :class:`DFTBJob<scm.plams.scmjob.DFTBJob>`
-.. |DFTBResults| replace:: :class:`DFTBResults<scm.plams.scmjob.DFTBResults>`
+.. |SCMJob| replace:: :class:`~scm.plams.interfaces.scmjob.SCMJob`
+.. |SCMResults| replace:: :class:`~scm.plams.interfaces.scmjob.SCMResults`
+.. |ADFJob| replace:: :class:`ADFJob<scm.plams.interfaces.scmjob.SCMJob>`
+.. |ADFResults| replace:: :class:`ADFResults<scm.plams.interfaces.scmjob.SCMResults>`
+.. |BANDJob| replace:: :class:`BANDJob<scm.plams.interfaces.scmjob.SCMJob>`
+.. |BANDResults| replace:: :class:`BANDResults<scm.plams.interfaces.scmjob.SCMResults>`
+.. |DFTBJob| replace:: :class:`DFTBJob<scm.plams.interfaces.scmjob.SCMJob>`
+.. |DFTBResults| replace:: :class:`DFTBResults<scm.plams.interfaces.scmjob.SCMResults>`
 
-.. |DiracJob| replace:: :class:`~scm.plams.diracjob.DiracJob`
-.. |DiracResults| replace:: :class:`~scm.plams.diracjob.DiracResults`
+.. |DiracJob| replace:: :class:`~scm.plams.interfaces.diracjob.DiracJob`
+.. |DiracResults| replace:: :class:`~scm.plams.interfaces.diracjob.DiracResults`
 
 .. |RPM| replace:: :ref:`rerun-prevention`
 .. |cleaning| replace:: :ref:`cleaning`
@@ -265,5 +264,6 @@ rst_epilog = """
 .. |binding_decorators| replace:: :ref:`binding-decorators`
 .. |parallel| replace:: :ref:`parallel`
 
+.. |hspace| unicode:: 0xA0
 """
 
