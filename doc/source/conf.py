@@ -246,17 +246,17 @@ rst_epilog = """
 .. |KFReader| replace:: :class:`~scm.plams.tools.kftools.KFReader`
 .. |KFFile| replace:: :class:`~scm.plams.tools.kftools.KFFile`
 
-.. |SCMJob| replace:: :class:`~scm.plams.interfaces.scmjob.SCMJob`
-.. |SCMResults| replace:: :class:`~scm.plams.interfaces.scmjob.SCMResults`
-.. |ADFJob| replace:: :class:`ADFJob<scm.plams.interfaces.scmjob.SCMJob>`
-.. |ADFResults| replace:: :class:`ADFResults<scm.plams.interfaces.scmjob.SCMResults>`
-.. |BANDJob| replace:: :class:`BANDJob<scm.plams.interfaces.scmjob.SCMJob>`
-.. |BANDResults| replace:: :class:`BANDResults<scm.plams.interfaces.scmjob.SCMResults>`
-.. |DFTBJob| replace:: :class:`DFTBJob<scm.plams.interfaces.scmjob.SCMJob>`
-.. |DFTBResults| replace:: :class:`DFTBResults<scm.plams.interfaces.scmjob.SCMResults>`
+.. |SCMJob| replace:: :class:`~scm.plams.interfaces.adfsuite.SCMJob`
+.. |SCMResults| replace:: :class:`~scm.plams.interfaces.adfsuite.SCMResults`
+.. |ADFJob| replace:: :class:`ADFJob<scm.plams.interfaces.adfsuite.SCMJob>`
+.. |ADFResults| replace:: :class:`ADFResults<scm.plams.interfaces.adfsuite.SCMResults>`
+.. |BANDJob| replace:: :class:`BANDJob<scm.plams.interfaces.adfsuite.SCMJob>`
+.. |BANDResults| replace:: :class:`BANDResults<scm.plams.interfaces.adfsuite.SCMResults>`
+.. |DFTBJob| replace:: :class:`DFTBJob<scm.plams.interfaces.adfsuite.SCMJob>`
+.. |DFTBResults| replace:: :class:`DFTBResults<scm.plams.interfaces.adfsuite.SCMResults>`
 
-.. |DiracJob| replace:: :class:`~scm.plams.interfaces.diracjob.DiracJob`
-.. |DiracResults| replace:: :class:`~scm.plams.interfaces.diracjob.DiracResults`
+.. |DiracJob| replace:: :class:`~scm.plams.interfaces.dirac.DiracJob`
+.. |DiracResults| replace:: :class:`~scm.plams.interfaces.dirac.DiracResults`
 
 .. |RPM| replace:: :ref:`rerun-prevention`
 .. |cleaning| replace:: :ref:`cleaning`

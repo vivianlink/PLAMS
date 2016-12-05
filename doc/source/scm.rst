@@ -1,7 +1,7 @@
 ADF Suite
 -------------------------
 
-.. currentmodule:: scm.plams.interfaces.scmjob
+.. currentmodule:: scm.plams.interfaces.adfsuite
 
 PLAMS offers interfaces to three main binaries of the ADF Suite: ADF, BAND and DFTB as well as some other small utility binaries like DENSF of FCF. All possible input keywords and options are covered, as well as extraction of arbitrary data from binary files (called KF files) produced by these programs.
 

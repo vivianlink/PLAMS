@@ -12,8 +12,8 @@ from .tools.pdbtools import *
 from .tools.numdiff import *
 from .tools.utils import *
 
-from .interfaces.cp2kjob import *
-from .interfaces.diracjob import *
-from .interfaces.gamessjob import *
-from .interfaces.orcajob import *
-from .interfaces.scmjob import *
+from .interfaces.adfsuite import *
+from .interfaces.cp2k import *
+from .interfaces.dirac import *
+from .interfaces.gamess import *
+from .interfaces.orca import *

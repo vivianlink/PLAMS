@@ -6,7 +6,7 @@ from ..core.results import Results
 from ..core.basejob import MultiJob
 from ..core.settings import Settings
 from ..core.basemol import Atom
-from ..interfaces.scmjob import ADFJob, BANDJob, DFTBJob
+from ..interfaces.adfsuite import ADFJob, BANDJob, DFTBJob
 
 
 __all__ = ['ADFNumGradJob' ,'BANDNumGradJob', 'DFTBNumGradJob']
