@@ -4,13 +4,6 @@ from ..core.basejob import SingleJob
 from ..core.common import string
 from ..core.settings import Settings
 
-try:
-    import subprocess32 as subprocess
-except ImportError:
-    import subprocess
-
-# ======================<>===========================
-
 
 class ORCAJob(SingleJob):
     """
@@ -108,8 +101,8 @@ class ORCAJob(SingleJob):
                 multi = mol.properties.multiplicity
             else:
                 multi = 1
-            xyz = ''.join(at.str(symbol=True, space=11, decimal=5) for at in mol.atoms)
-            return '* xyz {} {}\n{}*\n\n'.format(charge, multi, xyz)
+            xyz = '\n'.join(at.str(symbol=True, space=11, decimal=5) for at in mol.atoms)
+            return '* xyz {} {}\n{}\n*\n\n'.format(charge, multi, xyz)
         else:
             return ''
 
@@ -118,8 +111,7 @@ class ORCAJob(SingleJob):
         Running orca is straightforward, simply:
         */absolute/path/to/orca myinput.inp*
         """
-        path = string(subprocess.check_output(['which', 'orca'])).rstrip()
-        return '{} {}'.format(path, self._filename('inp'))
+        return 'orca {}'.format(path, self._filename('inp'))
 
     def check(self):
         """
