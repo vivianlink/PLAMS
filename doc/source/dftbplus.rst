@@ -1,7 +1,7 @@
 DFTB+
 -------------------------
 
-.. currentmodule:: scm.plams.dftbplusjob
+.. currentmodule:: scm.plams.interfaces.dftbplus
 
 DFTB+ is a density-functional tight-binding implemenation. More information about DFTB can be found on its `official website <http://www.dftb-plus.info>`_.
 
@@ -14,11 +14,11 @@ PLAMS offers a simple and incomplete DFTB+ interface. It is so far capable of ha
 Preparing a calculation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Preparing an instance of |DFTBPlusJob| follows the general principles for |SingleJob|. Information adjusting the input file is stored in the ``myjob.settings.input`` branch. The geometry of your system can be supplied via the class ``scm.plams.basemole.Molecule``. Note that right now the molecule is transformed into the ``GenFormat`` with the ``C`` (cluster) option, meaning the class can only handle clusters and not periodic systems! See `the manual <http://www.dftb-plus.info/documentation/>`_ for further information on the different geometry-input types.
+Preparing an instance of |DFTBPlusJob| follows the general principles for |SingleJob|. Information adjusting the input file is stored in the ``myjob.settings.input`` branch. The geometry of your system can be supplied via the class |Molecule|. Note that right now the molecule is transformed into the ``GenFormat`` with the ``C`` (cluster) option, meaning the class can only handle clusters and not periodic systems! See `the manual <http://www.dftb-plus.info/documentation/>`_ for further information on the different geometry-input types.
 
     
 
-.. _dftb+-input:
+.. _dftbplus-input:
 
 Input
 +++++
@@ -36,7 +36,7 @@ Empty *method types* can be created by not giving any subkeys to a key except ``
 
 
 
-.. _dftb+-runscript:
+.. _dftbplus-runscript:
 
 Runscript
 +++++++++

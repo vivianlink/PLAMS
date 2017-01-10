@@ -2,31 +2,26 @@
 Run DFTB+ with plams
 v0.1 by Patrick Melix
 
-add 'from .dftbplusjob import *' to $ADFHome/scripting/plams/src/scm/plams/___init___.py to make this work
-add this file to $ADFHome/scripting/plams/src/scm/plams/
-
-see dftb+_example.plms for an example
+see documentation for an example
 """
 from __future__ import unicode_literals
 
+from ..core.basejob import SingleJob
+from ..core.settings import Settings
+from ..core.results import Results
+from ..tools.utils import Units
+from ..core.basemol import Molecule
+from ..core.errors import PlamsError
 
-from .basejob import SingleJob
-from .settings import Settings
-from .results import Results
-from .utils import Units
-from .basemol import Molecule
-from .errors import PlamsError
-import os
-
-__all__ = ['DFTBPlusJob']
+__all__ = ['DFTBPlusJob', 'DFTBPlusResults']
 
 class DFTBPlusResults(Results):
-    """A Class for DFTB+ Results"""
+    """A Class for handling DFTB+ Results."""
     _outfile = 'detailed.out'
     _xyzout = 'geo_end.xyz'
 
     def get_molecule(self):
-        #read molecule coordinates
+        """Returns the molecule from the 'geo_end.xyz' file.""" 
         try:
             mol = Molecule(filename=self[self._xyzout])
         except:
@@ -34,7 +29,7 @@ class DFTBPlusResults(Results):
         return mol
 
     def get_energy(self, string='Total energy',unit='au'):
-        #get the energy given in the output with description "<string>:"
+        """Fucntion returning the energy given in the output with description '<string>:' in units of '<string>:', standard is 'Total energy' and 'au'."""
         try:
             energy = float(self.grep_file(self._outfile, pattern=string+':')[0].split()[2])
             energy = Units.convert(energy, 'au', unit)
@@ -43,7 +38,7 @@ class DFTBPlusResults(Results):
         return energy
 
     def get_atomic_charges(self):
-        #returns dictonary with atom numbers and their charges
+        """Function returning dictonary with atom numbers and their charges, ordering is the same as in the input."""
         try:
             atomic_charges = {}
             string = self.awk_file(self._outfile,script='/Net atomic charges/{do_print=1} NF==0 {do_print=0 }do_print==1 {print}')
@@ -60,7 +55,7 @@ class DFTBPlusResults(Results):
 
 class DFTBPlusJob(SingleJob):
     """A class representing a single computational job with DFTB+.
-       Only supports molecular coordinates, no support for lattice yet"""
+       Only supports molecular coordinates, no support for lattice yet."""
     _result_type = DFTBPlusResults
     _filenames = {'inp':'dftb_in.hsd', 'run':'$JN.run', 'out':'$JN.out', 'err': '$JN.err'}
 
@@ -135,7 +130,7 @@ class DFTBPlusJob(SingleJob):
 
 
     def get_runscript(self):
-        #dftb+ has to be the bin to run
+        """dftb+ has to be in your $PATH!"""
         ret = 'dftb+ '
         if self.settings.runscript.stdout_redirect:
             ret += ' >' + self._filenames('out')
@@ -144,6 +139,7 @@ class DFTBPlusJob(SingleJob):
 
 
     def check(self):
+        """Returns true if 'ERROR!' is not found in the output."""
         s = self.results.grep_output('ERROR!')
         return len(s) == 0
 
