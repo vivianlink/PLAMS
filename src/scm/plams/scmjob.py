@@ -233,6 +233,19 @@ class SCMJob(SingleJob):
         """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path to the main KF file. See :meth:`Settings.__reduce__<scm.plams.settings.Settings.__reduce__>` for details."""
         return self.results._kfpath()
 
+#===================================================================================================
+#===================================================================================================
+
+
+def _SCM_input_atom_symbol(atom):
+    """The atom symbol for the SCM input file (with support for Ghost atoms and Names)"""
+    smb = atom.symbol
+    if hasattr(atom, 'ghost') and atom.ghost:
+        smb = ('Gh.'+smb).rstrip('.')
+    if hasattr(atom, 'name'):
+        smb = (smb+'.'+str(atom.name)).lstrip('.')
+    return smb
+
 
 #===================================================================================================
 #===================================================================================================
@@ -254,12 +267,7 @@ class ADFJob(SCMJob):
 
     def _parsemol(self):
         for i,atom in enumerate(self.molecule):
-
-            smb = atom.symbol
-            if hasattr(atom, 'ghost') and atom.ghost:
-                smb = ('Gh.'+smb).rstrip('.')
-            if hasattr(atom, 'name'):
-                smb = (smb+'.'+str(atom.name)).lstrip('.')
+            smb = _SCM_input_atom_symbol(atom)
             suffix = ''
             if hasattr(atom,'fragment'):
                 suffix += 'f={fragment} '
@@ -291,7 +299,9 @@ class BANDJob(SCMJob):
 
     def _parsemol(self):
         for i,atom in enumerate(self.molecule):
-            self.settings.input.atoms['_'+str(i+1)] = atom.str()
+            smb = _SCM_input_atom_symbol(atom)
+            self.settings.input.atoms['_'+str(i+1)] = atom.str(symbol=smb)
+
         if self.molecule.lattice:
             for i,vec in enumerate(self.molecule.lattice):
                 self.settings.input.lattice['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
@@ -323,7 +333,8 @@ class DFTBJob(SCMJob):
 
     def _parsemol(self):
         for i,atom in enumerate(self.molecule):
-            self.settings.input.system.atoms['_'+str(i+1)] = atom.str()
+            smb = _SCM_input_atom_symbol(atom)
+            self.settings.input.system.atoms['_'+str(i+1)] = atom.str(symbol=smb)
         if self.molecule.lattice:
             self.settings.runscript.nproc=1
             for i,vec in enumerate(self.molecule.lattice):
