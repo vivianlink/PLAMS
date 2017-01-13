@@ -1108,6 +1108,12 @@ class Molecule (object):
         f.write('\n')
         for at in self.atoms:
             f.write(str(at) + '\n')
+        if self.lattice:
+           for i,vec in enumerate(self.lattice):
+               f.write('VEC'+str(i+1))
+               for el in vec:
+                  f.write(' '+str(el))
+               f.write('\n')
 
 
     def readmol(self, f, frame):
