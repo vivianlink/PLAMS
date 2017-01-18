@@ -1,7 +1,7 @@
 Job manager
 -------------
 
-.. currentmodule:: scm.plams.jobmanager
+.. currentmodule:: scm.plams.core.jobmanager
 
 Job manager is the "director" of PLAMS environment. It keeps track of all jobs you run, manages the main working folder, allocates job folders to jobs and prevents multiple runs of the same job.
 

@@ -1,15 +1,8 @@
 from __future__ import unicode_literals
 
-from .basejob import SingleJob
-from .common import string
-from .settings import Settings
-
-try:
-    import subprocess32 as subprocess
-except ImportError:
-    import subprocess
-
-# ======================<>===========================
+from ..core.basejob import SingleJob
+from ..core.common import string
+from ..core.settings import Settings
 
 
 class ORCAJob(SingleJob):
@@ -27,24 +20,24 @@ class ORCAJob(SingleJob):
         into string with blocks, subblocks, keys and values. The branch
         self.settings.input.main corresponds to the lines starting with
         the special character ! in the Orca input.
-        
+
         Orca *end* keyword is mandatory for only a subset of sections,
         For instance the following orca input shows the keywords *methods*
         and *basis* use of end.
 
-            ! UKS B3LYP/G SV(P) SV/J TightSCF Direct Grid3 FinalGrid4 
+            ! UKS B3LYP/G SV(P) SV/J TightSCF Direct Grid3 FinalGrid4
 
             %method SpecialGridAtoms 26
                     SpecialGridIntAcc 7
                     end
             %basis NewGTO 26 "CP(PPP)" end
                    NewAuxGTO 26 "TZV/J" end
-                   end 
-        
+                   end
+
         In order to specify when the *end* keyword must be used,
         the following syntasis can be used.
 
-        
+
         job = Orca(molecule=Molecule(<Path/to/molecule>))
         job.settings.input.main = "UKS B3LYP/G SV(P) SV/J TightSCF Direct Grid3 FinalGrid4"
         job.settings.input.method.SpecialGridAtoms = 26
@@ -108,8 +101,8 @@ class ORCAJob(SingleJob):
                 multi = mol.properties.multiplicity
             else:
                 multi = 1
-            xyz = ''.join(at.str(symbol=True, space=11, decimal=5) for at in mol.atoms)
-            return '* xyz {} {}\n{}*\n\n'.format(charge, multi, xyz)
+            xyz = '\n'.join(at.str(symbol=True, space=11, decimal=5) for at in mol.atoms)
+            return '* xyz {} {}\n{}\n*\n\n'.format(charge, multi, xyz)
         else:
             return ''
 
@@ -118,8 +111,7 @@ class ORCAJob(SingleJob):
         Running orca is straightforward, simply:
         */absolute/path/to/orca myinput.inp*
         """
-        path = string(subprocess.check_output(['which', 'orca'])).rstrip()
-        return '{} {}'.format(path, self._filename('inp'))
+        return 'orca {}'.format(path, self._filename('inp'))
 
     def check(self):
         """

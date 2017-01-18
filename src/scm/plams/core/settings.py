@@ -264,6 +264,36 @@ class Settings(dict):
 
 
 
+    def find_case(self, key):
+        """Check if this instance contains a key consisting of the same letters as *key*, but possibly with different case. If found, return such a key. If not, return *key*.
+
+        When |Settings| are used in case-insensitive contexts, this helps preventing multiple occurences of the same key with different case::
+
+            >>> s = Settings()
+            >>> s.system.key1 = value1
+            >>> s.System.key2 = value2
+            >>> print(s)
+            System:
+                key2:    value2
+            system:
+                key1:    value1
+            >>> t = Settings()
+            >>> t.system.key1 = value1
+            >>> t[t.find_case('System')].key2 = value2
+            >>> print(t)
+            system:
+                key1:    value1
+                key2:    value2
+
+        """
+        lowkey = key.lower()
+        for k in self:
+            if k.lower() == lowkey:
+                return k
+        return key
+
+
+
     def as_dict(self):
         """
         Transform a |Settings| object into a dict.

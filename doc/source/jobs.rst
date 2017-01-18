@@ -1,7 +1,7 @@
 Jobs
 -------------
 
-.. currentmodule:: scm.plams.basejob
+.. currentmodule:: scm.plams.core.basejob
 
 Without any doubt job is the most important object in PLAMS library. Job is the basic piece of computational work and running jobs is the main goal of PLAMS scripts.
 

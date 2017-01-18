@@ -4,14 +4,15 @@ import copy
 import heapq
 import math
 import numpy
+import os
 import types
 import uuid
 
 from .common import log
 from .errors import MoleculeError, PTError, FileError
-from .pdbtools import PDBHandler, PDBRecord
 from .settings import Settings
-from .utils import Units, PT
+from ..tools.pdbtools import PDBHandler, PDBRecord
+from ..tools.utils import Units, PT
 
 __all__ = ['Atom', 'Bond', 'Molecule']
 
@@ -318,8 +319,9 @@ class Molecule (object):
     """A class representing basic molecule object.
 
     An instance of this class has the following attributes:
-        *   ``atoms`` -- list of |Atom| objects that belong to this molecule
-        *   ``bonds`` -- list of |Bond| objects between atoms listed in ``atoms``
+        *   ``atoms`` -- a list of |Atom| objects that belong to this molecule
+        *   ``bonds`` -- a list of |Bond| objects between atoms listed in ``atoms``
+        *   ``lattice`` -- a list of lattice vectors, in case of periodic structures
         *   ``properties`` -- a |Settings| instance storing all other information about this molecule
 
     .. note::
@@ -336,10 +338,30 @@ class Molecule (object):
 
         >>> mol = Molecule('xyz/Benzene.xyz')
 
-    Constructor of a |Molecule| object accepts three arguments that can be used to supply this information from a file in your filesystem. *filename* should be a string with a path (absolute or relative) to such a file. *inputformat* describes the format of the file. Currently, the following formats are supported: ``xyz``, ``mol``, ``mol2`` and ``pdb``. If *inputformat* argument is not supplied, PLAMS will try to deduce it by examining the extension of the provided file, so in most of cases it is not needed to use *inputformat*, if only the file has the proper extension. Some formats (``xyz`` and ``pdb``) allow to store more than one geometry of a particular molecule within a single file. In such cases *geometry* argument can be used to indicate which (in order of appearance in the file) geometry to import.
+    Constructor of a |Molecule| object accepts three arguments that can be used to supply this information from a file in your filesystem. *filename* should be a string with a path (absolute or relative) to such a file. *inputformat* describes the format of the file. Currently, the following formats are supported: ``xyz``, ``mol``, ``mol2`` and ``pdb``. If *inputformat* argument is not supplied, PLAMS will try to deduce it by examining the extension of the provided file, so in most of cases it is not needed to use *inputformat*, if only the file has the proper extension. Some formats (``xyz`` and ``pdb``) allow to store more than one geometry of a particular molecule within a single file. In such cases *geometry* argument can be used to indicate which (in order of appearance in the file) geometry to import. *other* keyword arguments passed to the constructor are used to populate ``properties`` |Settings|.
+
+    If a |Molecule| is initialized from an external file, the path to this file (*filename* argument) is stored in ``properties.source``. The base name of the file without extension is kept in ``properties.name``.
 
     It is also possible to write a molecule to a file in one of the formats mentioned above. See :meth:`write` for details.
 
+    ``lattice`` attribute is used to store information about lattice vectors in case of periodic structures. Some job types (|BANDJob|, |DFTBJob|) will automatically use that data while constructing input files. ``lattice`` should be a list of up to 3 vectors (for different types of periodicity: chain, slab or bulk), each of which needs to be a list or a tuple of 3 numbers.
+
+    Lattice vectors can be directly read and written to ``xyz`` files using the following convention (please mind the fact that this is an unofficial extension to the XYZ format)::
+
+        3
+
+            H      0.000000      0.765440     -0.008360
+            O      0.000000      0.000000      0.593720
+            H      0.000000     -0.765440     -0.008360
+        VEC1       3.000000      0.000000      0.000000
+        VEC2       0.000000      3.000000      0.000000
+        VEC3       0.000000      0.000000      3.000000
+
+    For 1D (2D) periodicity please supply only ``VEC1`` (``VEC1`` and ``VEC2``). Writing lattice vectors to ``xyz`` files can be disabled by simply reseting the ``lattice`` attribute::
+
+        >>> mol.lattice = []
+
+    |hspace|
 
     Below the detailed description of available methods is presented. Many of these methods require passing atoms belonging to the molecule as arguments. It can by done by using a reference to an |Atom| object present it ``atoms`` list, but not by passing a number of an atom (its position within ``atoms`` list). Unlike some other tools, PLAMS does not use integer numbers as primary identifiers of atoms. It is done to prevent problems when atoms within a molecule are reordered or some atoms are deleted. References to |Atom| or |Bond| objects can be obtained directly from ``atoms`` or ``bonds`` lists, or with dictionary-like bracket notation::
 
@@ -374,7 +396,7 @@ class Molecule (object):
     """
 
 
-    def __init__(self, filename=None, inputformat=None, geometry=1,**other):
+    def __init__(self, filename=None, inputformat=None, geometry=1, **other):
         self.atoms = []
         self.bonds = []
         self.lattice = []
@@ -382,6 +404,8 @@ class Molecule (object):
 
         if filename is not None :
             self.read(filename, inputformat, geometry)
+            self.properties.source = filename
+            self.properties.name = os.path.splitext(os.path.basename(filename))[0]
 
 
 #===================================================================================================
@@ -1095,7 +1119,7 @@ class Molecule (object):
                     else:
                         break
         if not nohead and fr > 0:
-            raise MoleculeError('readxyz: There are only %i frames in %s' % (frame - fr, f.name))
+            raise FileError('readxyz: There are only %i frames in %s' % (frame - fr, f.name))
 
 
     def writexyz(self, f):
@@ -1108,17 +1132,13 @@ class Molecule (object):
         f.write('\n')
         for at in self.atoms:
             f.write(str(at) + '\n')
-        if self.lattice:
-           for i,vec in enumerate(self.lattice):
-               f.write('VEC'+str(i+1))
-               for el in vec:
-                  f.write(' '+str(el))
-               f.write('\n')
+        for i,vec in enumerate(self.lattice):
+            f.write('VEC'+str(i+1) + '%14.6f %14.6f %14.6f\n'%tuple(vec))
 
 
     def readmol(self, f, frame):
         if frame != 1:
-            raise MoleculeError('readmol: .mol files do not support multiple geometries')
+            raise FileError('readmol: .mol files do not support multiple geometries')
 
         comment = []
         for i in range(4):
@@ -1147,7 +1167,7 @@ class Molecule (object):
                         self.add_bond(Bond(atom1=at1, atom2=at2, order=ordr))
                     break
                 elif spl[len(spl)-1] == 'V3000':
-                    raise MoleculeError('readmol: Molfile V3000 not supported. Please convert')
+                    raise FileError('readmol: Molfile V3000 not supported. Please convert')
                 else:
                     comment.append(line)
         if comment:
@@ -1198,7 +1218,7 @@ class Molecule (object):
             elif line[0] == '@':
                 line = line.partition('>')[2]
                 if not line:
-                    raise MoleculeError('readmol2: Error in %s line %i: invalid @ record' % (f.name, str(i+1)))
+                    raise FileError('readmol2: Error in %s line %i: invalid @ record' % (f.name, str(i+1)))
                 mode = (line, i)
 
             elif mode[0] == 'MOLECULE':
@@ -1217,7 +1237,7 @@ class Molecule (object):
             elif mode[0] == 'ATOM':
                 spl = line.split()
                 if len(spl) < 6:
-                    raise MoleculeError('readmol2: Error in %s line %i: not enough values in line' % (f.name, str(i+1)))
+                    raise FileError('readmol2: Error in %s line %i: not enough values in line' % (f.name, str(i+1)))
                 symb = spl[5].partition('.')[0]
                 try:
                     num = PT.get_atomic_number(symb)
@@ -1238,12 +1258,12 @@ class Molecule (object):
             elif mode[0] == 'BOND':
                 spl = line.split()
                 if len(spl) < 4:
-                    raise MoleculeError('readmol2: Error in %s line %i: not enough values in line' % (f.name, str(i+1)))
+                    raise FileError('readmol2: Error in %s line %i: not enough values in line' % (f.name, str(i+1)))
                 try:
                     atom1 = self.atoms[int(spl[1])-1]
                     atom2 = self.atoms[int(spl[2])-1]
                 except IndexError:
-                    raise MoleculeError('readmol2: Error in %s line %i: wrong atom ID' % (f.name, str(i+1)))
+                    raise FileError('readmol2: Error in %s line %i: wrong atom ID' % (f.name, str(i+1)))
                 newbond = Bond(atom1, atom2, order=bondorders[spl[3]])
                 if len(spl) > 4:
                     for flag in spl[4].split('|'):
@@ -1296,14 +1316,22 @@ class Molecule (object):
         pdb = PDBHandler(f)
         models = pdb.get_models()
         if frame > len(models):
-            raise MoleculeError('readpdb: There are only %i frames in %s' % (len(models), f.name))
+            raise FileError('readpdb: There are only %i frames in %s' % (len(models), f.name))
 
+        symbol_columns = [70,6,7,8]
         for i in models[frame-1]:
             if i.name in ['ATOM  ','HETATM']:
                 x = float(i.value[0][24:32])
                 y = float(i.value[0][32:40])
                 z = float(i.value[0][40:48])
-                atnum = PT.get_atomic_number(i.value[0][70:72].strip())
+                for n in symbol_columns:
+                    symbol = i.value[0][n:n+2].strip()
+                    try:
+                        atnum = PT.get_atomic_number(symbol)
+                        break
+                    except PTError:
+                        if n == symbol_columns[-1]:
+                            raise FileError('readpdb: Unable to deduce the atomic symbol in the following line:\n%s'%(i.name+i.value[0]))
                 self.add_atom(Atom(atnum=atnum,coords=(x,y,z)))
 
         return pdb
@@ -1337,11 +1365,8 @@ class Molecule (object):
             else:
                 inputformat = 'xyz'
         if inputformat in self.__class__._readformat:
-            try:
-                with open(filename, 'rU') as f:
-                    ret = self._readformat[inputformat](self, f, frame)
-            except:
-                raise FileError('read: Error reading file %s' % filename)
+            with open(filename, 'rU') as f:
+                ret = self._readformat[inputformat](self, f, frame)
             return ret
         else:
             raise MoleculeError('read: Unsupported file format')

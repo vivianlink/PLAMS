@@ -4,7 +4,7 @@ import collections
 import math
 import numpy
 
-from .errors import PTError, UnitsError
+from ..core.errors import PTError, UnitsError
 
 __all__ = ['PeriodicTable', 'PT', 'Units']
 

@@ -8,11 +8,10 @@ except ImportError:
 
 from os.path import join as opj
 
-from .basejob import SingleJob
-from .results import Results
-from .settings import Settings
-from .utils import PT
-from .common import string
+from ..core.basejob import SingleJob
+from ..core.results import Results
+from ..core.settings import Settings
+from ..core.common import string
 
 __all__ = ['DiracJob', 'DiracResults']
 

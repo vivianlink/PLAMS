@@ -1,7 +1,7 @@
 Results
 -------------
 
-.. currentmodule:: scm.plams.results
+.. currentmodule:: scm.plams.core.results
 
 Every |Job| instance has an associated |Results| instance created automatically on job creation and stored in ``results`` attribute. The goal of |Results| is to take care of the job folder after the execution of the job is finished: gather information about produced files, help to manage them and extract data of interest from them. From the technical standpoint, |Results| is the part of the job running mechanism that is responsible for thread safety and proper synchronization in parallel job execution.
 

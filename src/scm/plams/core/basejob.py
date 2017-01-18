@@ -189,6 +189,8 @@ class Job(object):
                 self.status = prev.status
             if self.settings.pickle:
                 self.pickle()
+            self.results.finished.set()
+            self.results.done.set()
             if self.parent:
                 self.parent._notify()
         else:
@@ -219,9 +221,9 @@ class Job(object):
         if config.preview is False:
             log('Collecting results of %s' % self.name, 7)
             self.results.collect()
+            self.results.finished.set()
             if self.status != 'crashed':
                 self.status = 'finished'
-                self.results.finished.set()
                 if self.check():
                     log('%s.check() success. Cleaning results with keep = %s' % (self.name, self.settings.keep), 7)
                     self.results._clean(self.settings.keep)
@@ -235,7 +237,7 @@ class Job(object):
                 else:
                     log('%s.check() failed' % self.name, 7)
                     self.status = 'failed'
-                self.results.done.set()
+            self.results.done.set()
         else:
             self.status = 'preview'
 

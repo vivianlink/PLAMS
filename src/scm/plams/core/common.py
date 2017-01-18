@@ -3,12 +3,17 @@ from __future__ import unicode_literals
 import glob
 import os
 import shutil
-import sys
 import threading
 import time
 import types
 
 from os.path import join as opj
+from six import PY3
+if PY3:
+    import builtins
+else:
+    import __builtin__ as builtins
+
 
 from .errors import PlamsError
 from .settings import Settings
@@ -33,33 +38,26 @@ def init(path=None, folder=None):
       This function **must** be called before any other PLAMS command can be executed. Trying to do anything without it results in a crash. See also :ref:`master-script`.
     """
 
-    if sys.version_info >= (3, 0):
-        import builtins as btins
-    else:
-        import __builtin__ as btins
-    btins.config = Settings()
-
+    builtins.config = Settings()
 
     from os.path import isfile, expandvars, dirname
     if 'PLAMSDEFAULTS' in os.environ and isfile(expandvars('$PLAMSDEFAULTS')):
         defaults = expandvars('$PLAMSDEFAULTS')
-    elif 'PLAMSHOME' in os.environ and isfile(opj(expandvars('$PLAMSHOME'), 'utils', 'plams_defaults.py')):
-        defaults = opj(expandvars('$PLAMSHOME'), 'utils', 'plams_defaults.py')
-    elif 'ADFHOME' in os.environ and isfile(opj(expandvars('$ADFHOME'), 'scripting', 'plams', 'utils', 'plams_defaults.py')):
-        defaults = opj(expandvars('$ADFHOME'), 'scripting', 'plams', 'utils', 'plams_defaults.py')
+    elif 'PLAMSHOME' in os.environ and isfile(opj(expandvars('$PLAMSHOME'), 'src', 'scm', 'plams', 'plams_defaults')):
+        defaults = opj(expandvars('$PLAMSHOME'), 'src', 'scm', 'plams', 'plams_defaults')
+    elif 'ADFHOME' in os.environ and isfile(opj(expandvars('$ADFHOME'), 'scripting', 'plams', 'src', 'scm', 'plams', 'plams_defaults')):
+        defaults = opj(expandvars('$ADFHOME'), 'scripting', 'plams', 'src', 'scm', 'plams', 'plams_defaults')
     else:
-        defaults = opj(dirname(dirname(dirname(dirname(__file__)))), 'utils', 'plams_defaults.py')
+        defaults = opj(dirname(dirname(__file__)), 'plams_defaults')
         if not isfile(defaults):
-            defaults = opj(dirname(__file__), 'defaults', 'plams_defaults.py')
-            if not isfile(defaults):
-                raise PlamsError('plams_defaults.py not found, please set PLAMSDEFUALTS or PLAMSHOME in your environment')
+            raise PlamsError('plams_defaults not found, please set PLAMSDEFAULTS or PLAMSHOME in your environment')
     exec(compile(open(defaults).read(), defaults, 'exec'))
 
 
     from .jobmanager import JobManager
     config.jm = JobManager(config.jobmanager, path, folder)
 
-    log('PLAMS running with Python %i' % sys.version_info[0], 5)
+    log('PLAMS running with Python %i' % (3 if PY3 else 2), 5)
     log('PLAMS environment initialized', 5)
     log('PLAMS working folder: %s' % config.jm.workdir, 1)
 
@@ -124,22 +122,23 @@ def log(message, level=0):
 
     Logs are printed independently to both text file and standard output. If *level* is equal or lower than verbosity (defined by ``config.log.file`` or ``config.log.stdout``) the message is printed. Date and/or time can be added based on ``config.log.date`` and ``config.log.time``. All logging activity is thread safe.
     """
-    if level <= config.log.file or level <= config.log.stdout:
-        message = str(message)
-        prefix = ''
-        if config.log.date:
-            prefix += '%d.%m|'
-        if config.log.time:
-            prefix += '%H:%M:%S'
-        if prefix:
-            prefix = '[' + prefix.rstrip('|') + '] '
-            message = time.strftime(prefix) + message
-        if level <= config.log.stdout:
-            with _stdlock:
-                print(message)
-        if level <= config.log.file and 'jm' in config:
-            with _filelock, open(config.jm.logfile, 'a') as f:
-                f.write(message + '\n')
+    if 'config' in vars(builtins):
+        if level <= config.log.file or level <= config.log.stdout:
+            message = str(message)
+            prefix = ''
+            if config.log.date:
+                prefix += '%d.%m|'
+            if config.log.time:
+                prefix += '%H:%M:%S'
+            if prefix:
+                prefix = '[' + prefix.rstrip('|') + '] '
+                message = time.strftime(prefix) + message
+            if level <= config.log.stdout:
+                with _stdlock:
+                    print(message)
+            if level <= config.log.file and 'jm' in config:
+                with _filelock, open(config.jm.logfile, 'a') as f:
+                    f.write(message + '\n')
 
 
 #===================================================================================================
@@ -202,7 +201,6 @@ def add_to_instance(instance):
 
 #remove me and all my calls after moving to Python3!!!
 def string(s):
-    from six import PY3
     if PY3 and isinstance(s, bytes):
         return s.decode()
     return s

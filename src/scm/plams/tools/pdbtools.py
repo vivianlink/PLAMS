@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from .errors import PlamsError, FileError
+from ..core.errors import PlamsError, FileError
 
 __all__ = ['PDBRecord', 'PDBHandler']
 
@@ -65,15 +65,15 @@ class PDBHandler(object):
         for key in _sequence + _coord:
             self.records[key] = []
         if textfile is not None:
-            if isinstance(textfile, file):
-                self.read(textfile)
-            elif isinstance(textfile, str):
+            if isinstance(textfile, str):
                 try:
                     f = open(textfile, 'rU')
                 except:
                     raise FileError('PDBHandler: Error reading file %s' % textfile)
                 self.read(f)
                 f.close()
+            else: #textfile is an open file object
+                self.read(textfile)
 
 
     def singlemodel(self):

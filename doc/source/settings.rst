@@ -1,7 +1,7 @@
 Settings
 -------------
 
-.. currentmodule:: scm.plams.settings
+.. currentmodule:: scm.plams.core.settings
 
 The |Settings| class provides a general purpose data container for various kinds of information that need to be stored and processed by PLAMS environment. Other PLAMS objects (like for example |Job|, |JobManager| or |GridRunner|) have their own |Settings| instances that store data defining and adjusting their behavior. The global scope |Settings| instance (``config``) is used for global settings.
 

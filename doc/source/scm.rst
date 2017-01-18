@@ -1,7 +1,7 @@
 ADF Suite
 -------------------------
 
-.. currentmodule:: scm.plams.scmjob
+.. currentmodule:: scm.plams.interfaces.adfsuite
 
 PLAMS offers interfaces to three main binaries of the ADF Suite: ADF, BAND and DFTB as well as some other small utility binaries like DENSF of FCF. All possible input keywords and options are covered, as well as extraction of arbitrary data from binary files (called KF files) produced by these programs.
 
@@ -31,40 +31,40 @@ The input file is generated based on ``input`` branch of job's |Settings|. All d
 
 Input file created during execution of ``myjob`` looks like::
 
-    Atoms
+    atoms
         #coordinates from water.xyz
-    End
+    end
 
-    Basis
-      Createoutput None
-      Core None
-      Type DZP
-    End
+    basis
+      createoutput None
+      core None
+      type DZP
+    end
 
-    Save TAPE13
+    save TAPE13
 
-    Scf
-      Converge 1.0e-06 1.0e-06
-      Iterations 100
-    End
+    scf
+      converge 1.0e-06 1.0e-06
+      iterations 100
+    end
 
-As you can see, entries present in ``myjob.settings.input.`` are listed in the alphabetical order. If an entry is a regular key-value pair it is printed in one line (like ``Save TAPE13`` above). If an entry is a nested |Settings| instance it is printed as a block and entries in this instance correspond to contents of a the block. All **keys** inside |Settings| are lowercased and the first letter is later capitalized when printing the input file. **Values** on the other hand remain unchanged. Strings put as values can contain spaces like ``converge`` above -- the whole string is printed after the key. That allows to handle lines that need to contain more than one key=value pair. If you need to put a key without any value, ``True`` or empty string can be given as a value::
+As you can see, entries present in ``myjob.settings.input.`` are listed in the alphabetical order. If an entry is a regular key-value pair it is printed in one line (like ``save TAPE13`` above). If an entry is a nested |Settings| instance it is printed as a block and entries in this instance correspond to contents of a the block. Both keys and values are kept in their original case. Strings put as values can contain spaces like ``converge`` above -- the whole string is printed after the key. That allows to handle lines that need to contain more than one key=value pair. If you need to put a key without any value, ``True`` or empty string can be given as a value::
 
     >>> myjob.settings.input.geometry.SP = True
     >>> myjob.settings.input.writefock = ''
     # translates to:
-    Geometry
-      Sp
-    End
+    geometry
+      SP
+    end
 
-    Writefock
+    writefock
 
 To produce an empty block simply type::
 
     >>> myjob.settings.input.geometry  # this is equivalent to myjob.settings.input.geometry = Settings()
     #
-    Geometry
-    End
+    geometry
+    end
 
 The algorithm translating |Settings| contents into input file does not check the correctness of the data - it simply takes keys and values from |Settings| instance and puts them in the text file. Due to that you are not going to be warned if you make a typo, use wrong keyword or improper syntax. Beware of that.
 
@@ -72,11 +72,11 @@ The algorithm translating |Settings| contents into input file does not check the
 
     >>> myjob.settings.input.dog.cat.apple = 'pear'
     #
-    Dog
-      Cat
-        Apple pear
-      Subend
-    End
+    dog
+      cat
+        apple pear
+      subend
+    end
 
 Some blocks require (or allow) some data to be put in the header line, next to the block name. Special key ``_h`` is helpful in these situations::
 
@@ -84,10 +84,10 @@ Some blocks require (or allow) some data to be put in the header line, next to t
     >>> myjob.settings.input.someblock.key1 = 'value1'
     >>> myjob.settings.input.someblock.key2 = 'value2'
     #
-    Someblock header=very important
-      Key1 value1
-      Key2 value2
-    End
+    someblock header=very important
+      key1 value1
+      key2 value2
+    end
 
 The order of blocks within input file and subblocks within a parent block follows |Settings| iteration order which is lexicographical (however, |SCMJob| is smart enough to put blocks like DEFINE or UNITS at the top of the input). In rare cases you would want to override this order, for example when you supply ATOMS block manually, which can be done when automatic molecule handling is disabled (see below). That behavior can be achieved by another type of special key::
 
@@ -97,43 +97,43 @@ The order of blocks within input file and subblocks within a parent block follow
     >>> myjob.settings.input.block.key1 = 'value1'
     >>> myjob.settings.input.block.key2 = 'value2'
     #
-    Block
+    block
       entire line that has to be the first line of block
       second line
-      Key1 value1
-      Key2 value2
-    End
+      key1 value1
+      key2 value2
+    end
 
 Sometimes one needs to put more instances of the same key within one block, like for example in CONSTRAINTS block in ADF. It can be done by using list of values instead of a single value::
 
     >>> myjob.settings.input.constraints.atom = [1,5,4]
     >>> myjob.settings.input.constraints.block = ['ligand', 'residue']
     #
-    Constraints
-      Atom 1
-      Atom 5
-      Atom 4
-      Block ligand
-      Block residue
-    End
+    constraints
+      atom 1
+      atom 5
+      atom 4
+      block ligand
+      block residue
+    end
 
 Finally, in some rare cases key and value pair in the input needs to be printed in a form ``key=value`` instead of ``key value``. When value is a string starting with the equal sign, no space is inserted between key and value::
 
     >>> myjob.settings.input.block.key = '=value'
     #
-    Block
-      Key=value
-    End
+    block
+      key=value
+    end
 
 Sometimes a value of a key in the input file needs to be a path to some file, usually KF file with results of some previous calculation. Of course such a path can be given explicitly ``newjob.restart = '/home/user/science/plams.12345/oldjob/oldjob.t21'``, but for user's convenience instances of |SCMJob| or |SCMResults| (or directly |KFFile|) can be also used. Algorithm will detect it and use an absolute path to the main KF file instead::
 
     >>> myjob.settings.input.restart = oldjob
     >>> myjob.settings.input.fragment.frag1 = fragjob
     #
-    Restart /home/user/science/plams.12345/oldjob/oldjob.t21
-    Fragment
-      Frag1 /home/user/science/fragmentresults/somejob/somejob.t21
-    End
+    restart /home/user/science/plams.12345/oldjob/oldjob.t21
+    fragment
+      frag1 /home/user/science/fragmentresults/somejob/somejob.t21
+    end
 
 |Molecule| instance stored in job's ``molecule`` attribute is automatically processed during the input file preparation and printed in the proper format, depending on the program. It is possible to disable that and give molecular coordinates explicitly as entries in ``myjob.settings.input.``. Automatic molecule processing can be turned off by ``myjob.settings.ignore_molecule = True``.
 
@@ -142,7 +142,7 @@ Sometimes a value of a key in the input file needs to be a path to some file, us
 Special atoms in ADF
 ++++++++++++++++++++
 
-In ADF atomic coordinates in ``ATOMS`` block can be enriched with some additional information like special names of atoms (for example in case of using different isotopes) or block/fragment membership. Since usually contents of ``ATOMS`` block are generated automatically based on the |Molecule| associated with a job, this information needs to be supplied inside the given |Molecule| instance. Details about every atom can be adjusted separately, by modifying attributes of a particular |Atom| instance according to the following convention:
+In ADF atomic coordinates in ``atoms`` block can be enriched with some additional information like special names of atoms (for example in case of using different isotopes) or block/fragment membership. Since usually contents of ``atoms`` block are generated automatically based on the |Molecule| associated with a job, this information needs to be supplied inside the given |Molecule| instance. Details about every atom can be adjusted separately, by modifying attributes of a particular |Atom| instance according to the following convention:
     *   Atomic symbol is generated based on atomic number stored in ``atnum`` attribute of a corresponding |Atom|. Atomic number 0 corresponds to the "dummy atom" for which the symbol is empty.
     *   If an attribute ``ghost`` of an |Atom| is ``True``, the above atomic symbol is prefixed with ``Gh.``.
     *   If an |Atom| has an attribute ``name`` its contents are added after the symbol. Hence setting ``atnum`` to 0 and adjusting ``name`` allows to put an arbitrary string as the atomic symbol.
@@ -167,7 +167,7 @@ The following example illustrates the usage of this mechanism::
     >>> mol[7].block = 'block2'
     >>> myjob = ADFJob(molecule=mol)
     #
-    Atoms
+    atoms
           1      Gh.C       0.01247       0.02254       1.08262
           2       C.D      -0.00894      -0.01624      -0.43421
           3    Gh.H.T      -0.49334       0.93505       1.44716
@@ -177,7 +177,7 @@ The following example illustrates the usage of this mechanism::
           7         H       0.49999       0.86726      -0.84481 b=block1
           8         H      -1.04310      -0.02739      -0.80544 f=frag b=block2
           9         O      -0.66442      -1.15471       1.56909
-    End
+    end
 
 
 
@@ -226,7 +226,7 @@ Below you can find the list of dedicated job classes that are currently availabl
 KF files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. currentmodule:: scm.plams.kftools
+.. currentmodule:: scm.plams.tools.kftools
 
 KF is the main format for storing binary data used in all ADFSuite programs. PLAMS offers an easy and efficient way of accessing the data stored in existing KF files, as well as modifying and creating them.
 

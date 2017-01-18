@@ -2,11 +2,11 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 
-from .results import Results
-from .basejob import MultiJob
-from .settings import Settings
-from .scmjob import ADFJob, BANDJob, DFTBJob
-from .basemol import Atom
+from ..core.results import Results
+from ..core.basejob import MultiJob
+from ..core.settings import Settings
+from ..core.basemol import Atom
+from ..interfaces.adfsuite import ADFJob, BANDJob, DFTBJob
 
 
 __all__ = ['ADFNumGradJob' ,'BANDNumGradJob', 'DFTBNumGradJob']

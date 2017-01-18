@@ -3,22 +3,32 @@ from setuptools import setup
 
 setup(
     name='PLAMS',
-    version='1.1',
-    author='Michal Handzlik',
+    version='1.2',
+    author='Michał Handzlik',
     author_email='handzlik@scm.com',
-    package_dir={'': 'src/scm'},
-    packages=['plams', 'plams.defaults'],
     url='https://www.scm.com/doc/plams/',
-    license='',
+    download_url='https://github.com/SCM-NV/PLAMS',
+    license='LGPLv3',
     description='Python Library for Automating Molecular Simulations',
-    long_description='',
+    long_description='PLAMS is a library providing powerful, flexible and easily extendable Python interface to molecular modeling programs. It takes care of input preparation, job execution, file management and output data extraction as well as helps with building more advanced data workflows that can be executed in parallel, either locally or by submitting to resource manager queue.',
     classifiers=[
-            "Operating System :: OS Independent",
-            "Programming Language :: Python :: 2.7",
-            "Programming Language :: Python :: 3",
-            "Topic :: Computational Chemistry :: Libraries"
+            'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+            'Operating System :: OS Independent',
+            'Programming Language :: Python :: 2.7',
+            'Programming Language :: Python :: 3.5',
+            'Topic :: Scientific/Engineering :: Chemistry',
+            'Topic :: Scientific/Engineering :: Physics',
+            'Topic :: Scientific/Engineering :: Bio-Informatics',
+            'Topic :: Software Development :: Libraries :: Python Modules',
     ],
+    keywords=[],
     install_requires=[
-        'dill', 'six',
+        'dill>=0.2.4',
+        'numpy',
+        'six',
     ],
+    package_dir={'': 'src/scm'},
+    packages=['plams', 'plams.core', 'plams.tools', 'plams.interfaces'],
+    package_data={'plams':['plams_defaults']},
+    scripts=['bin/plams']
 )

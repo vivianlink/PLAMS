@@ -5,12 +5,11 @@ import copy
 
 from os.path import join as opj
 
-from .basejob import SingleJob
-from .results import Results
-from .settings import Settings
-from .utils import PT
-from .kftools import KFFile
-from .errors import PlamsError
+from ..core.basejob import SingleJob
+from ..core.results import Results
+from ..core.settings import Settings
+from ..core.errors import PlamsError
+from ..tools.kftools import KFFile
 
 __all__ = ['ADFJob', 'ADFResults', 'BANDJob', 'BANDResults', 'DFTBJob', 'DFTBResults', 'FCFJob', 'FCFResults', 'DensfJob', 'DensfResults']
 
@@ -25,14 +24,28 @@ class SCMResults(Results):
 
 
     def collect(self):
-        """Collect files present in the job folder.
-
-        Use parent method from |Results|, then create an instance of |KFFile| for the main KF file and store it as ``_kf`` attribute.
+        """Collect files present in the job folder. Use parent method from |Results|, then create an instance of |KFFile| for the main KF file and store it as ``_kf`` attribute.
         """
         Results.collect(self)
         kfname = self.job.name + self.__class__._kfext
         if kfname in self.files:
             self._kf = KFFile(opj(self.job.path, kfname))
+
+
+    def refresh(self):
+        """Refresh the contents of ``files`` list. Use parent method from |Results|, then look at all attributes that are instances of |KFFile| and check if they point to existing files. If not, try to reinstantiate them with current job path (that can happen while loading a pickled job after the entire job folder was moved).
+        """
+        Results.refresh(self)
+        to_remove = []
+        for attr,val in self.__dict__.items():
+            if isinstance(val, KFFile) and os.path.dirname(val.path) != self.job.path:
+                guessnewpath = opj(self.job.path, os.path.basename(val.path))
+                if os.path.isfile(guessnewpath):
+                    self.__dict__[attr] = KFFile(guessnewpath)
+                else:
+                    to_remove.append(attr)
+        for i in to_remove:
+            del self.__dict__[i]
 
 
     def readkf(self, section, variable):
@@ -127,7 +140,7 @@ class SCMJob(SingleJob):
     _result_type = SCMResults
     _top = ['title','units','define']
     _command = ''
-    _subblock_end = 'SubEnd'
+    _subblock_end = 'subend'
 
 
 
@@ -141,7 +154,6 @@ class SCMJob(SingleJob):
 
         def parse(key, value, indent=''):
             ret = ''
-            key = key.title()
             if isinstance(value, Settings):
                 ret += indent + key
                 if '_h' in value:
@@ -158,7 +170,7 @@ class SCMJob(SingleJob):
                         ret += parse(el, value[el], indent+'  ')
 
                 if indent == '':
-                    ret += 'End\n'
+                    ret += 'end\n'
                 else:
                     ret += indent + self._subblock_end + '\n'
             elif isinstance(value, list):
@@ -181,12 +193,13 @@ class SCMJob(SingleJob):
         if use_molecule:
             self._parsemol()
         for item in self._top:
+            item = self.settings.input.find_case(item)
             if item in self.settings.input:
                 inp += parse(item, self.settings.input[item]) + '\n'
         for item in self.settings.input:
-            if item not in self._top:
+            if item.lower() not in self._top:
                 inp += parse(item, self.settings.input[item]) + '\n'
-        inp += 'End Input\n'
+        inp += 'end input\n'
         if use_molecule:
             self._removemol()
         return inp
@@ -233,18 +246,15 @@ class SCMJob(SingleJob):
         """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path to the main KF file. See :meth:`Settings.__reduce__<scm.plams.settings.Settings.__reduce__>` for details."""
         return self.results._kfpath()
 
-#===================================================================================================
-#===================================================================================================
-
-
-def _SCM_input_atom_symbol(atom):
-    """The atom symbol for the SCM input file (with support for Ghost atoms and Names)"""
-    smb = atom.symbol
-    if hasattr(atom, 'ghost') and atom.ghost:
-        smb = ('Gh.'+smb).rstrip('.')
-    if hasattr(atom, 'name'):
-        smb = (smb+'.'+str(atom.name)).lstrip('.')
-    return smb
+    @staticmethod
+    def _atom_symbol(atom):
+        """Return the atomic symbol of *atom*. Ensure proper formatting for ADFSuite input taking into account ``ghost`` and ``name`` attributes of *atom*."""
+        smb = atom.symbol if atom.atnum > 0 else ''  #Dummy atom should have '' instead of 'Xx'
+        if hasattr(atom, 'ghost') and atom.ghost:
+            smb = ('Gh.'+smb).rstrip('.')
+        if hasattr(atom, 'name'):
+            smb = (smb+'.'+str(atom.name)).lstrip('.')
+        return smb
 
 
 #===================================================================================================
@@ -267,7 +277,7 @@ class ADFJob(SCMJob):
 
     def _parsemol(self):
         for i,atom in enumerate(self.molecule):
-            smb = _SCM_input_atom_symbol(atom)
+            smb = self._atom_symbol(atom)
             suffix = ''
             if hasattr(atom,'fragment'):
                 suffix += 'f={fragment} '
@@ -299,8 +309,7 @@ class BANDJob(SCMJob):
 
     def _parsemol(self):
         for i,atom in enumerate(self.molecule):
-            smb = _SCM_input_atom_symbol(atom)
-            self.settings.input.atoms['_'+str(i+1)] = atom.str(symbol=smb)
+            self.settings.input.atoms['_'+str(i+1)] = atom.str(symbol=self._atom_symbol(atom))
 
         if self.molecule.lattice:
             for i,vec in enumerate(self.molecule.lattice):
@@ -329,20 +338,25 @@ class DFTBJob(SCMJob):
     _result_type = DFTBResults
     _command = 'dftb'
     _top = ['units', 'task']
-    _subblock_end = 'End'
+    _subblock_end = 'end'
 
     def _parsemol(self):
+        s = self.settings.input
         for i,atom in enumerate(self.molecule):
-            smb = _SCM_input_atom_symbol(atom)
-            self.settings.input.system.atoms['_'+str(i+1)] = atom.str(symbol=smb)
+            s[s.find_case('system')]['atoms']['_'+str(i+1)] = atom.str(symbol=self._atom_symbol(atom))
         if self.molecule.lattice:
-            self.settings.runscript.nproc=1
             for i,vec in enumerate(self.molecule.lattice):
-                self.settings.input.system.lattice['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
+                s[s.find_case('system')]['lattice']['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
 
     def _removemol(self):
-        if 'system' in self.settings.input and 'atoms' in self.settings.input.system:
-            del self.settings.input.system.atoms
+        s = self.settings.input
+        system = s.find_case('system')
+        if system in s:
+            if 'atoms' in s[system]:
+                del s[system]['atoms']
+            if 'lattice' in s[system]:
+                del s[system]['lattice']
+
 
 
 #===================================================================================================

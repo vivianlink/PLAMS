@@ -39,6 +39,11 @@ class JobManager(object):
 
     def __init__(self, settings, path=None, folder=None):
 
+        self.settings = settings
+        self.jobs = []
+        self.names = {}
+        self.hashes = {}
+
         if path is None:
             self.path = os.getcwd()
         elif os.path.isdir(path):
@@ -46,20 +51,23 @@ class JobManager(object):
         else:
             raise PlamsError('Invalid path: %s'%path)
 
-        self.folder = folder or ('plams.' + str(os.getpid()))
-        self.settings = settings
-        self.jobs = []
-        self.names = {}
-        self.hashes = {}
+        if folder is None:
+            basename = 'plams.' + str(os.getpid())
+            self.foldername = basename
+            i = 1
+            while os.path.exists(opj(self.path, self.foldername)):
+                self.foldername = basename + '_' + str(i)
+                i += 1
+        else:
+            self.foldername = os.path.normpath(folder) #normpath removes trailing /
 
-        self.workdir = opj(self.path, self.folder)
-        self.logfile = opj(self.workdir, self.folder+'.log')
-        self.input = opj(self.workdir, self.folder+'.inp')
-        self.restart = opj(self.workdir, self.folder+'.res')
+        self.workdir = opj(self.path, self.foldername)
+        self.logfile = opj(self.workdir, self.foldername+'.log')
+        self.input = opj(self.workdir, self.foldername+'.inp')
         if not os.path.exists(self.workdir):
             os.mkdir(self.workdir)
         else:
-            log('WARNING: Folder %s already exists. It is strongly advised to use a fresh folder for every run. If you experience problems check config.jobmanager.jobfolder_exists setting in plams_defaults.py' % self.workdir)
+            log('WARNING: Folder %s already exists. It is strongly advised to use a fresh folder for every run. If you experience problems check config.jobmanager.jobfolder_exists setting in plams_defaults.py' % self.workdir, 1)
 
 
     def _register_name(self, job):

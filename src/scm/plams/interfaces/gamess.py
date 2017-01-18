@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
 from functools import reduce
 
-from .basejob  import SingleJob
-from .settings import Settings
+from ..core.basejob  import SingleJob
+from ..core.settings import Settings
 
 
 __all__ = ['GamessJob']

@@ -10,8 +10,8 @@ except ImportError:
 
 from bisect import bisect
 
-from .errors import FileError
-from .common import log
+from ..core.errors import FileError
+from ..core.common import log
 
 __all__ = ['KFFile', 'KFReader']
 

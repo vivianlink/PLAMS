@@ -108,7 +108,7 @@ Optional arguments
 
 The master script accepts a few optional arguments that may come handy in some situations. It allows to pick custom name and location for the main working folder. The main working folder is an initially empty folder that is created on |init|. All files produced by PLAMS and other programs executed by it are saved in the main working folder (usually in some of its subfolders). Each separate run of PLAMS has its separate main working folder.
 
-By default the main working folder is located in the directory where your script was executed and is called ``plams.[number]`` where *[number]* is a PID of Python process. You can change this behavior by supplying ``-p`` and ``-f`` arguments to master script to choose, respectively, the location and the name of the main working folder. For example the command::
+By default the main working folder is located in the directory where your script was executed and is called ``plams.xxxxx`` where *xxxxx* is the PID of the Python process. You can change this behavior by supplying ``-p`` and ``-f`` arguments to master script to choose, respectively, the location and the name of the main working folder. For example the command::
 
     plams.py -p /home/user/science -f polymers myscript.plms
 
@@ -116,7 +116,7 @@ will use ``/home/user/science/polymers`` as the main working folder regardless w
 
 .. note::
 
-    If you wish to use custom main working folder name make sure to pick a name that is not present in the particular location. Trying to use an existing folder as PLAMS main working folder results in an error.
+    It is **strongly recommended** to perform each PLAMS run in a fresh, empty folder (i.e. supplying a non-existing folder name and letting PLAMS automatically create it). Using an existing folder is possible for various compatibility reasons with other tools, but can lead to unpredictable behavior if the folder was not empty.
 
 With the master script you can also pass variables to your script directly from the command line. This can be done with ``-v`` parameter that follows the syntax ``-v variable=value`` (mind the lack of spaces around equal sign, it is a must). For a script executed that way there is an additional global string variable with the name ``variable`` and the value ``'value'`` visible in script's namespace. For example if the script in file ``script1.plms`` looks like this::
 
