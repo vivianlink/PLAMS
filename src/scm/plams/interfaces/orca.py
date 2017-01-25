@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from ..core.basejob import SingleJob
 from ..core.common import string
 from ..core.settings import Settings
+import subprocess
 
 
 class ORCAJob(SingleJob):
@@ -111,6 +112,7 @@ class ORCAJob(SingleJob):
         Running orca is straightforward, simply:
         */absolute/path/to/orca myinput.inp*
         """
+        path = string(subprocess.check_output(['which', 'orca'])).rstrip()
         return 'orca {}'.format(path, self._filename('inp'))
 
     def check(self):
