@@ -11,7 +11,6 @@ This chapter contains description of all components (classes, functions, decorat
     runners
     jobmanager
     functions
-    external
     molecule
     utils
 

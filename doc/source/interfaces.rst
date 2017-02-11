@@ -1,4 +1,4 @@
-External binaries
+Interfaces
 =========================
 
 Currently PLAMS offers interfaces to the following programs:
