@@ -367,7 +367,7 @@ class KFFile(object):
     @staticmethod
     def _split(name):
         """Ensure that a key used in bracket notation is of the form ``'section%variable'`` or ``('section','variable')``. If so, return a tuple ``('section','variable')``."""
-        if isinstance(name, tuple) and len(name) == 2 and isinstance(name[0], str) and isinstance(name[1], str):
+        if isinstance(name, tuple) and len(name) == 2:
                 return name[0], name[1]
         if isinstance(name, str):
             s = name.split('%')
