@@ -10,7 +10,6 @@ import argparse
 import os
 import shutil
 import sys
-import threading
 import traceback
 from os.path import join as opj
 
@@ -63,7 +62,7 @@ if args.restart:
         print('WARNING: To perform a restart run you need to specify the folder with -f flag. Ignoring -r flag.')
 
 
-#initialize PLAMS (normpath prevents crash when f ends with /)
+#initialize PLAMS
 init(path=args.path, folder=args.folder)
 
 #write down input script

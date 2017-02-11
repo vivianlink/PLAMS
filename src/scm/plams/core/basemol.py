@@ -905,7 +905,7 @@ class Molecule (object):
         Transform the molecule wrapping its x-axis around z-axis. This method is useful for building nanotubes or molecular wedding rings.
 
         Atomic coordinates are transformed in the following way:
-            *   zzzzz coordinates remain untouched
+            *   z coordinates remain untouched
             *   x axis gets wrapped around the circle centered in the origin of new coordinate system. Each segment of x axis of length *length* ends up as an arc of a circle subtended by an angle *angle*. The radius of this circle is R = *length*/*angle*.
             *   part of the plane between the x axis and the line y=R is transformed into the interior of the circle, with line y=R being squashed into a single point - the center of the circle.
             *   part of the plane above line y=R is dropped
