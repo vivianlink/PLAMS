@@ -8,10 +8,10 @@ from os.path import join as opj
 command = ""
 #Try to locate sphinx-build executable
 if 'ADFBIN' in os.environ:
-    command = opj(os.path.expandvars('$ADFBIN'), 'pythonbase', 'bin', 'sphinx-build')
+    command = opj(os.path.expandvars('$ADFBIN'), 'python3.5', 'bin', 'sphinx-build')
     if not os.path.exists(command):
         # This might be a windows machine
-        command = opj(os.path.expandvars('$ADFBIN'), 'pythonbase', 'Scripts', 'sphinx-build.exe')
+        command = opj(os.path.expandvars('$ADFBIN'), 'python3.5', 'Scripts', 'sphinx-build.exe')
         if os.path.exists(command):
             # starting sphinx-build on windows is tricky...
             command = ['sh', opj(os.path.expandvars('$ADFBIN'), 'startpython'), '-m', 'sphinx']
