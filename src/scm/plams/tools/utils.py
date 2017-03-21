@@ -21,7 +21,7 @@ class PeriodicTable(object):
 
         This class is visible in the main namespace as both ``PeriodicTable`` and ``PT``.
     """
-    data = [None] * 113
+    data = [None] * 119
                #[symbol, mass, radius, connectors]
     #atomic weights from: http://www.ciaaw.org/atomic-weights.htm
     data[  0] = ['Xx',   0.00000, 0.00 ,  0]
