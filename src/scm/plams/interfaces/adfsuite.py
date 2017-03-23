@@ -6,6 +6,7 @@ import copy
 from os.path import join as opj
 
 from ..core.basejob import SingleJob
+from ..core.common import log
 from ..core.results import Results
 from ..core.settings import Settings
 from ..core.errors import PlamsError
@@ -226,10 +227,16 @@ class SCMJob(SingleJob):
     def check(self):
         """Check if ``termination status`` variable from ``General`` section of main KF file equals ``NORMAL TERMINATION``."""
         try:
-            ret = (self.results.readkf('General', 'termination status').strip(' ') == 'NORMAL TERMINATION')
+            status = self.results.readkf('General', 'termination status')
         except:
             return False
-        return ret
+        if 'NORMAL TERMINATION' in status:
+            if 'errors' in status:
+                return False
+            if 'warnings' in status:
+                log('Job %s reported warnings' % (self.name))
+            return True
+        return False
 
 
     def _parsemol(self):
