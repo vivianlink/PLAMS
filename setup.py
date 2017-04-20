@@ -30,5 +30,5 @@ setup(
     package_dir={'': 'src/scm'},
     packages=['plams', 'plams.core', 'plams.tools', 'plams.interfaces'],
     package_data={'plams':['plams_defaults']},
-    scripts=['bin/plams.py']
+    scripts=['bin/plams']
 )

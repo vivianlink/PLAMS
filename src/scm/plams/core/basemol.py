@@ -668,13 +668,26 @@ class Molecule (object):
 
         """
 
-        def element(order, ratio, atom1, atom2):
-            eford = order
-            if order == 1.5:
-                eford = 1.15
-            elif order == 1 and {atom1.symbol, atom2.symbol} == {'C', 'N'}:
-                eford = 1.11
-            return ((eford+0.9)*ratio, order, ratio, atom1, atom2)
+        class HeapElement(object):
+            def __init__(self, order, ratio, atom1, atom2):
+                eff_ord = order
+                if order == 1.5: #effective order for aromatic bonds
+                    eff_ord = 1.15
+                elif order == 1 and {atom1.symbol, atom2.symbol} == {'C', 'N'}:
+                    eff_ord = 1.11 #effective order for single C-N bond
+                value = (eff_ord + 0.9) * ratio
+                self.data = (value, order, ratio)
+                self.atoms = (atom1, atom2)
+            def unpack(self):
+                val, o, r = self.data
+                at1, at2 = self.atoms
+                return val, o, r, at1, at2
+            def __lt__(self, other): return self.data < other.data
+            def __le__(self, other): return self.data <= other.data
+            def __eq__(self, other): return self.data == other.data
+            def __ne__(self, other): return self.data != other.data
+            def __gt__(self, other): return self.data > other.data
+            def __ge__(self, other): return self.data >= other.data
 
         self.delete_all_bonds()
 
@@ -708,7 +721,7 @@ class Molecule (object):
                     if (at2.free > 0) and (at1._id < at2._id):
                         ratio = at1.distance_to(at2)/(at1.radius+at2.radius)
                         if (ratio < dmax):
-                            heap.append(element(0, ratio, at1, at2))
+                            heap.append(HeapElement(0, ratio, at1, at2))
                             #I hate to do this, but I guess there's no other way :/ [MH]
                             if (at1.atnum == 16 and at2.atnum == 8):
                                 at1.free = 6
@@ -728,14 +741,14 @@ class Molecule (object):
                     at.free = 3
 
         while heap:
-            val, o, r, at1, at2 = heapq.heappop(heap)
+            val, o, r, at1, at2 = heapq.heappop(heap).unpack()
             step = 1 if o in [0,2] else 0.5
             if at1.free >= step and at2.free >= step:
                 o += step
                 at1.free -= step
                 at2.free -= step
                 if o < 3:
-                    heapq.heappush(heap, element(o,r,at1,at2))
+                    heapq.heappush(heap, HeapElement(o,r,at1,at2))
                 else:
                     self.add_bond(at1,at2,o)
             elif o > 0:

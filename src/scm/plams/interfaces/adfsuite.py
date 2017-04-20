@@ -246,6 +246,16 @@ class SCMJob(SingleJob):
         """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path to the main KF file. See :meth:`Settings.__reduce__<scm.plams.settings.Settings.__reduce__>` for details."""
         return self.results._kfpath()
 
+    @staticmethod
+    def _atom_symbol(atom):
+        """Return the atomic symbol of *atom*. Ensure proper formatting for ADFSuite input taking into account ``ghost`` and ``name`` attributes of *atom*."""
+        smb = atom.symbol if atom.atnum > 0 else ''  #Dummy atom should have '' instead of 'Xx'
+        if hasattr(atom, 'ghost') and atom.ghost:
+            smb = ('Gh.'+smb).rstrip('.')
+        if hasattr(atom, 'name'):
+            smb = (smb+'.'+str(atom.name)).lstrip('.')
+        return smb
+
 
 #===================================================================================================
 #===================================================================================================
@@ -267,12 +277,7 @@ class ADFJob(SCMJob):
 
     def _parsemol(self):
         for i,atom in enumerate(self.molecule):
-
-            smb = atom.symbol
-            if hasattr(atom, 'ghost') and atom.ghost:
-                smb = ('Gh.'+smb).rstrip('.')
-            if hasattr(atom, 'name'):
-                smb = (smb+'.'+str(atom.name)).lstrip('.')
+            smb = self._atom_symbol(atom)
             suffix = ''
             if hasattr(atom,'fragment'):
                 suffix += 'f={fragment} '
@@ -304,7 +309,8 @@ class BANDJob(SCMJob):
 
     def _parsemol(self):
         for i,atom in enumerate(self.molecule):
-            self.settings.input.atoms['_'+str(i+1)] = atom.str()
+            self.settings.input.atoms['_'+str(i+1)] = atom.str(symbol=self._atom_symbol(atom))
+
         if self.molecule.lattice:
             for i,vec in enumerate(self.molecule.lattice):
                 self.settings.input.lattice['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
@@ -337,7 +343,7 @@ class DFTBJob(SCMJob):
     def _parsemol(self):
         s = self.settings.input
         for i,atom in enumerate(self.molecule):
-            s[s.find_case('system')]['atoms']['_'+str(i+1)] = atom.str()
+            s[s.find_case('system')]['atoms']['_'+str(i+1)] = atom.str(symbol=self._atom_symbol(atom))
         if self.molecule.lattice:
             for i,vec in enumerate(self.molecule.lattice):
                 s[s.find_case('system')]['lattice']['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
