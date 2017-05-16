@@ -29,7 +29,7 @@ setup(
     ],
     package_dir={'': 'src'},
     packages=['scm.plams', 'scm.plams.core', 'scm.plams.tools', 'scm.plams.interfaces', 'scm'],
-    package_data={'plams':['plams_defaults']},
+    package_data={'scm.plams':['plams_defaults']},
     namespace_packages = ['scm'],
     scripts=['bin/plams']
 )

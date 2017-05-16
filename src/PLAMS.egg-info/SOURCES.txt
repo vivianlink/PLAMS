@@ -8,6 +8,7 @@ src/PLAMS.egg-info/requires.txt
 src/PLAMS.egg-info/top_level.txt
 src/scm/__init__.py
 src/scm/plams/__init__.py
+src/scm/plams/plams_defaults
 src/scm/plams/core/__init__.py
 src/scm/plams/core/basejob.py
 src/scm/plams/core/basemol.py
