@@ -27,8 +27,9 @@ setup(
         'numpy',
         'six',
     ],
-    package_dir={'': 'src/scm'},
-    packages=['plams', 'plams.core', 'plams.tools', 'plams.interfaces'],
+    package_dir={'': 'src'},
+    packages=['scm.plams', 'scm.plams.core', 'scm.plams.tools', 'scm.plams.interfaces'],
     package_data={'plams':['plams_defaults']},
+    namespace_packages = ['scm'],
     scripts=['bin/plams']
 )
