@@ -1,3 +1,0 @@
-dill>=0.2.4
-numpy
-six
