@@ -316,7 +316,7 @@ class BANDJob(SCMJob):
 
     def _parsemol(self):
         for i,atom in enumerate(self.molecule):
-            self.settings.input.atoms['_'+str(i+1)] = atom.str(symbol=self._atom_symbol(atom))
+            self.settings.input.atoms['_'+str(i+1)] = atom.str(symbol=self._atom_symbol(atom), space=18, decimal=10)
 
         if self.molecule.lattice:
             for i,vec in enumerate(self.molecule.lattice):
@@ -350,7 +350,7 @@ class DFTBJob(SCMJob):
     def _parsemol(self):
         s = self.settings.input
         for i,atom in enumerate(self.molecule):
-            s[s.find_case('system')]['atoms']['_'+str(i+1)] = atom.str(symbol=self._atom_symbol(atom))
+            s[s.find_case('system')]['atoms']['_'+str(i+1)] = atom.str(symbol=self._atom_symbol(atom), space=18, decimal=10)
         if self.molecule.lattice:
             for i,vec in enumerate(self.molecule.lattice):
                 s[s.find_case('system')]['lattice']['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
