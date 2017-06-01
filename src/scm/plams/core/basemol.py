@@ -970,6 +970,35 @@ class Molecule (object):
         return formula
 
 
+    def apply_strain(self, strain):
+        """Apply a strain deformation to a periodic system. 
+        
+        This method can be used only for periodic systems (the ones with non-empty ``lattice`` attribute). *strain* should be a container with n*n numerical values, where n is the size of the ``lattice``. It can be a list (tuple, numpy array etc.) listing matrix elements row-wise, either flat (``[1,2,3,4,5,6,7,8,9]``) or in two-level fashion (``[[1,2,3],[4,5,6],[7,8,9]]``).
+        """
+
+        n = len(self.lattice)
+
+        if n == 0:
+            raise MoleculeError('apply_strain: strain can only be applied to periodic systems')
+
+        try:
+            strain = numpy.array(strain).reshape(n,n)
+        except:
+            raise MoleculeError('apply_strain: could not convert the strain to a (%i,%i) numpy array'%(n,n))
+
+        lattice_np = numpy.array(self.lattice)
+        frac_coords_transf = numpy.linalg.inv(lattice_np.T)
+        deformed_lattice = numpy.dot(lattice_np, numpy.eye(n) + numpy.array(strain))
+
+        for atom in self.atoms:
+            coord_np = numpy.array(atom.coords)
+            fractional_coords = numpy.matmul(frac_coords_transf, coord_np.T)
+            atom.coords = tuple(numpy.matmul(fractional_coords,deformed_lattice))
+
+        self.lattice = [tuple(vec) for vec in deformed_lattice.tolist()]
+
+
+
 
 #===================================================================================================
 #==== Magic methods ================================================================================
