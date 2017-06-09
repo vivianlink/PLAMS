@@ -74,7 +74,7 @@ In the last line of the above example all intermediate |Settings| instances are 
     >>> s['foo'] = 'bar'
     >>> x = s['fo']
 
-    >>> print s
+    >>> print(s)
     fo:
     foo:    bar
 

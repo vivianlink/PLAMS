@@ -39,10 +39,10 @@ class Atom(object):
         *   ``symbol`` -- allows to read or write atomic symbol directly. Atomic symbol is not stored as an attribute, instead of that atomic number (``atnum``) indicates the type of atom. In fact, ``symbol`` this is just a wrapper around ``atnum`` that uses |PeriodicTable| as a translator::
 
                 >>> a = Atom(atnum=8)
-                >>> print a.symbol
+                >>> print(a.symbol)
                 O
                 >>> a.symbol = 'Ca'
-                >>> print a.atnum
+                >>> print(a.atnum)
                 20
 
         *   ``mass`` -- atomic mass, obtained from |PeriodicTable|, read only
@@ -57,10 +57,10 @@ class Atom(object):
     Values stored in ``coords`` tuple do not necessarily have to be numeric, you can also store any string there. This might come handy for programs that allow parametrization of coordinates in the input file (to enforce some geometry constraints for example)::
 
             >>> a = Atom(symbol='C', coords=(1,2,3))
-            >>> print a
+            >>> print(a)
                      C       1.00000       2.00000       3.00000
             >>> a.y = 'param1'
-            >>> print a
+            >>> print(a)
                      C       1.00000        param1       3.00000
 
     However, non-numerical coordinates cannot be used together with some methods (for example :meth:`distance_to` or :meth:`translate`). Trying to do this will raise an exception.
@@ -102,18 +102,18 @@ class Atom(object):
         Example:
 
             >>> a = Atom(atnum=6, coords=(1,1.5,2))
-            >>> print a.str()
+            >>> print(a.str())
                      C      1.000000      1.500000      2.000000
-            >>> print a.str(unit='bohr')
+            >>> print(a.str(unit='bohr'))
                      C      1.889726      2.834589      3.779452
-            >>> print a.str(symbol=False)
+            >>> print(a.str(symbol=False))
                   1.000000      1.500000      2.000000
-            >>> print a.str(symbol='C2.13')
+            >>> print(a.str(symbol='C2.13'))
                  C2.13      1.000000      1.500000      2.000000
-            >>> print a.str(suffix='protein1')
+            >>> print(a.str(suffix='protein1'))
                      C      1.000000      1.500000      2.000000 protein1
             >>> a.info = 'membrane'
-            >>> print a.str(suffix='subsystem={info}')
+            >>> print(a.str(suffix='subsystem={info}'))
                      C      1.000000      1.500000      2.000000 subsystem=membrane
 
         """
@@ -367,7 +367,7 @@ class Molecule (object):
 
         >>> mol = Molecule('xyz/Ammonia.xyz')
         >>> mol.guess_bonds()
-        >>> print mol
+        >>> print(mol)
           Atoms:
             1         H      0.942179      0.000000     -0.017370
             2         H     -0.471089      0.815951     -0.017370
@@ -378,13 +378,13 @@ class Molecule (object):
            (2)--1.0--(3)
            (3)--1.0--(4)
         >>> at = mol[1]
-        >>> print at
+        >>> print(at)
                  H      0.942179      0.000000     -0.017370
         >>> b = mol[(1,3)]
-        >>> print b
+        >>> print(b)
         (         H      0.942179      0.000000     -0.017370 )--1.0--(         N      0.000000      0.000000      0.383210 )
         >>> b = mol[(1,4)]
-        >>> print b
+        >>> print(b)
         None
 
     .. note::

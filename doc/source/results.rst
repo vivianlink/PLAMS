@@ -18,9 +18,9 @@ Directly after execution of a job is finished (see :ref:`job-life-cycle`), the j
 If you need an absolute path to some file, the bracket notation known from dictionaries is defined for |Results| objects. When supplied with an entry from ``files`` list, it returns the absolute path to that file. This mechanism is read-only::
 
     >>> r = j.run()
-    >>> print r.files
+    >>> print(r.files)
     ['plamsjob.err', 'plamsjob.in', 'plamsjob.out', 'plamsjob.run']
-    >>> print r['plamsjob.out']
+    >>> print(r['plamsjob.out'])
     /home/user/plams.12345/plamsjob/plamsjob.in
     >>> r['newfile.txt'] = '/home/user/abc.txt'
     TypeError: 'Results' object does not support item assignment
@@ -29,12 +29,12 @@ In the bracket notation and in every other context regarding |Results|, whenever
 
     >>> r.rename('$JN.out', 'outputfile')
     >>> r.grep_file('$JN.err', 'NORMAL TERMINATION')
-    >>> print r['$JN.run']
+    >>> print(r['$JN.run'])
     /home/user/plams.12345/plamsjob/plamsjob.run
 
 Some external binaries produce fixed name files during execution (like for example ADF's ``TAPE21``). If one wants to automatically rename those files it can be done with ``_rename_map`` class attribute::
 
-    >>> print ADFResults._rename_map
+    >>> print(ADFResults._rename_map)
     {'TAPE13': '$JN.t13', 'TAPE21': '$JN.t21'}
 
 As presented in the above example, ``_rename_map`` is a dictionary defining which files should be renamed and how. Renaming is done only once, on :meth:`~Results.collect`. In generic |Results| class ``_rename_map`` is an empty dictionary.
