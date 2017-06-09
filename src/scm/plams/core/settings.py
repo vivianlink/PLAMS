@@ -158,7 +158,7 @@ class Settings(dict):
               y:    22
               z:    set([1, 's', 'e', 't'])
 
-        This method is also used when :func:`python2:copy.copy` is called.
+        This method is also used when :func:`python3:copy.copy` is called.
         """
         ret = Settings()
         for name in self:

@@ -327,7 +327,7 @@ class Results(object):
 
     def _export_attribute(self, attr, other):
         """_export_attribute(attr, other)
-        Export this instance's attribute to *other*. This method should be overridden in your |Results| subclass if it has some attribute that is not properly copyable by :func:`python2:copy.deepcopy`.
+        Export this instance's attribute to *other*. This method should be overridden in your |Results| subclass if it has some attribute that is not properly copyable by :func:`python3:copy.deepcopy`.
 
         *other* is the |Results| instance, *attr* is the **value** of the attribute to be copied. See :meth:`SCMJob._export_attribute<scm.plams.scmjob.SCMResults._export_attribute>` for an example implementation.
         """

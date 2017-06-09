@@ -200,7 +200,7 @@ add_module_names = False
 pygments_style = 'sphinx'
 
 # configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'python2': ('http://docs.python.org/2.7', None)}
+intersphinx_mapping = {'python3': ('http://docs.python.org/3.5', None)}
 
 autodoc_default_flags = ['members', 'private-members', 'special-members']
 autodoc_member_order = 'bysource'
