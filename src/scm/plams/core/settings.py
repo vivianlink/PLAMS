@@ -131,7 +131,9 @@ class Settings(dict):
     def copy(self):
         """Return a new instance that is a copy of this one. Nested |Settings| instances are copied recursively, not linked.
 
-        In practice this method usually works as a complete deep copy -- all keys and values in returned copy are distinct from originals **unless** one of the original "proper values" (i.e. not nested |Settings|) is of the mutable type. In that case both original and copy will point to the same mutable object. This behavior is illustrated by the following example::
+        In practice this method works as a shallow copy: all "proper values" (leaf nodes) in the returned copy point to the same objects as the original instance (unless they are immutable, like ``int`` or ``tuple``). However, nested |Settings| instances (internal nodes) are copied in a deep-copy fashion. In other words, copying a |Settings| instance creates a brand new "tree skeleton" and populates its leaf nodes with values taken directly from the original instance.
+
+        This behavior is illustrated by the following example::
 
             >>> s = Settings()
             >>> s.a = 'string'

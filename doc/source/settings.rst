@@ -134,7 +134,7 @@ These changes are going to affect only the script they are called from. If you w
 
 .. technical::
 
-     ``config`` is made visible from everywhere by being added to built-ins namespace in :mod:`__builtin__` module.
+     ``config`` is made visible from everywhere by being added to built-ins namespace in :mod:`builtins` module.
 
 
 
