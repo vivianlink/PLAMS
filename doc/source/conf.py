@@ -35,10 +35,8 @@ def setup(app):
 # ==================================================================================
 
 if tags.has('scm_theme'):
-    global_conf_relative_path = '../../../'
-    sys.path.insert(0, os.path.abspath(global_conf_relative_path))
-    from global_conf import *
 
+    from global_conf import *
     project, htmlhelp_basename, latex_documents = set_project_specific_var ('PLAMS')
 
 else:
