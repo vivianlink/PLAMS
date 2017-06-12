@@ -1158,28 +1158,43 @@ class Molecule (object):
             line = f.readline().rstrip()
             if line:
                 spl = line.split()
-                if spl[len(spl)-1] == 'V2000':
-                    natom = int(spl[0])
-                    nbond = int(spl[1])
+                if spl[-1] == 'V2000':
+                    if len(line) == 39:
+                        natom = int(line[0:3])
+                        nbond = int(line[3:6])
+                    else:
+                        natom = int(spl[0])
+                        nbond = int(spl[1])
                     for j in range(natom):
-                        atomline = f.readline().split()
-                        crd = tuple(map(float, atomline[0:3]))
-                        symb = atomline[3]
+                        atomline = f.readline().rstrip()
+                        if len(atomline) == 69:
+                            crdx = (float(atomline[:10]),float(atomline[10:20]),float(atomline[20:30]))
+                            symb = atomline[31:34]
+                        else:
+                            tmp = atomline.split()
+                            crd = tuple(map(float, tmp[0:3]))
+                            symb = tmp[3]
                         try:
                             num = PT.get_atomic_number(symb)
                         except PTError:
                             num = 0
                         self.add_atom(Atom(atnum=num, coords=crd))
                     for j in range(nbond):
-                        bondline = f.readline().split()
-                        at1 = self.atoms[int(bondline[0]) - 1]
-                        at2 = self.atoms[int(bondline[1]) - 1]
-                        ordr = int(bondline[2])
+                        bondline = f.readline().rstrip()
+                        if len(bondline) == 21:
+                            at1 = int(bondline[0:3])
+                            at2 = int(bondline[3:6])
+                            ordr = int(bondline[6:9])
+                        else:
+                            tmp = bondline.split()
+                            at1 = int(tmp[0])
+                            at2 = int(tmp[1])
+                            ordr = int(tmp[2])
                         if ordr == 4:
                             ordr = Bond.AR
-                        self.add_bond(Bond(atom1=at1, atom2=at2, order=ordr))
+                        self.add_bond(Bond(atom1=self[at1], atom2=self[at2], order=ordr))
                     break
-                elif spl[len(spl)-1] == 'V3000':
+                elif spl[-1] == 'V3000':
                     raise FileError('readmol: Molfile V3000 not supported. Please convert')
                 else:
                     comment.append(line)
@@ -1203,14 +1218,14 @@ class Molecule (object):
 
         self.set_atoms_id()
 
-        f.write('%3i%3i  0  0  0  0  0  0  0  0999 V2000\n' % (len(self.atoms),len(self.bonds)))
+        f.write('%3i %2i  0  0  0  0  0  0  0  0999 V2000\n' % (len(self.atoms),len(self.bonds)))
         for at in self.atoms:
-            f.write('%10.4f%10.4f%10.4f %-3s 0  0  0  0  0  0\n' % (at.x,at.y,at.z,at.symbol))
+            f.write('%10.4f %9.4f %9.4f %-3s 0  0  0  0  0  0  0  0  0  0  0  0\n' % (at.x,at.y,at.z,at.symbol))
         for bo in self.bonds:
             order = bo.order
             if order == Bond.AR:
                 order = 4
-            f.write('%3i%3i%3i  0  0  0\n' % (bo.atom1.id,bo.atom2.id,order))
+            f.write('%3i %2i %2i  0  0  0  0\n' % (bo.atom1.id,bo.atom2.id,order))
         self.unset_atoms_id()
         f.write('M  END\n')
 
@@ -1286,7 +1301,6 @@ class Molecule (object):
 
 
     def writemol2(self, f):
-        bondorders = ['1','2','3','ar']
 
         def write_prop(name, obj, separator, space=0, replacement=None):
             form_str = '%-' + str(space) + 's'
@@ -1318,7 +1332,7 @@ class Molecule (object):
 
         f.write('\n@<TRIPOS>BOND\n')
         for i,bo in enumerate(self.bonds):
-            f.write('%5i %5i %5i %4s' % (i+1, bo.atom1.id, bo.atom2.id, bondorders[bo.order]))
+            f.write('%5i %5i %5i %4s' % (i+1, bo.atom1.id, bo.atom2.id, 'ar' if bo.is_aromatic() else bo.order))
             write_prop('flags', bo, '\n')
 
         self.unset_atoms_id()
