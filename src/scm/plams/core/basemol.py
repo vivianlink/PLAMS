@@ -1435,128 +1435,57 @@ class Molecule (object):
     _readformat = {'xyz':readxyz, 'mol':readmol, 'mol2':readmol2, 'pdb':readpdb}
     _writeformat = {'xyz':writexyz, 'mol':writemol, 'mol2':writemol2, 'pdb': writepdb}
 
-#===================================================================================================
-#==== JSON IO ======================================================================================
-#===================================================================================================
-
 
     def as_dict(self):
         """
-        The Molecule information is stored in a dict based on the mol
-        `file format <http://onlinelibrarystatic.wiley.com/marvin/help/FF/19693841.html>`
-        :returns: JSON object
+        The Molecule information is stored in a dict.
+        :returns: Dict
 
         """
-        # def create_atom_ids(mol):
-        #     """
-        #     Generate unique identifier for each atom
-        #     :parameter mol: Molecule object containing the atoms
-        #     :type      mol: |Molecule|
-        #     """
-        #     ds = []
-        #     for i,self.assertTrue() in enumerate(mol.atoms):
-        #         idx  = "atom_" + str(i)
-        #         ds.append(idx)
-        #     return ds
-
-        def create_atom_block(mol):
-            """
-            In this block are stored the atomic number, coordinates,
-            atomic symbols and others properties that are passed as a *Setting* object.
-            :parameter mol: Molecule object containing the atoms
-            :type      mol: |Molecule|
-            :parameter ids: List of unique identifier
-            :type      ids: [Int]
-            """
-            return [{'coords': at.coords, 'symbol': at.symbol,
-                     'atnum': at.atnum, 'properties': at.properties.as_dict()} for at in mol.atoms]
-
-        def create_bond_block(mol):
-            """
-            :parameter mol: Molecule object containing the atoms
-            :type      mol: |Molecule|
-            :parameter ids: List of unique identifier
-            :type      ids: [Int]
-
-            The data list on table bellow is used to store
-            information related to the bonds.
-
-            =================   =====================
-            Meaning             Value
-            ==================  =====================
-            First atom number   Int
-            Second atom number  Int
-            Bond type           Int (float for aromatic)
-                                #. Single
-                                #. Double
-                                #. Triple
-                                #. Aromatic
-            Properties          Settings
-            ==================  =====================
-            """
-            def get_bond_order(bond):
-                if bond.order:
-                    return bond.order
-                elif bond.AR:
-                    return bond.AR
-                else:
-                    msg = "bond does not contain order attribute"
-                    raise AttributeError(msg)
-
-            # Represent the atoms involved in the bond like references
-            # to the unique identifiers stored in the ``atomBlock``
-            # dict_atom2id = {at: idx for (at, idx) in zip(mol.atoms, ids)}
-            bonds_list = []
-            for i, b in enumerate(mol.bonds):
-                atom1 = mol.atoms.index(b.atom1)
-                atom2 = mol.atoms.index(b.atom2)
-                order = get_bond_order(b)
-                bond  = {'atom1': atom1, 'atom2': atom2,
-                         'order': order, 'properties': b.properties.as_dict()}
-                bonds_list.append(bond)
-
-            return bonds_list
-
-        d              = dict()
-        d["atomBlock"] = create_atom_block(self)
-        d["bondBlock"] = create_bond_block(self)
-        d["properties"] = self.properties
-
-        return d
+        mol_dict = copy.deepcopy(self.__dict__)
+        atom_indices = {id(a): i for i, a in enumerate(mol_dict['atoms'])}
+        bond_indices = {id(b): i for i, b in enumerate(mol_dict['bonds'])}
+        atom_dicts = [a.__dict__ for a in mol_dict['atoms']]
+        bond_dicts = [b.__dict__ for b in mol_dict['bonds']]
+        for a_dict in atom_dicts:
+            a_dict['bonds'] = [bond_indices[id(b)] for b in a_dict['bonds']]
+            del(a_dict['mol'])
+        for b_dict in bond_dicts:
+            b_dict['atom1'] = atom_indices[id(b_dict['atom1'])]
+            b_dict['atom2'] = atom_indices[id(b_dict['atom2'])]
+            del(b_dict['mol'])
+        mol_dict['atoms'] = atom_dicts
+        mol_dict['bonds'] = bond_dicts
+        return mol_dict
 
     @classmethod
-    def from_dict(cls, atomBlock, bondBlock, properties):
+    def from_dict(cls, mol_dict):
         """
         Generate a new Molecule instance using the data stored
-        in the dictionary representing the JSON serialized data
-        :parameter ds: Dict containing the JSON serialized molecule
+        in the dictionary
+        :parameter mol_dict: Dict containing the serialized molecule
         :type      ds: Dict
         :returns: |Molecule|
         """
         # New Molecule instance
-        mol     = cls()
-        # dict from unique atom identifiers to numeration
-        # inside the molecule
-
-        # Reconstruct the Atom instances using the Json data
-        for at in atomBlock:
-            atnum     = at["atnum"]
-            coords    = at["coords"]
-            symbol    = at["symbol"]
-            props     = at["properties"]
-            mol.add_atom(Atom(atnum=atnum, coords=coords, symbol=symbol,
-                              **props))
-        # Reconstruct the bonds using the internal numeration of the molecule
-        # build in  the previous step.
-        for b in bondBlock:
-            id_atom1 = b["atom1"]
-            id_atom2 = b["atom2"]
-            atom1    = mol.atoms[id_atom1]
-            atom2    = mol.atoms[id_atom2]
-            bond = Bond(atom1=atom1, atom2=atom2, order=b["order"],
-                        **b["properties"])
-            mol.add_bond(bond)
-
-        mol.properties = properties
-
+        mol = cls()
+        mol.__dict__ = copy.deepcopy(mol_dict)
+        atom_dicts = mol.atoms
+        bond_dicts = mol.bonds
+        mol.atoms=[]
+        mol.bonds=[]
+        for a_dict in atom_dicts:
+            a = Atom()
+            a.__dict__ = a_dict
+            a.mol = mol
+            a.bonds=[]
+            mol.add_atom(a)
+        for b_dict in bond_dicts:
+            b = Bond(None, None)
+            b_dict['atom1'] = mol.atoms[b_dict['atom1']]
+            b_dict['atom2'] = mol.atoms[b_dict['atom2']]
+            b.__dict__ = b_dict
+            b.mol = mol
+            mol.add_bond(b)
         return mol
+
