@@ -193,7 +193,7 @@ Runscripts for ADF, BAND and DFTB are very simple - they are just single executi
 Results extraction
 ++++++++++++++++++
 
-All three programs print results to the standard output. The output file can be examined with standard text processing tools (:meth:`~scm.plams.results.Results.grep_output` and :meth:`~scm.plams.results.Results.awk_output`). Besides that all calculation details are saved in the binary file in KF format. This file is called ``TAPE21`` for ADF, ``RUNKF`` for BAND and ``dftb.rkf`` for DFTB. PLAMS renames those files to, respectively ``[jobname].t21``, ``[jobname].runkf`` and ``[jobname].rkf``. Data stored in those files can be accessed using additional methods defined in |SCMResults| class.
+All three programs print results to the standard output. The output file can be examined with standard text processing tools (:meth:`~scm.plams.core.results.Results.grep_output` and :meth:`~scm.plams.core.results.Results.awk_output`). Besides that all calculation details are saved in the binary file in KF format. This file is called ``TAPE21`` for ADF, ``RUNKF`` for BAND and ``dftb.rkf`` for DFTB. PLAMS renames those files to, respectively ``[jobname].t21``, ``[jobname].runkf`` and ``[jobname].rkf``. Data stored in those files can be accessed using additional methods defined in |SCMResults| class.
 
 
 API

@@ -65,7 +65,7 @@ When you run a job using a serial job runner, all steps of |run| (see :ref:`job-
 
     You should **NEVER** access results in any other way than by a **method** of |Results| instance.
 
-The |Results| class is designed in such a way, that each of its methods automatically gets wrapped with the access guardian when |Results| instance is created. That behavior holds for any |Results| subclasses and new methods defined by user, so no need to worry about guardian when extending |Results| functionality. Also |binding_decorators| recognize when you try to use them with |Results| and act accordingly. Methods whose names end with two underscores, as well as :meth:`~Results.refresh`, :meth:`~Results.collect`, :meth:`~Results._clean` are not wrapped with the guardian. The guardian gives special privileges (earlier access) to |postrun| and :meth:`~scm.plams.basejob.Job.check` (see :ref:`prerun-postrun`).
+The |Results| class is designed in such a way, that each of its methods automatically gets wrapped with the access guardian when |Results| instance is created. That behavior holds for any |Results| subclasses and new methods defined by user, so no need to worry about guardian when extending |Results| functionality. Also |binding_decorators| recognize when you try to use them with |Results| and act accordingly. Methods whose names end with two underscores, as well as :meth:`~Results.refresh`, :meth:`~Results.collect`, :meth:`~Results._clean` are not wrapped with the guardian. The guardian gives special privileges (earlier access) to |postrun| and :meth:`~scm.plams.core.basejob.Job.check` (see :ref:`prerun-postrun`).
 
 .. technical::
 
@@ -204,7 +204,7 @@ Cleaning job folder
 
 |Results| instance associated with a job is responsible for cleaning the job folder (removing files that are no longer needed). Cleaning is done automatically, twice for each job, so usually there is no need to manually invoke it.
 
-First cleaning is done during job execution, just after :meth:`~scm.plams.basejob.Job.check` and before |postrun|. The value adjusting first cleaning is taken from ``myjob.settings.keep`` and should be either string or list (see below). This cleaning will usually be used rather rarely. It is intended for purposes when your jobs produce large files that you don't need for further processing. Running many of such jobs could then deplete disk quota and cause the whole script to crash. If you wish to immediately get rid of some files produced by your jobs (without having a chance to do anything with them), use this cleaning.
+First cleaning is done during job execution, just after :meth:`~scm.plams.core.basejob.Job.check` and before |postrun|. The value adjusting first cleaning is taken from ``myjob.settings.keep`` and should be either string or list (see below). This cleaning will usually be used rather rarely. It is intended for purposes when your jobs produce large files that you don't need for further processing. Running many of such jobs could then deplete disk quota and cause the whole script to crash. If you wish to immediately get rid of some files produced by your jobs (without having a chance to do anything with them), use this cleaning.
 
 In the majority of cases it is sufficient to use second cleaning, which is performed at the end of your script, when |finish| method is called. It is adjusted by ``myjob.settings.save``. You can use second cleaning to remove files that you no longer need after you extracted relevant data earlier in your script.
 

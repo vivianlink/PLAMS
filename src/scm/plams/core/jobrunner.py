@@ -45,7 +45,7 @@ def _limit(func):
     return wrapper
 
 class _MetaRunner(type):
-    """Metaclass for |JobRunner|. Wraps :meth:`~scm.plams.jobrunner.JobRunner.call` with :func:`_limit` decorator."""
+    """Metaclass for |JobRunner|. Wraps :meth:`~scm.plams.core.jobrunner.JobRunner.call` with :func:`_limit` decorator."""
     def __new__(meta, name, bases, dct):
         dct['call'] = _limit(dct['call'])
         return type.__new__(meta, name, bases, dct)

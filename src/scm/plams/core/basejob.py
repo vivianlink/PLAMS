@@ -130,7 +130,7 @@ class Job(object):
 
         This method can be overridden in concrete subclasses for different types of jobs. It should return a boolean value.
 
-        The definition here serves as a default, to prevent crashing if a subclass does not define its own :meth:`~scm.plams.basejob.Job.check`. It always returns ``True``.
+        The definition here serves as a default, to prevent crashing if a subclass does not define its own :meth:`~scm.plams.core.basejob.Job.check`. It always returns ``True``.
         """
         return True
 
@@ -370,7 +370,7 @@ class SingleJob(Job):
     def _execute(self, jobrunner):
         """Execute previously created runscript using *jobrunner*.
 
-        The method :meth:`~scm.plams.jobrunner.JobRunner.call` of *jobrunner* is used. Working directory is ``self.path``. ``self.settings.run`` is passed as ``runflags`` argument.
+        The method :meth:`~scm.plams.core.jobrunner.JobRunner.call` of *jobrunner* is used. Working directory is ``self.path``. ``self.settings.run`` is passed as ``runflags`` argument.
 
         If preview mode is on, this method does nothing.
         """

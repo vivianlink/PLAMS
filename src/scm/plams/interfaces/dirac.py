@@ -24,7 +24,7 @@ class DiracResults(Results):
 
 
     def collect(self):
-        """After collecting the files produced by job execution with parent method :meth:`Results.collect<scm.plams.results.Results.collect>` append the ``pam`` output to the regular output file.
+        """After collecting the files produced by job execution with parent method :meth:`Results.collect<scm.plams.core.results.Results.collect>` append the ``pam`` output to the regular output file.
         """
         Results.collect(self)
         pamfile = self.job._filename('out')
@@ -65,7 +65,7 @@ class DiracJob(SingleJob):
 
 
     def _get_ready(self):
-        """Before generating runscript and input with parent method :meth:`SingleJob._get_ready<scm.plams.basejob.SingleJob._get_ready>` add proper ``mol`` and ``inp`` entries to ``self.settings.runscript.pam``. If already present there, ``mol`` will not be added.
+        """Before generating runscript and input with parent method :meth:`SingleJob._get_ready<scm.plams.core.basejob.SingleJob._get_ready>` add proper ``mol`` and ``inp`` entries to ``self.settings.runscript.pam``. If already present there, ``mol`` will not be added.
         """
         s = self.settings.runscript.pam
         if 'mol' not in s:

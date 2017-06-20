@@ -109,14 +109,14 @@ class SCMResults(Results):
 
     def _settings_reduce(self):
         """_settings_reduce()
-        When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path to the main KF file. See :meth:`Settings.__reduce__<scm.plams.settings.Settings.__reduce__>` for details.
+        When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path to the main KF file. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details.
         """
         return self._kfpath()
 
 
     def _export_attribute(self, attr, other):
         """_export_attribute(attr, other)
-        If *attr* is a KF file take care of a proper path. Otherwise use parent method. See :meth:`Results._copy_to<scm.plams.results.Results._copy_to>` for details.
+        If *attr* is a KF file take care of a proper path. Otherwise use parent method. See :meth:`Results._copy_to<scm.plams.core.results.Results._copy_to>` for details.
         """
         if isinstance(attr, KFFile):
             oldname = os.path.basename(attr.path)
@@ -250,7 +250,7 @@ class SCMJob(SingleJob):
 
 
     def _settings_reduce(self):
-        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path to the main KF file. See :meth:`Settings.__reduce__<scm.plams.settings.Settings.__reduce__>` for details."""
+        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path to the main KF file. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details."""
         return self.results._kfpath()
 
     @staticmethod

@@ -29,7 +29,7 @@ The first step to run a job using PLAMS is to create a job object. You need to p
 
 Various keyword arguments (arguments of the form ``arg=value``, like ``name`` in the example above) can be passed to a job constructor, depending on the type of your job. However, the following keyword arguments are common for all types of jobs:
     *   ``name`` -- a string containing the name of the job. If not supplied, default name ``plamsjob`` is used. Job's name cannot contain path separator (``\`` in Linux, ``/`` in Windows).
-    *   ``settings`` -- a |Settings| instance to be used by this job. It gets copied (using :meth:`~scm.plams.settings.Settings.copy`) so you can pass the same instance to several different jobs and changes made afterwards won't interfere. Any instance of |Job| can be also passed as a value of this argument. In that case |Settings| associated with the passed job are copied.
+    *   ``settings`` -- a |Settings| instance to be used by this job. It gets copied (using :meth:`~scm.plams.core.settings.Settings.copy`) so you can pass the same instance to several different jobs and changes made afterwards won't interfere. Any instance of |Job| can be also passed as a value of this argument. In that case |Settings| associated with the passed job are copied.
     *   ``depend`` -- a list of jobs that need to be finished before this job can start. This is useful when you want to execute your jobs in parallel. Usually there is no need to use this argument, since dependencies between jobs are resolved automatically (see |parallel|). However, sometimes one needs to explicitly state such a dependency and this option is then helpful.
 
 Those values do not need to be passed to the constructor, they can be set or changed later (but they should be fixed before the job starts to run)::
@@ -72,7 +72,7 @@ Every job instance has an attribute called ``default_settings`` that stores a li
     >>> myjob.default_settings.append(sometemplate)
     >>> myjob.default_settings += [temp1, temp2]
 
-During job execution (just after ``prerun()`` is finished) job's own ``settings`` are soft-updated with all elements of ``default_settings`` list, one by one, starting with **last**. That way if you want to adjust some setting for all jobs run in your script you don't need to go to each job and set it there every time, one change in ``config.job`` is enough. Similarly, if you have a group of jobs that need the same ``settings`` adjustments, you can create an empty |Settings| instance, put those adjustments in it and add it to each job's ``default_settings``. Keep in mind that :meth:`~scm.plams.settings.Settings.soft_update` is used so any key in a template in ``default_settings`` will end up in job's ``settings`` only if such a key is not yet present there. Thanks to that the order of templates in ``default_settings`` somehow defines their importance: data from a preceding template will never override the following one, it can only enrich it.
+During job execution (just after ``prerun()`` is finished) job's own ``settings`` are soft-updated with all elements of ``default_settings`` list, one by one, starting with **last**. That way if you want to adjust some setting for all jobs run in your script you don't need to go to each job and set it there every time, one change in ``config.job`` is enough. Similarly, if you have a group of jobs that need the same ``settings`` adjustments, you can create an empty |Settings| instance, put those adjustments in it and add it to each job's ``default_settings``. Keep in mind that :meth:`~scm.plams.core.settings.Settings.soft_update` is used so any key in a template in ``default_settings`` will end up in job's ``settings`` only if such a key is not yet present there. Thanks to that the order of templates in ``default_settings`` somehow defines their importance: data from a preceding template will never override the following one, it can only enrich it.
 
 
 .. _job-life-cycle:
@@ -94,7 +94,7 @@ The following steps are taken after the |run| method is called:
     5. Job's |prerun| method is called.
     6. ``myjob.settings`` are updated according to contents of ``myjob.default_settings``.
     7. The hash of a job is calculated and checked (see |RPM|). If the same job was found as previously run, its results are copied (or linked) to the current job's folder and |run| finishes.
-    8. Now the real job execution happens. If your job is a single job, an input file and a runscript are produced and passed to job runner's method :meth:`~scm.plams.jobrunner.JobRunner.call`. In case of multijob, |run| method is called for all children jobs.
+    8. Now the real job execution happens. If your job is a single job, an input file and a runscript are produced and passed to job runner's method :meth:`~scm.plams.core.jobrunner.JobRunner.call`. In case of multijob, |run| method is called for all children jobs.
     9. After the execution is finished, result files produced by the job are collected and :meth:`~Job.check` is used to test if the execution was successful.
     10. The job folder is cleaned using ``myjob.settings.keep``. See |cleaning| for details.
     11. Job's |postrun| method is called.

@@ -32,9 +32,9 @@ During |run|, just before the actual job execution, an unique identifier of a jo
 
     Linking is done using hard links. Windows machines do not support hard links and hence, if you are running PLAMS under Windows, results are always copied.
 
-The crucial part of the whole rerun prevention mechanism is properly working :meth:`~scm.plams.basejob.Job.hash` function. It needs to produce different hashes for different jobs and exactly the same hashes for jobs that do exactly the same work. It is difficult to come up with the scheme that works well for all kind of external binaries, since the technical details about job preparation can differ a lot. Currently implemented method works based on calculating SHA256 hash of input and/or runscript contents. The value of ``hashing`` key in job manager's ``settings`` can be one of the following: ``'input'``, ``'runscript'``, ``'input+runscript'`` (or ``None`` to disable the rerun prevention).
+The crucial part of the whole rerun prevention mechanism is properly working :meth:`~scm.plams.core.basejob.Job.hash` function. It needs to produce different hashes for different jobs and exactly the same hashes for jobs that do exactly the same work. It is difficult to come up with the scheme that works well for all kind of external binaries, since the technical details about job preparation can differ a lot. Currently implemented method works based on calculating SHA256 hash of input and/or runscript contents. The value of ``hashing`` key in job manager's ``settings`` can be one of the following: ``'input'``, ``'runscript'``, ``'input+runscript'`` (or ``None`` to disable the rerun prevention).
 
-If you decide to implement your own hashing method, it can be done by overriding :meth:`~scm.plams.basejob.SingleJob.hash`. Make sure that your version of this method supports three basic modes listed above.
+If you decide to implement your own hashing method, it can be done by overriding :meth:`~scm.plams.core.basejob.SingleJob.hash`. Make sure that your version of this method supports three basic modes listed above.
 
 .. warning::
 
@@ -79,7 +79,7 @@ This operation brings back the old |Job| instance in (almost) the same state it 
 
     That way big clumsy object will not be stored in the ``.dill`` file. After loading such a ``.dill`` file the value of ``myjob.something`` will simply be ``None``.
 
-    ``_dont_pickle`` is an attribute of each |Job| instance, initialized by the constructor to an empty list. It does not contain names of attributes that are always removed ( like ``jobmanager``, for example), only additional ones defined by the user (see :meth:`Job.__getstate__<scm.plams.basejob.Job.__getstate__>`)
+    ``_dont_pickle`` is an attribute of each |Job| instance, initialized by the constructor to an empty list. It does not contain names of attributes that are always removed ( like ``jobmanager``, for example), only additional ones defined by the user (see :meth:`Job.__getstate__<scm.plams.core.basejob.Job.__getstate__>`)
 
 
 As mentioned above, saving a job happens at the very end of |run|. The decision if a job should be pickled is based on ``pickle`` key in job's ``settings``, so it can be adjusted for each job separately. If you wish not to pickle a particular job just set ``myjob.settings.pickle = False``. Of course global default setting in ``config.job.pickle`` can also be used.

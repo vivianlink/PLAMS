@@ -93,7 +93,7 @@ class KFReader(object):
 
 
     def _settings_reduce(self):
-        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.settings.Settings.__reduce__>` for details."""
+        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details."""
         return self.path
 
 
@@ -359,7 +359,7 @@ class KFFile(object):
 
 
     def _settings_reduce(self):
-        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.settings.Settings.__reduce__>` for details."""
+        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details."""
         return self.path
 
 

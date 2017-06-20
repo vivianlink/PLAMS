@@ -1043,7 +1043,7 @@ class Molecule (object):
 
         >>> newmol = mol1 + mol2
 
-        The new molecule has atoms, bonds and all other elements distinct from both components. ``properties`` of ``newmol`` are ``properties`` of ``mol1`` :meth:`soft_updated<scm.plams.settings.Settings.soft_update>` with ``properties`` of ``mol2``.
+        The new molecule has atoms, bonds and all other elements distinct from both components. ``properties`` of ``newmol`` are ``properties`` of ``mol1`` :meth:`soft_updated<scm.plams.core.settings.Settings.soft_update>` with ``properties`` of ``mol2``.
         """
         m = self.copy()
         m += other
@@ -1055,7 +1055,7 @@ class Molecule (object):
 
         >>> protein += water
 
-        All atoms and bonds present in *other* are copied and copies are added to this molecule. ``properties`` of this molecule are :meth:`soft_updated<scm.plams.settings.Settings.soft_update>` with ``properties`` of *other*.
+        All atoms and bonds present in *other* are copied and copies are added to this molecule. ``properties`` of this molecule are :meth:`soft_updated<scm.plams.core.settings.Settings.soft_update>` with ``properties`` of *other*.
         """
         othercopy = other.copy()
         self.atoms += othercopy.atoms
