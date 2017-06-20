@@ -971,8 +971,8 @@ class Molecule (object):
 
 
     def apply_strain(self, strain):
-        """Apply a strain deformation to a periodic system. 
-        
+        """Apply a strain deformation to a periodic system.
+
         This method can be used only for periodic systems (the ones with non-empty ``lattice`` attribute). *strain* should be a container with n*n numerical values, where n is the size of the ``lattice``. It can be a list (tuple, numpy array etc.) listing matrix elements row-wise, either flat (``[1,2,3,4,5,6,7,8,9]``) or in two-level fashion (``[[1,2,3],[4,5,6],[7,8,9]]``).
         """
 
@@ -1438,8 +1438,11 @@ class Molecule (object):
 
     def as_dict(self):
         """
-        The Molecule information is stored in a dict.
-        :returns: Dict
+        Store all the information about this |Molecule| in a dictionary.
+
+        Returned dictionary is, in principle, identical to ``self.__dict__`` of the current instance, apart from the fact that all |Atom| and |Bond| instances in ``atoms`` and ``bonds`` lists are replaced with dictionaries storing corresponing information.
+
+        This method is a counterpart of :meth:`~scm.plams.core.basemol.Molecule.from_dict`.
 
         """
         mol_dict = copy.deepcopy(self.__dict__)
@@ -1459,17 +1462,14 @@ class Molecule (object):
         return mol_dict
 
     @classmethod
-    def from_dict(cls, mol_dict):
+    def from_dict(cls, dictionary):
         """
-        Generate a new Molecule instance using the data stored
-        in the dictionary
-        :parameter mol_dict: Dict containing the serialized molecule
-        :type      ds: Dict
-        :returns: |Molecule|
+        Generate a new |Molecule| instance based on the information stored in *dictionary*.
+
+        This method is a counterpart of :meth:`~scm.plams.core.basemol.Molecule.as_dict`.
         """
-        # New Molecule instance
         mol = cls()
-        mol.__dict__ = copy.deepcopy(mol_dict)
+        mol.__dict__ = copy.deepcopy(dictionary)
         atom_dicts = mol.atoms
         bond_dicts = mol.bonds
         mol.atoms=[]

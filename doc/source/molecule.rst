@@ -12,7 +12,7 @@ Molecule
 
 
 .. autoclass :: Molecule
-    :exclude-members: __weakref__, __copy__, from_dict, as_dict
+    :exclude-members: __weakref__, __copy__
 
 
 Atom
