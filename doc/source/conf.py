@@ -259,6 +259,8 @@ rst_epilog = """
 .. |RPM| replace:: :ref:`rerun-prevention`
 .. |cleaning| replace:: :ref:`cleaning`
 .. |pickling| replace:: :ref:`pickling`
+.. |restarting| replace:: :ref:`restarting`
+.. |master_script| replace:: :ref:`master-script`
 .. |binding_decorators| replace:: :ref:`binding-decorators`
 .. |parallel| replace:: :ref:`parallel`
 

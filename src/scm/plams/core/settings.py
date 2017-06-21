@@ -299,7 +299,7 @@ class Settings(dict):
 
     def as_dict(self):
         """
-        Transform a |Settings| object into a dict.
+        Return a copy of this instance with all |Settings| replaced by the regular Python dict.
         """
         d = {}
         for k, v in self.items():

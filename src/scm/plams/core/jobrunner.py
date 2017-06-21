@@ -123,7 +123,7 @@ class GridRunner(JobRunner):
 
     So the behavior of |GridRunner| is determined by the contents of |Settings| instance stored in its ``settings`` attribute. This |Settings| instance can be manually supplied by the user or taken from a collection of predefined behaviors stored as branches of ``config.gridrunner``. The adjustment is done via *grid* parameter that should be either string or |Settings|. If string, it has to be a key occurring in ``config.gridrunner`` (or ``'auto'`` for autodetection). For example, if ``grid='slurm'`` is passed, ``config.gridrunner.slurm`` is linked as ``settings``. If *grid* is ``'auto'``, entries in ``config.gridrunner`` are tested one by one and the first one that works (its submit command is present on your system) is chosen. When a |Settings| instance is passed it gets plugged directly as ``settings``.
 
-    Currently two predefined job schedulers are available (see ``plams_defaults.py``): ``slurm`` for SLURM and ``pbs`` for job schedulers following PBS syntax (PBS, TORQUE, Oracle Grid Engine etc.).
+    Currently two predefined job schedulers are available (see ``plams_defaults``): ``slurm`` for SLURM and ``pbs`` for job schedulers following PBS syntax (PBS, TORQUE, Oracle Grid Engine etc.).
 
     The |Settings| instance used for |GridRunner| should have the following structure:
 
