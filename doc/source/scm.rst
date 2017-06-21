@@ -143,11 +143,12 @@ Special atoms in ADF
 ++++++++++++++++++++
 
 In ADF atomic coordinates in ``atoms`` block can be enriched with some additional information like special names of atoms (for example in case of using different isotopes) or block/fragment membership. Since usually contents of ``atoms`` block are generated automatically based on the |Molecule| associated with a job, this information needs to be supplied inside the given |Molecule| instance. Details about every atom can be adjusted separately, by modifying attributes of a particular |Atom| instance according to the following convention:
-    *   Atomic symbol is generated based on atomic number stored in ``atnum`` attribute of a corresponding |Atom|. Atomic number 0 corresponds to the "dummy atom" for which the symbol is empty.
-    *   If an attribute ``ghost`` of an |Atom| is ``True``, the above atomic symbol is prefixed with ``Gh.``.
-    *   If an |Atom| has an attribute ``name`` its contents are added after the symbol. Hence setting ``atnum`` to 0 and adjusting ``name`` allows to put an arbitrary string as the atomic symbol.
-    *   If an |Atom| has an attribute ``fragment`` its contents are added after atomic coordinates with ``f=`` prefix.
-    *   If an |Atom| has an attribute ``block`` its contents are added after atomic coordinates with ``b=`` prefix.
+
+*   Atomic symbol is generated based on atomic number stored in ``atnum`` attribute of a corresponding |Atom|. Atomic number 0 corresponds to the "dummy atom" for which the symbol is empty.
+*   If an attribute ``ghost`` of an |Atom| is ``True``, the above atomic symbol is prefixed with ``Gh.``.
+*   If an |Atom| has an attribute ``name`` its contents are added after the symbol. Hence setting ``atnum`` to 0 and adjusting ``name`` allows to put an arbitrary string as the atomic symbol.
+*   If an |Atom| has an attribute ``fragment`` its contents are added after atomic coordinates with ``f=`` prefix.
+*   If an |Atom| has an attribute ``block`` its contents are added after atomic coordinates with ``b=`` prefix.
 
 The following example illustrates the usage of this mechanism::
 

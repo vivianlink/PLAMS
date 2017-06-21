@@ -206,9 +206,9 @@ class PeriodicTable(object):
 PT = PeriodicTable
 
 
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
+#===========================================================================
+#===========================================================================
+#===========================================================================
 
 
 class Units(object):
@@ -217,40 +217,41 @@ class Units(object):
     All values are based on `2014 CODATA recommended values <http://physics.nist.gov/cuu/Constants>`_.
 
     The following constants and units are supported:
-        *   constants:
 
-            -   ``speed_of_light`` (also ``c``)
-            -   ``elementary_charge`` (also ``e`` and ``electron_charge``)
-            -   ``avogadro_constant`` (also ``NA``)
-            -   ``bohr_radius``
+    *   constants:
 
-        *   distance:
+        -   ``speed_of_light`` (also ``c``)
+        -   ``elementary_charge`` (also ``e`` and ``electron_charge``)
+        -   ``avogadro_constant`` (also ``NA``)
+        -   ``bohr_radius``
 
-            -   ``Angstrom``, ``angstrom``, ``A``
-            -   ``bohr``, ``a0``, ``au``
-            -   ``nm``
-            -   ``pm``
+    *   distance:
 
-        *   angle:
+        -   ``Angstrom``, ``angstrom``, ``A``
+        -   ``bohr``, ``a0``, ``au``
+        -   ``nm``
+        -   ``pm``
 
-            -    ``degree``, ``deg``,
-            -    ``radian``, ``rad``,
-            -    ``grad``
-            -    ``circle``
+    *   angle:
 
-        *   energy:
+        -    ``degree``, ``deg``,
+        -    ``radian``, ``rad``,
+        -    ``grad``
+        -    ``circle``
 
-            -   ``au``, ``hartree``, ``Hartree``
-            -   ``ev``, ``eV``
-            -   ``kcal/mol``
-            -   ``kJ/mol``
-            -   ``cm^-1``
+    *   energy:
 
-        *   dipole moment:
+        -   ``au``, ``hartree``, ``Hartree``
+        -   ``ev``, ``eV``
+        -   ``kcal/mol``
+        -   ``kJ/mol``
+        -   ``cm^-1``
 
-            -   ``au``
-            -   ``Cm``
-            -   ``D``, ``Debye``, ``debye``
+    *   dipole moment:
+
+        -   ``au``
+        -   ``Cm``
+        -   ``D``, ``Debye``, ``debye``
 
     Example::
 

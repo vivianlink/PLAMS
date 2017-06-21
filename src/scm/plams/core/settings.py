@@ -8,10 +8,11 @@ class Settings(dict):
     """Automatic multi-level dictionary. Subclass of built-in :class:`dict`.
 
     The shortcut dot notation (``s.basis`` instead of ``s['basis']``) can be used for keys that:
-        *   are strings
-        *   don't contain whitespaces
-        *   begin with a letter or underscore
-        *   don't both begin and end with two or more underscores.
+
+    *   are strings
+    *   don't contain whitespaces
+    *   begin with a letter or underscore
+    *   don't both begin and end with two or more underscores.
 
     .. warning::
 

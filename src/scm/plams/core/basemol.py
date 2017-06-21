@@ -18,9 +18,9 @@ __all__ = ['Atom', 'Bond', 'Molecule']
 
 
 
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
+#===========================================================================
+#===========================================================================
+#===========================================================================
 
 
 
@@ -28,26 +28,28 @@ class Atom(object):
     """A class representing a single atom in three dimensional space.
 
     An instance of this class has the following attributes:
-        *   ``atnum`` -- atomic number (zero for "dummy atoms")
-        *   ``coords`` -- tuple of length 3 storing spatial coordinates
-        *   ``bonds`` -- list of bonds (see |Bond|) this atom is a part of
-        *   ``mol`` -- a |Molecule| this atom belongs to
-        *   ``properties`` -- a |Settings| instance storing all other information about this atom (initially it is populated with *\*\*other* keyword arguments passed to the constructor)
+
+    *   ``atnum`` -- atomic number (zero for "dummy atoms")
+    *   ``coords`` -- tuple of length 3 storing spatial coordinates
+    *   ``bonds`` -- list of bonds (see |Bond|) this atom is a part of
+    *   ``mol`` -- a |Molecule| this atom belongs to
+    *   ``properties`` -- a |Settings| instance storing all other information about this atom (initially it is populated with *\*\*other* keyword arguments passed to the constructor)
 
     All the above attributes can be accessed either directly or using one of the following properties:
-        *   ``x``, ``y``, ``z`` -- allow to read or modify each coordinate separately
-        *   ``symbol`` -- allows to read or write atomic symbol directly. Atomic symbol is not stored as an attribute, instead of that atomic number (``atnum``) indicates the type of atom. In fact, ``symbol`` this is just a wrapper around ``atnum`` that uses |PeriodicTable| as a translator::
 
-                >>> a = Atom(atnum=8)
-                >>> print(a.symbol)
-                O
-                >>> a.symbol = 'Ca'
-                >>> print(a.atnum)
-                20
+    *   ``x``, ``y``, ``z`` -- allow to read or modify each coordinate separately
+    *   ``symbol`` -- allows to read or write atomic symbol directly. Atomic symbol is not stored as an attribute, instead of that atomic number (``atnum``) indicates the type of atom. In fact, ``symbol`` this is just a wrapper around ``atnum`` that uses |PeriodicTable| as a translator::
 
-        *   ``mass`` -- atomic mass, obtained from |PeriodicTable|, read only
-        *   ``radius`` -- atomic radius, obtained from |PeriodicTable|, read only
-        *   ``connectors`` -- number of connectors, obtained from |PeriodicTable|, read only
+            >>> a = Atom(atnum=8)
+            >>> print(a.symbol)
+            O
+            >>> a.symbol = 'Ca'
+            >>> print(a.atnum)
+            20
+
+    *   ``mass`` -- atomic mass, obtained from |PeriodicTable|, read only
+    *   ``radius`` -- atomic radius, obtained from |PeriodicTable|, read only
+    *   ``connectors`` -- number of connectors, obtained from |PeriodicTable|, read only
 
     .. note::
 
@@ -235,9 +237,9 @@ class Atom(object):
 
 
 
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
+#===========================================================================
+#===========================================================================
+#===========================================================================
 
 
 
@@ -245,10 +247,11 @@ class Bond (object):
     """A class representing a bond between two atoms.
 
     An instance of this class has the following attributes:
-        *   ``atom1`` and ``atom2`` -- two instances of |Atom| that form this bond
-        *   ``order`` -- order of the bond. It is either an integer number or the floating point value stored in ``Bond.AR``, indicating aromatic bond
-        *   ``mol`` -- a |Molecule| this bond belongs to
-        *   ``properties`` -- a |Settings| instance storing all other  information about this bond (initially it is populated with *\*\*other* keyword arguments passed to the constructor)
+
+    *   ``atom1`` and ``atom2`` -- two instances of |Atom| that form this bond
+    *   ``order`` -- order of the bond. It is either an integer number or the floating point value stored in ``Bond.AR``, indicating aromatic bond
+    *   ``mol`` -- a |Molecule| this bond belongs to
+    *   ``properties`` -- a |Settings| instance storing all other  information about this bond (initially it is populated with *\*\*other* keyword arguments passed to the constructor)
 
     .. note::
 
@@ -309,9 +312,9 @@ class Bond (object):
 
 
 
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
+#===========================================================================
+#===========================================================================
+#===========================================================================
 
 
 
@@ -319,10 +322,11 @@ class Molecule (object):
     """A class representing basic molecule object.
 
     An instance of this class has the following attributes:
-        *   ``atoms`` -- a list of |Atom| objects that belong to this molecule
-        *   ``bonds`` -- a list of |Bond| objects between atoms listed in ``atoms``
-        *   ``lattice`` -- a list of lattice vectors, in case of periodic structures
-        *   ``properties`` -- a |Settings| instance storing all other information about this molecule
+
+    *   ``atoms`` -- a list of |Atom| objects that belong to this molecule
+    *   ``bonds`` -- a list of |Bond| objects between atoms listed in ``atoms``
+    *   ``lattice`` -- a list of lattice vectors, in case of periodic structures
+    *   ``properties`` -- a |Settings| instance storing all other information about this molecule
 
     .. note::
 
@@ -363,7 +367,7 @@ class Molecule (object):
 
     |hspace|
 
-    Below the detailed description of available methods is presented. Many of these methods require passing atoms belonging to the molecule as arguments. It can by done by using a reference to an |Atom| object present it ``atoms`` list, but not by passing a number of an atom (its position within ``atoms`` list). Unlike some other tools, PLAMS does not use integer numbers as primary identifiers of atoms. It is done to prevent problems when atoms within a molecule are reordered or some atoms are deleted. References to |Atom| or |Bond| objects can be obtained directly from ``atoms`` or ``bonds`` lists, or with dictionary-like bracket notation::
+    The detailed description of available methods is presented below. Many of these methods require passing atoms belonging to the molecule as arguments. It can by done by using a reference to an |Atom| object present it ``atoms`` list, but not by passing a number of an atom (its position within ``atoms`` list). Unlike some other tools, PLAMS does not use integer numbers as primary identifiers of atoms. It is done to prevent problems when atoms within a molecule are reordered or some atoms are deleted. References to |Atom| or |Bond| objects can be obtained directly from ``atoms`` or ``bonds`` lists, or with dictionary-like bracket notation::
 
         >>> mol = Molecule('xyz/Ammonia.xyz')
         >>> mol.guess_bonds()
@@ -408,9 +412,9 @@ class Molecule (object):
             self.properties.name = os.path.splitext(os.path.basename(filename))[0]
 
 
-#===================================================================================================
+#===========================================================================
 #==== Atoms/bonds manipulation =====================================================================
-#===================================================================================================
+#===========================================================================
 
 
     def copy(self, atoms=None):
@@ -783,9 +787,9 @@ class Molecule (object):
 
 
 
-#===================================================================================================
+#===========================================================================
 #==== Geometry operations ==========================================================================
-#===================================================================================================
+#===========================================================================
 
 
 
@@ -905,12 +909,13 @@ class Molecule (object):
         Transform the molecule wrapping its x-axis around z-axis. This method is useful for building nanotubes or molecular wedding rings.
 
         Atomic coordinates are transformed in the following way:
-            *   z coordinates remain untouched
-            *   x axis gets wrapped around the circle centered in the origin of new coordinate system. Each segment of x axis of length *length* ends up as an arc of a circle subtended by an angle *angle*. The radius of this circle is R = *length*/*angle*.
-            *   part of the plane between the x axis and the line y=R is transformed into the interior of the circle, with line y=R being squashed into a single point - the center of the circle.
-            *   part of the plane above line y=R is dropped
-            *   part of the plane below x axis is transformed into outside of the circle
-            *   transformation is done in such a way that distances along y axis are preserved
+
+        *   z coordinates remain untouched
+        *   x axis gets wrapped around the circle centered in the origin of new coordinate system. Each segment of x axis of length *length* ends up as an arc of a circle subtended by an angle *angle*. The radius of this circle is R = *length*/*angle*.
+        *   part of the plane between the x axis and the line y=R is transformed into the interior of the circle, with line y=R being squashed into a single point - the center of the circle.
+        *   part of the plane above line y=R is dropped
+        *   part of the plane below x axis is transformed into outside of the circle
+        *   transformation is done in such a way that distances along y axis are preserved
 
         Before:
 
@@ -971,9 +976,9 @@ class Molecule (object):
 
 
 
-#===================================================================================================
+#===========================================================================
 #==== Magic methods ================================================================================
-#===================================================================================================
+#===========================================================================
 
 
 
@@ -1073,9 +1078,9 @@ class Molecule (object):
 
 
 
-#===================================================================================================
+#===========================================================================
 #==== File/format IO ===============================================================================
-#===================================================================================================
+#===========================================================================
 
 
 
@@ -1420,9 +1425,9 @@ class Molecule (object):
     _readformat = {'xyz':readxyz, 'mol':readmol, 'mol2':readmol2, 'pdb':readpdb}
     _writeformat = {'xyz':writexyz, 'mol':writemol, 'mol2':writemol2, 'pdb': writepdb}
 
-#===================================================================================================
+#===========================================================================
 #==== JSON IO ======================================================================================
-#===================================================================================================
+#===========================================================================
 
 
     def as_dict(self):

@@ -30,27 +30,30 @@ class Job(object):
     Methods that are meant to be explicitly called by the user are |run| and occasionally :meth:`~Job.pickle`. In most cases |pickling| is done automatically, but if for some reason you wish to do it manually, you can use :meth:`~Job.pickle` method.
 
     Methods that can be safely overridden in subclasses are:
-        *   :meth:`~Job.check`
-        *   :meth:`~Job.hash` (see |RPM|)
-        *   |prerun| and |postrun| (see :ref:`prerun-postrun`)
+
+    *   :meth:`~Job.check`
+    *   :meth:`~Job.hash` (see |RPM|)
+    *   |prerun| and |postrun| (see :ref:`prerun-postrun`)
 
     Other methods should remain unchanged.
 
     Class attribute ``_result_type`` defines the type of results associated with this job. It should point to a class and it **must** be a |Results| subclass.
 
     Every job instance has the following attributes. Values of these attributes are adjusted automatically and should not be set by the user:
-        *   ``status`` -- current status of the job in human-readable format.
-        *   ``results`` -- reference to a results instance. An empty instance of the type stored in ``_result_type`` is created when the job constructor is called.
-        *   ``path`` -- an absolute path to the job folder.
-        *   ``jobmanager`` -- a job manager associated with this job.
-        *   ``parent`` -- a pointer to the parent job if this job is a child job of some |MultiJob|. ``None`` otherwise.
+
+    *   ``status`` -- current status of the job in human-readable format.
+    *   ``results`` -- reference to a results instance. An empty instance of the type stored in ``_result_type`` is created when the job constructor is called.
+    *   ``path`` -- an absolute path to the job folder.
+    *   ``jobmanager`` -- a job manager associated with this job.
+    *   ``parent`` -- a pointer to the parent job if this job is a child job of some |MultiJob|. ``None`` otherwise.
 
     These attributes can be modified, but only before |run| is called:
-        *   ``name`` -- the name of the job.
-        *   ``settings`` -- settings of the job.
-        *   ``default_settings`` -- see :ref:`default-settings`.
-        *   ``depend`` -- a list of explicit dependencies.
-        *   ``_dont_pickle`` -- additional list of this instance's attributes that will be removed before pickling. See :ref:`pickling` for details.
+
+    *   ``name`` -- the name of the job.
+    *   ``settings`` -- settings of the job.
+    *   ``default_settings`` -- see :ref:`default-settings`.
+    *   ``depend`` -- a list of explicit dependencies.
+    *   ``_dont_pickle`` -- additional list of this instance's attributes that will be removed before pickling. See :ref:`pickling` for details.
 
     """
 
@@ -156,7 +159,7 @@ class Job(object):
         """
         pass
 
-    #===============================================================================================
+    #=======================================================================
 
 
     def _prepare(self, jobmanager):
@@ -248,9 +251,9 @@ class Job(object):
         log("Job %s finished with status '%s' "% (self.name, self.status), 1)
 
 
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
+#===========================================================================
+#===========================================================================
+#===========================================================================
 
 
 class SingleJob(Job):
@@ -311,10 +314,11 @@ class SingleJob(Job):
         The behavior of this method is adjusted by the value of ``hashing`` key in |JobManager| settings. If no |JobManager| is yet associated with this job, default setting from ``config.jobmanager.hashing`` is used.
 
         Currently supported values for ``hashing`` are:
-            *   ``False`` or ``None`` -- returns ``None`` and disables |RPM|.
-            *   ``input`` -- returns SHA256 hash of the input file.
-            *   ``runscript`` -- returns SHA256 hash of the runscript.
-            *   ``input+runscript`` -- returns SHA256 hash of the concatenation of input and runscript.
+
+        *   ``False`` or ``None`` -- returns ``None`` and disables |RPM|.
+        *   ``input`` -- returns SHA256 hash of the input file.
+        *   ``runscript`` -- returns SHA256 hash of the runscript.
+        *   ``input+runscript`` -- returns SHA256 hash of the concatenation of input and runscript.
         """
 
         if self.jobmanager:
@@ -384,17 +388,18 @@ class SingleJob(Job):
         log('%s._execute() finished' % self.name, 7)
 
 
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
+#===========================================================================
+#===========================================================================
+#===========================================================================
 
 
 class MultiJob(Job):
     """Concrete class representing a job that is a container for other jobs.
 
     In addition to constructor arguments and attributes defined by |Job|, the constructor of this class accepts two keyword arguments:
-        *   ``children`` -- should be a list (or other iterable container) containing children jobs.
-        *   ``childrunner`` -- by default all the children jobs are run using the same |JobRunner| as the parent job. If you wish to use a different |JobRunner| for children, you can pass it using this argument.
+
+    *   ``children`` -- should be a list (or other iterable container) containing children jobs.
+    *   ``childrunner`` -- by default all the children jobs are run using the same |JobRunner| as the parent job. If you wish to use a different |JobRunner| for children, you can pass it using this argument.
 
     Values passed as ``children`` and ``childrunner`` are stored as instance attributes and can be adjusted later, but before the |run| method is called.
 

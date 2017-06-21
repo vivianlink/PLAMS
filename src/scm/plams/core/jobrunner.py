@@ -55,8 +55,9 @@ class JobRunner(object):
     """Class representing local job runner.
 
     The goal of |JobRunner| is to take care of two important things -- parallelization and runscript execution:
-        *   When the method |run| of any |Job| instance is executed, this method, after some preparations, passes control to a |JobRunner| instance. This |JobRunner| instance decides if a separate thread should be spawned for this job or if the execution should proceed in the main thread. This decision is based on ``parallel`` attribute which can be set on |JobRunner| creation. There are no separate classes for serial and parallel job runner, both cases are covered by |JobRunner| depending on one bool parameter.
-        *   If the executed job is an instance of |SingleJob|, it creates a shell script (called runscript) which contains most of the actual computational work (usually it is just an execution of some external binary). The runscript is then submitted to a |JobRunner| instance using its method :meth:`call`. This method executes the runscript in a separate subprocess and takes care of setting proper working directory, output and error stream handling etc.
+
+    *   When the method |run| of any |Job| instance is executed, this method, after some preparations, passes control to a |JobRunner| instance. This |JobRunner| instance decides if a separate thread should be spawned for this job or if the execution should proceed in the main thread. This decision is based on ``parallel`` attribute which can be set on |JobRunner| creation. There are no separate classes for serial and parallel job runner, both cases are covered by |JobRunner| depending on one bool parameter.
+    *   If the executed job is an instance of |SingleJob|, it creates a shell script (called runscript) which contains most of the actual computational work (usually it is just an execution of some external binary). The runscript is then submitted to a |JobRunner| instance using its method :meth:`call`. This method executes the runscript in a separate subprocess and takes care of setting proper working directory, output and error stream handling etc.
 
     The number of simultaneously running :meth:`call` methods can be limited using *maxjobs* parameter. If *maxjobs* is 0, no limit is enforced. If *parallel* is ``False``, *maxjobs* is ignored. If *parallel* is ``True`` and *maxjobs* is a positive integer, a :class:`BoundedSemaphore<threading.BoundedSemaphore>` of that size is used to limit the number of concurrently running :meth:`call` methods.
 
@@ -110,9 +111,9 @@ class JobRunner(object):
             job._execute(self)
             job._finalize()
 
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
+#===========================================================================
+#===========================================================================
+#===========================================================================
 
 
 class GridRunner(JobRunner):
@@ -125,14 +126,15 @@ class GridRunner(JobRunner):
     Currently two predefined job schedulers are available (see ``plams_defaults.py``): ``slurm`` for SLURM and ``pbs`` for job schedulers following PBS syntax (PBS, TORQUE, Oracle Grid Engine etc.).
 
     The |Settings| instance used for |GridRunner| should have the following structure:
-        *   ``.output`` -- flag for specifying output file path.
-        *   ``.error`` -- flag for specifying error file path.
-        *   ``.workdir`` -- flag for specifying path to working directory.
-        *   ``.commands.submit`` -- submit command.
-        *   ``.commands.check`` -- queue status check command.
-        *   ``.commands.getid`` -- function extracting submitted job's ID from output of submit command.
-        *   ``.commands.finished`` -- function checking if submitted job is finished. It should take a single string (job's ID) and return boolean.
-        *   ``.commands.special.`` -- branch storing definitions of special |run| keyword arguments.
+
+    *   ``.output`` -- flag for specifying output file path.
+    *   ``.error`` -- flag for specifying error file path.
+    *   ``.workdir`` -- flag for specifying path to working directory.
+    *   ``.commands.submit`` -- submit command.
+    *   ``.commands.check`` -- queue status check command.
+    *   ``.commands.getid`` -- function extracting submitted job's ID from output of submit command.
+    *   ``.commands.finished`` -- function checking if submitted job is finished. It should take a single string (job's ID) and return boolean.
+    *   ``.commands.special.`` -- branch storing definitions of special |run| keyword arguments.
 
     See :meth:`call` for more technical details and examples.
 
@@ -202,8 +204,9 @@ class GridRunner(JobRunner):
         The submit command produced in the way explained above is then executed and returned output is used to determine submitted job's ID. Function stored in ``.commands.getid`` is used for that purpose, it should take one string (whole output) and return a string with job's ID.
 
         Now the method waits for the job to finish. Every ``sleepstep`` seconds it queries the job scheduler using following algorithm:
-            *   if a key ``finished`` exists in ``.commands.`` it is used. It should be a function taking job's ID and returning ``True`` or ``False``.
-            *   otherwise a string stored in ``.commands.check`` is concatenated with job's ID (with no space between) and such command is executed. Nonzero exit status indicates that job is no longer in job scheduler hence it is finished.
+
+        1.   if a key ``finished`` exists in ``.commands.`` it is used. It should be a function taking job's ID and returning ``True`` or ``False``.
+        2.   otherwise a string stored in ``.commands.check`` is concatenated with job's ID (with no space between) and such command is executed. Nonzero exit status indicates that job is no longer in job scheduler hence it is finished.
 
         Since it is difficult (on some systems even impossible) to automatically obtain job's exit code, the returned value is always 0. From |run| perspective it means that a job executed with |GridRunner| is never *crashed*.
 

@@ -65,9 +65,9 @@ config.default_jobrunner = JobRunner(parallel=False)
 
 
 
-#======================================================================================
+#==============================================================
 #===================== GridRunner definitions==========================================
-#======================================================================================
+#==============================================================
 
 # GridRunner mechanism for testing if job is finished:
 #if [...].commands.finished exists it is used to check if the job is finished. It should be a function that takes a single string (job_id) as an argument and returns True or False

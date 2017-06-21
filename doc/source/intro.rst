@@ -40,17 +40,18 @@ Thanks to that it takes very little effort to adjust its behavior to one's perso
 
 
 The most important features of PLAMS:
-    *   preparing, running and examining results of a molecular modeling job from within a single Python script
-    *   convenient automatic file and folder management
-    *   running jobs in parallel without a need to prepare a special script
-    *   integration with popular job schedulers (OGE, SLURM, TORQUE)
-    *   reading and writing molecular coordinates using various formats (``xyz``, ``mol``, ``mol2``, ``pdb``)
-    *   prevention of multiple runs of the same job
-    *   easy data transfer between separate runs
-    *   efficient restarting in case of crash
-    *   full coverage of all input options and output data in ADFSuite programs
-    *   easy extendable for other programs, job schedulers, file formats etc.
-    *   interfaces for Dirac, ORCA, CP2K, DFTB+ (and more coming soon)
+
+*   preparing, running and examining results of a molecular modeling job from within a single Python script
+*   convenient automatic file and folder management
+*   running jobs in parallel without a need to prepare a special script
+*   integration with popular job schedulers (OGE, SLURM, TORQUE)
+*   reading and writing molecular coordinates using various formats (``xyz``, ``mol``, ``mol2``, ``pdb``)
+*   prevention of multiple runs of the same job
+*   easy data transfer between separate runs
+*   efficient restarting in case of crash
+*   full coverage of all input options and output data in ADFSuite programs
+*   easy extendable for other programs, job schedulers, file formats etc.
+*   interfaces for Dirac, ORCA, CP2K, DFTB+ (and more coming soon)
 
 
 .. _simple_example:

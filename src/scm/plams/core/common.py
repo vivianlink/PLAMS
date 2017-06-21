@@ -21,16 +21,17 @@ from .settings import Settings
 __all__ = ['init', 'finish', 'log', 'load', 'load_all', 'add_to_class', 'add_to_instance']
 
 
-#===================================================================================================
+#===========================================================================
 
 def init(path=None, folder=None):
     """Initialize PLAMS environment. Create global ``config`` and default |JobManager|.
 
-    An empty |Settings| instance is created and added to :mod:`public<__builtin__>` namespace as ``config``. Then it is populated with default settings by executing ``plams_defaults.py``. The following locations are used to search for the defaults file, in order of precedence:
-        *   If ``$PLAMSDEFAULTS`` variable is in your environment and it points to a file, this file is used (executed as Python script).
-        *   If ``$PLAMSHOME`` variable is in your environment and ``$PLAMSHOME/utils/plams_defaults.py`` exists, it is used.
-        *   If ``$ADFHOME`` variable is in your environment and ``$ADFHOME/scripting/plams/utils/plams_defaults.py`` exists, it is used.
-        *   Otherwise, the path ``../../../utils/plams_defaults.py`` relative to the current file (``common.py``) is checked. If defaults file is not found there, an exception is raised.
+    An empty |Settings| instance is created and added to :mod:`public<builtins>` namespace as ``config``. Then it is populated with default settings by executing ``plams_defaults``. The following locations are used to search for the defaults file, in order of precedence:
+
+    *   If ``$PLAMSDEFAULTS`` variable is in your environment and it points to a file, this file is used (executed as Python script).
+    *   If ``$PLAMSHOME`` variable is in your environment and ``$PLAMSHOME/src/scm/plams/plams_defaults`` exists, it is used.
+    *   If ``$ADFHOME`` variable is in your environment and ``$ADFHOME/scripting/plams/src/scm/plams/plams_defaults`` exists, it is used.
+    *   Otherwise, the path ``../../plams_defaults`` relative to the current file (``common.py``) is checked. If defaults file is not found there, an exception is raised.
 
     Next, a |JobManager| instance is created as ``config.jm`` using *path* and *folder* to determine the main working directory. Settings used by this instance are directly linked from ``config.jobmanager``. If *path* is not supplied, the current directory is used. If *folder* is not supplied, the string ``plams.`` followed by PID of the current process is used.
 
@@ -62,7 +63,7 @@ def init(path=None, folder=None):
     log('PLAMS working folder: %s' % config.jm.workdir, 1)
 
 
-#===================================================================================================
+#===========================================================================
 
 def finish(otherJM=None):
     """Wait for all threads to finish and clean the environment.
@@ -85,14 +86,14 @@ def finish(otherJM=None):
         shutil.rmtree(config.jm.workdir)
 
 
-#===================================================================================================
+#===========================================================================
 
 def load(filename):
     """Load previously saved job from ``.dill`` file. This is just a shortcut for |load_job| method of the default |JobManager| ``config.jm``."""
     return config.jm.load_job(filename)
 
 
-#===================================================================================================
+#===========================================================================
 
 def load_all(path, jobmanager=None):
     """Load all jobs from *path*.
@@ -112,7 +113,7 @@ def load_all(path, jobmanager=None):
     return loaded_jobs
 
 
-#===================================================================================================
+#===========================================================================
 
 _stdlock = threading.Lock()
 _filelock = threading.Lock()
@@ -141,7 +142,7 @@ def log(message, level=0):
                     f.write(message + '\n')
 
 
-#===================================================================================================
+#===========================================================================
 
 def add_to_class(classname):
     """Add decorated function as a method to the whole class *classname*.
@@ -168,7 +169,7 @@ def add_to_class(classname):
         setattr(classname, func.__name__, func)
     return decorator
 
-#===================================================================================================
+#===========================================================================
 
 def add_to_instance(instance):
     """Add decorated function as a method to one particular *instance*.
@@ -197,7 +198,7 @@ def add_to_instance(instance):
     return decorator
 
 
-#===================================================================================================
+#===========================================================================
 
 #remove me and all my calls after moving to Python3!!!
 def string(s):

@@ -70,7 +70,7 @@ class NumGradJob(MultiJob):
                     newname = self.name + str(at) + axis + str(i)
                     self.children[(at,axis,i)] = s.jobtype(name=newname, molecule=newmol, settings=self.settings.child)
 
-#===================================================================================================
+#===========================================================================
 
 
 def _bond_energy(results):
@@ -82,7 +82,7 @@ class ADFNumGradJob(NumGradJob):
         self.settings.numgrad.jobtype = ADFJob
         self.settings.numgrad.get_energy = _bond_energy
 
-#===================================================================================================
+#===========================================================================
 
 def _BAND_totalenergy(results):
     return results.readkf('Bond energies', 'final bond energy')
@@ -93,7 +93,7 @@ class BANDNumGradJob(NumGradJob):
         self.settings.numgrad.jobtype = BANDJob
         self.settings.numgrad.get_energy = _BAND_totalenergy
 
-#===================================================================================================
+#===========================================================================
 
 def _DFTB_totalenergy(results):
     return float(results.grep_output('Total Energy (hartree)')[0].split()[-1])
