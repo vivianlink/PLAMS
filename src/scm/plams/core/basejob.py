@@ -1,12 +1,10 @@
-from __future__ import unicode_literals
-
 import copy
 import hashlib
 import os
 import stat
 import threading
 import time
-import types
+
 try:
     import dill as pickle
 except ImportError:

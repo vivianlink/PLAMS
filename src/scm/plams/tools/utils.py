@@ -1,12 +1,13 @@
-from __future__ import unicode_literals
-
 import collections
 import math
 import numpy
 
 from ..core.errors import PTError, UnitsError
 
+
 __all__ = ['PeriodicTable', 'PT', 'Units']
+
+
 
 class PeriodicTable(object):
     """Singleton class for periodic table of elements.
@@ -211,6 +212,7 @@ PT = PeriodicTable
 #===========================================================================
 
 
+
 class Units(object):
     """Singleton class for units converter.
 
@@ -320,6 +322,7 @@ class Units(object):
     dipole['debye'] = dipole['Debye']
     dipole['D'] = dipole['Debye']
     dicts.append(dipole)
+
 
     def __init__(self):
         raise UnitsError('Instances of Units cannot be created')

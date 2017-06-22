@@ -1,7 +1,4 @@
-from __future__ import unicode_literals
-
 from ..core.basejob import SingleJob
-from ..core.common import string
 from ..core.settings import Settings
 
 

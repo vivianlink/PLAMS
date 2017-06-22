@@ -1,12 +1,8 @@
-from __future__ import unicode_literals
-
 import copy
 import heapq
 import math
 import numpy
 import os
-import types
-import uuid
 
 from .common import log
 from .errors import MoleculeError, PTError, FileError
@@ -15,12 +11,6 @@ from ..tools.pdbtools import PDBHandler, PDBRecord
 from ..tools.utils import Units, PT
 
 __all__ = ['Atom', 'Bond', 'Molecule']
-
-
-
-#===========================================================================
-#===========================================================================
-#===========================================================================
 
 
 

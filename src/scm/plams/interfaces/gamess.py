@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from functools import reduce
 
 from ..core.basejob  import SingleJob
