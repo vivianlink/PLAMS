@@ -238,9 +238,10 @@ class Job(object):
                 else:
                     log('%s.check() failed' % self.name, 7)
                     self.status = 'failed'
-            self.results.done.set()
         else:
             self.status = 'preview'
+            self.results.finished.set()
+        self.results.done.set()
 
         if self.parent:
             self.parent._notify()
