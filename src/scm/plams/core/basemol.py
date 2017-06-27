@@ -1202,8 +1202,8 @@ class Molecule (object):
                     for j in range(natom):
                         atomline = f.readline().rstrip()
                         if len(atomline) == 69:
-                            crdx = (float(atomline[:10]),float(atomline[10:20]),float(atomline[20:30]))
-                            symb = atomline[31:34]
+                            crd = (float(atomline[:10]),float(atomline[10:20]),float(atomline[20:30]))
+                            symb = atomline[31:34].strip()
                         else:
                             tmp = atomline.split()
                             crd = tuple(map(float, tmp[0:3]))
