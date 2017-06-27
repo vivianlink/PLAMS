@@ -1465,11 +1465,11 @@ class Molecule (object):
         This method is a counterpart of :meth:`~scm.plams.core.basemol.Molecule.from_dict`.
 
         """
-        mol_dict = copy.deepcopy(self.__dict__)
+        mol_dict = copy.copy(self.__dict__)
         atom_indices = {id(a): i for i, a in enumerate(mol_dict['atoms'])}
         bond_indices = {id(b): i for i, b in enumerate(mol_dict['bonds'])}
-        atom_dicts = [a.__dict__ for a in mol_dict['atoms']]
-        bond_dicts = [b.__dict__ for b in mol_dict['bonds']]
+        atom_dicts = [copy.copy(a.__dict__) for a in mol_dict['atoms']]
+        bond_dicts = [copy.copy(b.__dict__) for b in mol_dict['bonds']]
         for a_dict in atom_dicts:
             a_dict['bonds'] = [bond_indices[id(b)] for b in a_dict['bonds']]
             del(a_dict['mol'])
@@ -1491,7 +1491,7 @@ class Molecule (object):
         This method is a counterpart of :meth:`~scm.plams.core.basemol.Molecule.as_dict`.
         """
         mol = cls()
-        mol.__dict__ = copy.deepcopy(dictionary)
+        mol.__dict__ = copy.copy(dictionary)
         atom_dicts = mol.atoms
         bond_dicts = mol.bonds
         mol.atoms=[]
