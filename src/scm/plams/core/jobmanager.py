@@ -161,11 +161,12 @@ class JobManager(object):
         with open(filename, 'rb') as f:
             try:
                 job = pickle.load(f)
-                setstate(job, path)
-                return job
             except Exception:
                 log("Unpickling of %s failed" % filename, 1)
                 return None
+
+        setstate(job, path)
+        return job
 
     def remove_job(self, job):
         """Remove *job* from job manager. Forget its hash."""
