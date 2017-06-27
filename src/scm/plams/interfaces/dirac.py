@@ -1,17 +1,11 @@
-from __future__ import unicode_literals
-
 import os
-try:
-    import subprocess32 as subprocess
-except ImportError:
-    import subprocess
+import subprocess
 
 from os.path import join as opj
 
 from ..core.basejob import SingleJob
 from ..core.results import Results
 from ..core.settings import Settings
-from ..core.common import string
 
 __all__ = ['DiracJob', 'DiracResults']
 
@@ -28,8 +22,7 @@ class DiracResults(Results):
         """
         Results.collect(self)
         pamfile = self.job._filename('out')
-        s = subprocess.check_output(['grep', 'output file', pamfile], cwd=self.job.path)
-        s = string(s)
+        s = subprocess.check_output(['grep', 'output file', pamfile], cwd=self.job.path).decode()
         diracfile = s.split(':')[-1].strip()
         if diracfile in self.files:
             pampath = opj(self.job.path, pamfile)

@@ -1,5 +1,4 @@
-from __future__ import unicode_literals
-
+import builtins
 import glob
 import os
 import shutil
@@ -8,12 +7,7 @@ import time
 import types
 
 from os.path import join as opj
-from six import PY3
-if PY3:
-    import builtins
-else:
-    import __builtin__ as builtins
-
+from os.path import isfile, expandvars, dirname
 
 from .errors import PlamsError
 from .settings import Settings
@@ -41,7 +35,6 @@ def init(path=None, folder=None):
 
     builtins.config = Settings()
 
-    from os.path import isfile, expandvars, dirname
     if 'PLAMSDEFAULTS' in os.environ and isfile(expandvars('$PLAMSDEFAULTS')):
         defaults = expandvars('$PLAMSDEFAULTS')
     elif 'PLAMSHOME' in os.environ and isfile(opj(expandvars('$PLAMSHOME'), 'src', 'scm', 'plams', 'plams_defaults')):
@@ -54,11 +47,9 @@ def init(path=None, folder=None):
             raise PlamsError('plams_defaults not found, please set PLAMSDEFAULTS or PLAMSHOME in your environment')
     exec(compile(open(defaults).read(), defaults, 'exec'))
 
-
     from .jobmanager import JobManager
     config.jm = JobManager(config.jobmanager, path, folder)
 
-    log('PLAMS running with Python %i' % (3 if PY3 else 2), 5)
     log('PLAMS environment initialized', 5)
     log('PLAMS working folder: %s' % config.jm.workdir, 1)
 
@@ -200,11 +191,5 @@ def add_to_instance(instance):
     return decorator
 
 
-#===========================================================================
 
-#remove me and all my calls after moving to Python3!!!
-def string(s):
-    if PY3 and isinstance(s, bytes):
-        return s.decode()
-    return s
 

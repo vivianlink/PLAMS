@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-from six import add_metaclass
-
 import copy
 import functools
 import glob
@@ -8,25 +5,18 @@ import inspect
 import operator
 import os
 import shutil
+import subprocess
 import threading
 import time
-import types
-try:
-    import subprocess32 as subprocess
-except ImportError:
-    import subprocess
 
 from os.path import join as opj
 
-from .common import log, string
+from .common import log
 from .errors import ResultsError, FileError
+
 
 __all__ = ['Results']
 
-
-#===========================================================================
-#===========================================================================
-#===========================================================================
 
 
 def _caller_name_and_arg(frame):
@@ -45,6 +35,7 @@ def _caller_name_and_arg(frame):
             caller_arg = loc[caller_varnames[0]]
     return caller_name, caller_arg
 
+
 def _privileged_access():
     """Analyze contents of the current stack to find out if privileged access to the |Results| methods should be granted.
 
@@ -57,7 +48,6 @@ def _privileged_access():
         if cal in ['postrun', 'check'] and prev_cal == '_finalize' and arg == prev_arg and isinstance(arg, Job):
                 return True
     return False
-
 
 
 def _restrict(func):
@@ -122,6 +112,7 @@ def _restrict(func):
 #===========================================================================
 
 
+
 class _MetaResults(type):
     """Metaclass for |Results|. During new |Results| instance creation it wraps all methods with :func:`_restrict` decorator ensuring proper synchronization and thread safety. Methods listed in ``_dont_restrict`` as well as "magic methods" are not wrapped."""
     _dont_restrict = ['refresh', 'collect', '_clean']
@@ -132,12 +123,14 @@ class _MetaResults(type):
         return type.__new__(meta, name, bases, dct)
 
 
+
 #===========================================================================
 #===========================================================================
 #===========================================================================
 
-@add_metaclass(_MetaResults)
-class Results(object):
+
+
+class Results(metaclass=_MetaResults):
     """General concrete class for job results.
 
     ``job`` attribute stores a reference to associated job. ``files`` attribute is a list with contents of the job folder. ``_rename_map`` is a class attribute with the dictionary storing the default renaming scheme.
@@ -339,7 +332,9 @@ class Results(object):
         """If *string* starts with *oldname*, maybe followed by some extension, replace *oldname* with *newname*."""
         return string.replace(oldname, newname) if (os.path.splitext(string)[0] == oldname) else string
 
-    #=======================================================================
+
+#=======================================================================
+
 
     def __getitem__(self, name):
         """Magic method to enable bracket notation. Elements from ``files`` can be used to get absolute paths."""
@@ -358,10 +353,9 @@ class Results(object):
         filename = filename.replace('$JN', self.job.name)
         if filename in self.files:
             try:
-                output = subprocess.check_output(command + [filename], cwd=self.job.path)
+                output = subprocess.check_output(command + [filename], cwd=self.job.path).decode()
             except subprocess.CalledProcessError:
                 return []
-            output = string(output)
             ret = output.split('\n')
             if ret[-1] == '':
                 ret = ret[:-1]

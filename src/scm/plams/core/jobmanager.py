@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import glob
 import os
 import shutil
@@ -16,6 +14,8 @@ from .errors import PlamsError
 from .basejob import MultiJob
 
 __all__ = ['JobManager']
+
+
 
 class JobManager(object):
     """Class responsible for jobs and files management.
@@ -167,6 +167,7 @@ class JobManager(object):
 
         setstate(job, path)
         return job
+
 
     def remove_job(self, job):
         """Remove *job* from job manager. Forget its hash."""

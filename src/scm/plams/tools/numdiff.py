@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 
 from ..core.results import Results
@@ -11,6 +9,8 @@ from ..interfaces.adfsuite import ADFJob, BANDJob, DFTBJob
 
 __all__ = ['ADFNumGradJob' ,'BANDNumGradJob', 'DFTBNumGradJob']
 
+
+
 class NumGradResults(Results):
 
     def get_gradient(self, atom, coord, func=None):
@@ -21,6 +21,7 @@ class NumGradResults(Results):
         energies = [extract(self.job.children[(atom,coord,i)].results) for i in s.steps]
         coeffs, denom = self.job._coeffs[s.npoints]
         return sum([c*e for c,e in zip(coeffs, energies)])/(denom * s.step)
+
 
 
 class NumGradJob(MultiJob):
@@ -70,6 +71,7 @@ class NumGradJob(MultiJob):
                     newname = self.name + str(at) + axis + str(i)
                     self.children[(at,axis,i)] = s.jobtype(name=newname, molecule=newmol, settings=self.settings.child)
 
+
 #===========================================================================
 
 
@@ -82,7 +84,9 @@ class ADFNumGradJob(NumGradJob):
         self.settings.numgrad.jobtype = ADFJob
         self.settings.numgrad.get_energy = _bond_energy
 
+
 #===========================================================================
+
 
 def _BAND_totalenergy(results):
     return results.readkf('Bond energies', 'final bond energy')
@@ -93,7 +97,9 @@ class BANDNumGradJob(NumGradJob):
         self.settings.numgrad.jobtype = BANDJob
         self.settings.numgrad.get_energy = _BAND_totalenergy
 
+
 #===========================================================================
+
 
 def _DFTB_totalenergy(results):
     return float(results.grep_output('Total Energy (hartree)')[0].split()[-1])

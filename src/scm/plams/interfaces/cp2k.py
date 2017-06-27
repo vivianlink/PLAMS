@@ -1,15 +1,9 @@
-from __future__ import unicode_literals
+import os
+import subprocess
 
 from ..core.basejob  import SingleJob
 from ..core.settings import Settings
 
-import os
-try:
-    import subprocess32 as subprocess
-except ImportError:
-    import subprocess
-
-# ======================<>===========================
 
 
 class Cp2kJob(SingleJob):

@@ -1,24 +1,19 @@
-from __future__ import unicode_literals
-from six import add_metaclass
-
 import os
 import functools
+import subprocess
 import threading
 import time
-try:
-    import subprocess32 as subprocess
-except ImportError:
-    import subprocess
 
 from os.path import join as opj
 
-from .common import log, string
+from .common import log
 from .errors import PlamsError
 from .settings import Settings
 from .basejob import SingleJob
 
 
 __all__ = ['JobRunner', 'GridRunner']
+
 
 
 def _in_thread(func):
@@ -33,6 +28,7 @@ def _in_thread(func):
             func(self, *args, **kwargs)
     return wrapper
 
+
 def _limit(func):
     """Decorator for an instance method. If ``semaphore`` attribute of given instance is not ``None``, use this attribute to wrap decorated method via :ref:`with<with-locks>` statement."""
     @functools.wraps(func)
@@ -44,14 +40,22 @@ def _limit(func):
             return func(self, *args, **kwargs)
     return wrapper
 
+
 class _MetaRunner(type):
     """Metaclass for |JobRunner|. Wraps :meth:`~scm.plams.core.jobrunner.JobRunner.call` with :func:`_limit` decorator."""
     def __new__(meta, name, bases, dct):
         dct['call'] = _limit(dct['call'])
         return type.__new__(meta, name, bases, dct)
 
-@add_metaclass(_MetaRunner)
-class JobRunner(object):
+
+
+#===========================================================================
+#===========================================================================
+#===========================================================================
+
+
+
+class JobRunner(metaclass=_MetaRunner):
     """Class representing local job runner.
 
     The goal of |JobRunner| is to take care of two important things -- parallelization and runscript execution:
@@ -100,6 +104,7 @@ class JobRunner(object):
         log('Execution of %s finished with returncode %i' % (runscript, retcode), 5)
         return retcode
 
+
     @_in_thread
     def _run_job(self, job, jobmanager):
         """_run_job(job, jobmanager)
@@ -111,9 +116,12 @@ class JobRunner(object):
             job._execute(self)
             job._finalize()
 
+
+
 #===========================================================================
 #===========================================================================
 #===========================================================================
+
 
 
 class GridRunner(JobRunner):
@@ -161,7 +169,6 @@ class GridRunner(JobRunner):
             self.settings = grid
         else:
             raise PlamsError("GridRunner: invalid 'grid' argument. 'grid' should be either a Settings instance (see documentations for details) or a string occurring in config.gridrunner or 'auto' for autodetection")
-
 
 
     def call(self, runscript, workdir, out, err, runflags, **kwargs):
@@ -226,8 +233,7 @@ class GridRunner(JobRunner):
         cmd += ' ' + opj(workdir,runscript)
 
         log('Submitting %s with command %s' % (runscript, cmd), 5)
-        subout = subprocess.check_output(cmd.split(' '))
-        subout = string(subout)
+        subout = subprocess.check_output(cmd.split(' ')).decode()
         log('Output of submit command: %s' % subout, 5)
         jobid = s.commands.getid(subout)
         log('%s submitted successfully as job %s' % (runscript, jobid), 3)
@@ -245,7 +251,6 @@ class GridRunner(JobRunner):
 
         log('Execution of %s finished' % runscript, 5)
         return 0
-
 
 
     def _autodetect(self):

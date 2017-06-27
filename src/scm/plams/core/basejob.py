@@ -1,12 +1,10 @@
-from __future__ import unicode_literals
-
 import copy
 import hashlib
 import os
 import stat
 import threading
 import time
-import types
+
 try:
     import dill as pickle
 except ImportError:
@@ -240,9 +238,10 @@ class Job(object):
                 else:
                     log('%s.check() failed' % self.name, 7)
                     self.status = 'failed'
-            self.results.done.set()
         else:
             self.status = 'preview'
+            self.results.finished.set()
+        self.results.done.set()
 
         if self.parent:
             self.parent._notify()

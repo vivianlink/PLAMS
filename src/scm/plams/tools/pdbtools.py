@@ -1,14 +1,18 @@
-from __future__ import unicode_literals
-
 from ..core.errors import PlamsError, FileError
 
 __all__ = ['PDBRecord', 'PDBHandler']
+
+
 
 _multiline = set(['AUTHOR','CAVEAT','COMPND','EXPDTA','MDLTYP','KEYWDS','SOURCE','SPLIT ','SPRSDE','TITLE ','FORMUL','HETNAM','HETSYN','SEQRES','SITE  ','REMARK'])
 
 _sequence = ['HEADER','OBSLTE','TITLE ','SPLIT ','CAVEAT','COMPND','SOURCE','KEYWDS','EXPDTA','NUMMDL','MDLTYP','AUTHOR','REVDAT','SPRSDE','JRNL  ','REMARK','DBREF ','DBREF1','DBREF2','SEQADV','SEQRES','MODRES','HET   ','HETNAM','HETSYN','FORMUL','HELIX ','SHEET ','SSBOND','LINK  ','CISPEP','SITE  ','CRYST1','ORIGX1','ORIGX2','ORIGX3','SCALE1','SCALE2','SCALE3','MTRIX1','MTRIX2','MTRIX3','MODEL ','CONECT','MASTER','END   ']
 
 _coord = ['ATOM  ','ANISOU','HETATM','TER   ','ENDMDL']
+
+
+#===========================================================================
+
 
 class PDBRecord(object):
     __slots__ = ['name', 'value', 'model']
@@ -35,6 +39,7 @@ class PDBRecord(object):
     def is_multiline(self):
         return self.name in _multiline
 
+
     def extend(self, s):
         s = s.rstrip('\n')
         def _tonum(ss):
@@ -57,6 +62,11 @@ class PDBRecord(object):
                 self.value.append(val)
                 return True
         return False
+
+
+
+#===========================================================================
+
 
 
 class PDBHandler(object):
@@ -145,13 +155,13 @@ class PDBHandler(object):
         master = 'MASTER    %5i%5i%5i%5i%5i%5i%5i%5i%5i%5i%5i%5i          \n' % (remark, 0, het, helix, sheet, 0, site, xform, coord, ter, conect, seqres)
         return PDBRecord(master)
 
+
     def check_master(self):
         if self.records['MASTER']:
             old = self.records['MASTER'][0]
             new = self.calc_master()
             return old.value == new.value
         return False
-
 
 
     def get_models(self):
@@ -161,7 +171,6 @@ class PDBHandler(object):
             return [x.model for x in self.records['MODEL ']]
 
 
-
     def add_record(self, record):
         if record.name in self.records:
             self.records[record.name].append(record)
@@ -169,6 +178,7 @@ class PDBHandler(object):
             self.records[record.name] = record
         else:
             raise PlamsError('PDBHandler.add_record: Invalid record passed')
+
 
     def add_model(self, model):
     #model: list of PDBRecords of type in _coord

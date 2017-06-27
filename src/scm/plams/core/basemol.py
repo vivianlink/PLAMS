@@ -1,12 +1,8 @@
-from __future__ import unicode_literals
-
 import copy
 import heapq
 import math
 import numpy
 import os
-import types
-import uuid
 
 from .common import log
 from .errors import MoleculeError, PTError, FileError
@@ -15,12 +11,6 @@ from ..tools.pdbtools import PDBHandler, PDBRecord
 from ..tools.utils import Units, PT
 
 __all__ = ['Atom', 'Bond', 'Molecule']
-
-
-
-#===========================================================================
-#===========================================================================
-#===========================================================================
 
 
 
@@ -128,13 +118,16 @@ class Atom(object):
             symbol = self.symbol
         return ('{0:>10s}{1}{2}{3} '+suffix).format(symbol, *map(f,self.coords), **self.__dict__)
 
+
     def __str__(self):
         """Return a string representation of this atom. Simplified version of :meth:`str` to work as a magic method."""
         return self.str()
 
+
     def __iter__(self):
         """Iteration through atom yields coordinates. Thanks to that instances of |Atom| can be passed to any method requiring point or vector as an argument."""
         return iter(self.coords)
+
 
     def _setx(self, value): self.coords = (value, self.coords[1], self.coords[2])
     def _sety(self, value): self.coords = (self.coords[0], value, self.coords[2])
@@ -145,6 +138,7 @@ class Atom(object):
     x = property(_getx, _setx)
     y = property(_gety, _sety)
     z = property(_getz, _setz)
+
 
     def _getsymbol(self):
         return PT.get_symbol(self.atnum)
@@ -163,6 +157,7 @@ class Atom(object):
     def _getconnectors(self):
         return PT.get_connectors(self.atnum)
     connectors = property(_getconnectors)
+
 
     def translate(self, vector, unit='angstrom'):
         """Move this atom in space by *vector*, expressed in *unit*.
@@ -223,6 +218,7 @@ class Atom(object):
         den = self.distance_to(point1, point1unit) * self.distance_to(point2, point2unit)
         return Units.convert(math.acos(num/den), 'radian', result_unit)
 
+
     def rotate(self, matrix):
         """Rotate this atom according to rotation *matrix*.
 
@@ -259,7 +255,7 @@ class Bond (object):
 
     """
     AR = 1.5
-    def __init__(self, atom1, atom2, order=1, mol=None, **other):
+    def __init__(self, atom1=None, atom2=None, order=1, mol=None, **other):
         self.atom1 = atom1
         self.atom2 = atom2
         self.order = order
@@ -365,7 +361,6 @@ class Molecule (object):
 
         >>> mol.lattice = []
 
-    |hspace|
 
     The detailed description of available methods is presented below. Many of these methods require passing atoms belonging to the molecule as arguments. It can by done by using a reference to an |Atom| object present it ``atoms`` list, but not by passing a number of an atom (its position within ``atoms`` list). Unlike some other tools, PLAMS does not use integer numbers as primary identifiers of atoms. It is done to prevent problems when atoms within a molecule are reordered or some atoms are deleted. References to |Atom| or |Bond| objects can be obtained directly from ``atoms`` or ``bonds`` lists, or with dictionary-like bracket notation::
 
@@ -422,20 +417,29 @@ class Molecule (object):
 
         By default the entire molecule is copied. It is also possible to copy only some part of the molecule, indicated by *atoms* argument. It should be a list of atoms that **belong to this molecule**. Only these atoms, together with any bonds between them, are copied and included in the returned molecule.
         """
+
         if atoms is None:
-            return copy.deepcopy(self)
-        for at in self.atoms:
-            at._stay = False
+            atoms = self.atoms
+
+        ret = _safe_copy(self, without=['atoms','bonds'])
+
         for at in atoms:
-            at._stay = True
-        ret = copy.deepcopy(self)
-        for at in reversed(ret.atoms):
-            if at._stay is False:
-                ret.delete_atom(at)
-            del at._stay
-        for at in self.atoms:
-            del at._stay
+            at_copy = _safe_copy(at, without=['mol','bonds'])
+            ret.add_atom(at_copy)
+            at._bro = at_copy
+
+        for bo in self.bonds:
+            if hasattr(bo.atom1, '_bro') and hasattr(bo.atom2, '_bro'):
+                bo_copy = _safe_copy(bo, without=['atom1', 'atom2', 'mol'])
+                bo_copy.atom1 = bo.atom1._bro
+                bo_copy.atom2 = bo.atom2._bro
+                ret.add_bond(bo_copy)
+
+        for at in atoms:
+            del at._bro
+
         return ret
+
 
 
     def add_atom(self, atom, adjacent=None):
@@ -1510,4 +1514,14 @@ class Molecule (object):
             b.mol = mol
             mol.add_bond(b)
         return mol
+
+
+
+def _safe_copy(obj, without=[]):
+    ret = obj.__class__()
+    ret.properties = obj.properties.copy()
+    for k in obj.__dict__:
+        if k not in (without + ['properties']):
+            ret.__dict__[k] = copy.deepcopy(obj.__dict__[k])
+    return ret
 
