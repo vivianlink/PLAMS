@@ -8,7 +8,8 @@ from .common import log
 from .errors import MoleculeError, PTError, FileError
 from .settings import Settings
 from ..tools.pdbtools import PDBHandler, PDBRecord
-from ..tools.utils import Units, PT
+from ..tools.periodic_table import PT
+from ..tools.units import Units
 
 __all__ = ['Atom', 'Bond', 'Molecule']
 

@@ -9,8 +9,9 @@ from .core.settings import *
 
 from .tools.kftools import *
 from .tools.pdbtools import *
+from .tools.periodic_table import *
 from .tools.numdiff import *
-from .tools.utils import *
+from .tools.units import *
 
 from .interfaces.adfsuite import *
 from .interfaces.cp2k import *

@@ -230,8 +230,8 @@ rst_epilog = """
 .. |Bond| replace:: :class:`~scm.plams.core.basemol.Bond`
 .. |Molecule| replace:: :class:`~scm.plams.core.basemol.Molecule`
 
-.. |PeriodicTable| replace:: :class:`~scm.plams.tools.utils.PeriodicTable`
-.. |Units| replace:: :class:`~scm.plams.tools.utils.Units`
+.. |PeriodicTable| replace:: :class:`~scm.plams.tools.periodic_table.PeriodicTable`
+.. |Units| replace:: :class:`~scm.plams.tools.units.Units`
 
 .. |JobManager| replace:: :class:`~scm.plams.core.jobmanager.JobManager`
 .. |load_job| replace:: :meth:`~scm.plams.core.jobmanager.JobManager.load_job`
