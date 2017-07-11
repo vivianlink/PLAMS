@@ -15,7 +15,6 @@ setup(
             'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
             'Development Status :: 4 - Beta',
             'Operating System :: OS Independent',
-            'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3.5',
             'Topic :: Scientific/Engineering :: Chemistry',
             'Topic :: Scientific/Engineering :: Physics',
@@ -26,7 +25,6 @@ setup(
     install_requires=[
         'dill>=0.2.4',
         'numpy',
-        'six',
     ],
     package_dir={'': 'src'},
     packages=['scm.plams', 'scm.plams.core', 'scm.plams.tools', 'scm.plams.interfaces', 'scm'],
