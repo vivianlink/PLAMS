@@ -7,6 +7,7 @@ from .core.jobmanager import *
 from .core.results import *
 from .core.settings import *
 
+from .tools.geometry import *
 from .tools.kftools import *
 from .tools.pdbtools import *
 from .tools.periodic_table import *

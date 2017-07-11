@@ -22,3 +22,9 @@ Units
 
 .. autoclass:: scm.plams.tools.units.Units
     :exclude-members: __weakref__
+
+
+Geometry tools
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: scm.plams.tools.geometry.rotation_matrix
