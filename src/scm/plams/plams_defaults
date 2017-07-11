@@ -101,8 +101,29 @@ config.default_jobrunner = JobRunner(parallel=False)
 #if [...].commands.finished exists it is used to check if the job is finished. It should be a function that takes a single string (job_id) as an argument and returns True or False
 #otherwise [...].commands.check is combined with job_id, executed as a subprocess and returned exit code is tested (nonzero return code indicates that job has finished)
 
-def __getid(s):
+def __get_jobid(s):
     return ''.join([c for c in s if c.isdigit()])
+
+
+def __slurm_finished(jobid):
+    import os, subprocess
+    cmd = ('squeue -j ' + jobid).split(' ')
+    try:
+        with open(os.devnull, 'wb') as null:
+            out = subprocess.check_output(cmd, stderr=null).decode()
+    except subprocess.CalledProcessError: #squeue -j returned nonzero, job has been finished long ago
+        return True
+    lines = out.split('\n')
+    return len(lines) <= 1 or lines[1].find(jobid) == -1
+
+
+def __pbs_finished(jobid):
+    import os, subprocess
+    cmd = ('qstat ' + jobid).split(' ')
+    with open(os.devnull, 'wb') as null:
+        retcode = subprocess.call(cmd, stdout=null, stderr=null)
+    return retcode != 0
+
 
 config.gridrunner.pbs.workdir = '-d'
 config.gridrunner.pbs.output  = '-o'
@@ -111,26 +132,9 @@ config.gridrunner.pbs.special.nodes    = '-l nodes='
 config.gridrunner.pbs.special.walltime = '-l walltime='
 config.gridrunner.pbs.special.queue    = '-q '
 config.gridrunner.pbs.commands.submit  = 'qsub'
-config.gridrunner.pbs.commands.check   = 'qstat '
-config.gridrunner.pbs.commands.getid   = __getid
+config.gridrunner.pbs.commands.getid   = __get_jobid
+config.gridrunner.pbs.commands.finished   = __pbs_finished
 
-
-
-def __slurm_finished(jobid):
-    try:
-        import subprocess32 as subprocess
-    except ImportError:
-        import subprocess
-    from .common import string
-    import os
-    cmd = ('squeue -j ' + jobid).split(' ')
-    try:
-        with open(os.devnull, 'wb') as null:
-            out = subprocess.check_output(cmd, stderr=null)
-    except subprocess.CalledProcessError:
-        return True
-    lines = string(out).split('\n')
-    return not (len(lines) > 1 and lines[1].find(jobid) != -1)
 
 config.gridrunner.slurm.workdir = '-D'
 config.gridrunner.slurm.output  = '-o'
@@ -139,6 +143,6 @@ config.gridrunner.slurm.special.nodes    = '-N '
 config.gridrunner.slurm.special.walltime = '-t '
 config.gridrunner.slurm.special.queue    = '-p '
 config.gridrunner.slurm.commands.submit  = 'sbatch'
-config.gridrunner.slurm.commands.getid   = __getid
+config.gridrunner.slurm.commands.getid   = __get_jobid
 config.gridrunner.slurm.commands.finished   = __slurm_finished
 

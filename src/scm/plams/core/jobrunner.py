@@ -210,10 +210,7 @@ class GridRunner(JobRunner):
 
         The submit command produced in the way explained above is then executed and returned output is used to determine submitted job's ID. Function stored in ``.commands.getid`` is used for that purpose, it should take one string (whole output) and return a string with job's ID.
 
-        Now the method waits for the job to finish. Every ``sleepstep`` seconds it queries the job scheduler using following algorithm:
-
-        1.   if a key ``finished`` exists in ``.commands.`` it is used. It should be a function taking job's ID and returning ``True`` or ``False``.
-        2.   otherwise a string stored in ``.commands.check`` is concatenated with job's ID (with no space between) and such command is executed. Nonzero exit status indicates that job is no longer in job scheduler hence it is finished.
+        Now the method waits for the job to finish. Every ``sleepstep`` seconds it queries the job scheduler by executing a function stored in ``.commands.finished``. This function takes a single string argument with job's ID and returns True if that job has finished, or False otherwise.
 
         Since it is difficult (on some systems even impossible) to automatically obtain job's exit code, the returned value is always 0. From |run| perspective it means that a job executed with |GridRunner| is never *crashed*.
 
@@ -238,16 +235,8 @@ class GridRunner(JobRunner):
         jobid = s.commands.getid(subout)
         log('%s submitted successfully as job %s' % (runscript, jobid), 3)
 
-        if 'finished' in s.commands:
-            while not s.commands.finished(jobid):
-                time.sleep(self.sleepstep)
-        else:
-            checkcmd = (s.commands.check + jobid).split(' ')
-            retcode = 0
-            while retcode == 0:
-                time.sleep(self.sleepstep)
-                with open(os.devnull, 'wb') as null:
-                    retcode = subprocess.call(checkcmd, stdout=null, stderr=null)
+        while not s.commands.finished(jobid):
+            time.sleep(self.sleepstep)
 
         log('Execution of %s finished' % runscript, 5)
         return 0
