@@ -2,6 +2,7 @@ import builtins
 import glob
 import os
 import shutil
+import sys
 import threading
 import time
 import types
@@ -50,8 +51,9 @@ def init(path=None, folder=None):
     from .jobmanager import JobManager
     config.jm = JobManager(config.jobmanager, path, folder)
 
+    log('PLAMS running with Python {}.{}.{} located in {}'.format(*sys.version_info[:3], sys.executable), 5)
     log('PLAMS environment initialized', 5)
-    log('PLAMS working folder: %s' % config.jm.workdir, 1)
+    log('PLAMS working folder: {}'.format(config.jm.workdir), 1)
 
 
 #===========================================================================
