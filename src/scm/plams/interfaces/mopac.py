@@ -5,11 +5,12 @@ __all__ = ['MOPACJob', 'MOPACResults']
 
 
 class MOPACResults(Results):
-    _rename_map = {'results.rkf':'$JN.rkf'}
+    _rename_map = {'results.rkf':'$JN.rkf', '$JN.in.aux':'$JN.aux', '$JN.in.arc':'$JN.arc', '$JN.in.out':'$JN.out' }
 
 
 class MOPACJob(SingleJob):
     _result_type = MOPACResults
+    _command = 'MOPAC2016-SCM.exe'
 
     def get_input(self):
         aux = self.settings.input.find_case('aux')
@@ -39,9 +40,13 @@ class MOPACJob(SingleJob):
 
 
     def get_runscript(self):
-        ret = '$ADFBIN/mopac.scm -o < ' + self._filename('inp')
+        ret = self._command + ' ' + self._filename('inp')
         if self.settings.runscript.stdout_redirect:
             ret += ' >'+self._filename('out')
+        ret += '\n\n'
+        ret += 'cp {} {}.stdout\n'.format(self._filename('err'), self._filename('inp'))
+        ret += 'tokf mopac {} {}.rkf\n'.format(self._filename('inp'), self.name)
+        ret += 'rm {}.stdout\n\n'.format(self._filename('inp'))
         return ret
 
     def check(self):
