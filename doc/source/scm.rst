@@ -59,7 +59,7 @@ As you can see, entries present in ``myjob.settings.input.`` are listed in the a
 
     writefock
 
-To produce an empty block simply type::
+If a value of a particualr key is ``False``, that key is omitted. To produce an empty block simply type::
 
     >>> myjob.settings.input.geometry  # this is equivalent to myjob.settings.input.geometry = Settings()
     #

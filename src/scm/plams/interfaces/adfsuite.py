@@ -177,8 +177,10 @@ class SCMJob(SingleJob):
                     ret += parse(key, el, indent)
             elif isinstance(value, (SCMJob, SCMResults, KFFile)):
                 ret += parse(key, value._settings_reduce(), indent)
-            elif value is '' or value is True:
+            elif value in ['',True]:
                 ret += indent + key + '\n'
+            elif value is False:
+                pass
             else:
                 value = str(value)
                 ret += indent + key
