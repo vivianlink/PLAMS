@@ -18,4 +18,5 @@ from .interfaces.adfsuite import *
 from .interfaces.cp2k import *
 from .interfaces.dirac import *
 from .interfaces.gamess import *
+from .interfaces.mopac import *
 from .interfaces.orca import *
