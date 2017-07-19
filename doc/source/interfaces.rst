@@ -5,5 +5,5 @@ Currently PLAMS offers interfaces to the following programs:
 
 .. toctree::
 
-    scm
+    adfsuite
     dirac
