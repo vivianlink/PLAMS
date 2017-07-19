@@ -55,6 +55,11 @@ def init(path=None, folder=None):
     log('PLAMS environment initialized', 5)
     log('PLAMS working folder: {}'.format(config.jm.workdir), 1)
 
+    try:
+        import dill
+    except ImportError:
+        log('WARNING: importing dill failed. Falling back to default pickle module. Expect problems with pickling', 1)
+
 
 #===========================================================================
 
