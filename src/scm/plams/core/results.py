@@ -256,6 +256,48 @@ class Results(metaclass=_MetaResults):
             raise FileError('File %s not present in %s' % (old, self.job.path))
 
 
+    def get_file_chunk(self, filename, begin=None, end=None, match=0, inc_begin=False, inc_end=False, process=None):
+        """get_file_chunk(filename, begin=None, end=None, match=0, inc_begin=False, inc_end=False, process=None)
+
+        Extract a chunk of a text file given by *filename* consisting of all the lines between a line containing *begin* and a line containing *end*.
+
+        *begin* and *end* should be simple strings (no regular expressions allowed) or ``None`` (in that case matching is done from the very beginning or until the very end of the file). If multiple blocks delimited by *begin* end *end* are present in the file, *match* can be used to indicate which one should be printed (*match*=0 prints all of them). *inc_begin* and *inc_end* can be used to include/exclude the delimiting lines in the final result (by default they are excluded).
+
+        Returned value is a list of strings. *process* can be used to provide a function executed on each element of this list before returning it.
+        """
+        current_match = 0
+        ret = []
+        switch = (begin == None)
+
+        append = lambda x: ret.append(x.rstrip('\n')) if (match in [0,current_match]) else None
+
+        with open(self[filename], 'r') as f:
+            for line in f:
+                if switch and end and (end in line):
+                    switch = False
+                    if inc_end: append(line)
+                    if match == current_match: break
+                if switch:
+                    append(line)
+                if (not switch) and begin and (begin in line):
+                    switch = True
+                    current_match += 1
+                    if inc_begin: append(line)
+
+        return list(map(process, ret)) if process else ret
+
+
+    def get_output_chunk(self, begin=None, end=None, match=0, inc_begin=False, inc_end=False, process=None):
+        """get_output_chunk(begin=None, end=None, match=0, inc_begin=False, inc_end=False, process=None)
+        Shortcut for :meth:`~Results.get_file_chunk` on the output file."""
+        try:
+            output = self.job._filename('out')
+        except AttributeError:
+            raise ResultsError('Job %s is not an instance of SingleJob, it does not have an output' % self.job.name)
+        return self.get_file_chunk(output, begin, end, match, inc_begin, inc_end, process)
+
+
+
 #=======================================================================
 
 
