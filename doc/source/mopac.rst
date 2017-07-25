@@ -40,3 +40,4 @@ API
 .. autoclass:: MOPACJob(molecule=None, name='plamsjob', settings=None, depend=None)
     :exclude-members: _result_type
 .. autoclass:: MOPACResults
+    :exclude-members: _int2inp

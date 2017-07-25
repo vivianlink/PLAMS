@@ -1,23 +1,24 @@
 from ..core.basejob import SingleJob
 from ..core.results import Results
-from ..core.common import add_to_class
 from ..interfaces.adfsuite import SCMResults
 
 __all__ = ['MOPACJob', 'MOPACResults']
 
 
-class MOPACResults(Results):
+class MOPACResults(SCMResults):
     """A class for result of computation done with MOPAC.
+
+    This class inherits all methods from |SCMResults|.
 
     .. technical::
 
-        Methods :func:`collect` and :func:`readkf` are imported from |SCMResults|.
-
+        In case of a MOPAC job, preparation is much different from other programs of ADFSuite, but the result handling is quite similar due to presence of KF files. Therefore |MOPACResults| is a subclass of |SCMResults|, but |MOPACJob| is not a subclass of |SCMJob|.
     """
     _rename_map = {'results.rkf':'$JN.rkf', '$JN.in.aux':'$JN.aux', '$JN.in.arc':'$JN.arc', '$JN.in.out':'$JN.out' }
     _kfext = '.rkf'
-    collect = SCMResults.collect
-    readkf = SCMResults.readkf
+
+    def _int2inp(self):
+        return list(range(1, 1+len(self.job.molecule)))
 
 
 class MOPACJob(SingleJob):
