@@ -256,6 +256,9 @@ rst_epilog = """
 .. |DiracJob| replace:: :class:`~scm.plams.interfaces.dirac.DiracJob`
 .. |DiracResults| replace:: :class:`~scm.plams.interfaces.dirac.DiracResults`
 
+.. |MOPACJob| replace:: :class:`~scm.plams.interfaces.mopac.MOPACJob`
+.. |MOPACResults| replace:: :class:`~scm.plams.interfaces.mopac.MOPACResults`
+
 .. |RPM| replace:: :ref:`rerun-prevention`
 .. |cleaning| replace:: :ref:`cleaning`
 .. |pickling| replace:: :ref:`pickling`
@@ -263,7 +266,5 @@ rst_epilog = """
 .. |master_script| replace:: :ref:`master-script`
 .. |binding_decorators| replace:: :ref:`binding-decorators`
 .. |parallel| replace:: :ref:`parallel`
-
-.. |hspace| unicode:: 0xA0
 """
 

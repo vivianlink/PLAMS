@@ -224,6 +224,8 @@ Below you can find the list of dedicated job classes that are currently availabl
 .. autoclass:: DensfJob(inputjob=None, name='plamsjob', settings=None, depend=None)
     :exclude-members: _result_type
 
+.. _kf_files:
+
 KF files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
