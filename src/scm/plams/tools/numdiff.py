@@ -4,7 +4,9 @@ from ..core.results import Results
 from ..core.basejob import MultiJob
 from ..core.settings import Settings
 from ..core.basemol import Atom
-from ..interfaces.adfsuite import ADFJob, BANDJob, DFTBJob
+from ..interfaces.adfsuite.adf import ADFJob
+from ..interfaces.adfsuite.band import BANDJob
+from ..interfaces.adfsuite.dftb import DFTBJob
 
 
 __all__ = ['ADFNumGradJob' ,'BANDNumGradJob', 'DFTBNumGradJob']

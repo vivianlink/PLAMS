@@ -1,24 +1,16 @@
 import os
-import copy
 
 from os.path import join as opj
 
-from ..core.basejob import SingleJob
-from ..core.common import log
-from ..core.results import Results
-from ..core.settings import Settings
-from ..core.errors import PlamsError
-from ..tools.kftools import KFFile
-
-__all__ = ['ADFJob', 'ADFResults', 'BANDJob', 'BANDResults', 'DFTBJob', 'DFTBResults', 'FCFJob', 'FCFResults', 'DensfJob', 'DensfResults']
-
-
-#===========================================================================
-#===========================================================================
-
+from ...core.basejob import SingleJob
+from ...core.common import log
+from ...core.errors import PlamsError
+from ...core.results import Results
+from ...core.settings import Settings
+from ...tools.kftools import KFFile
 
 class SCMResults(Results):
-    """Abstract class gathering common mechanisms for results of all ADF Suite binaries."""
+    """Abstract class gathering common mechanisms for results of ADFSuite programs."""
     _kfext = ''
 
 
@@ -29,6 +21,8 @@ class SCMResults(Results):
         kfname = self.job.name + self.__class__._kfext
         if kfname in self.files:
             self._kf = KFFile(opj(self.job.path, kfname))
+        else:
+            log('WARNING: Main KF file {} not present in {}'.format(kfname, self.job.path), 1)
 
 
     def refresh(self):
@@ -54,7 +48,7 @@ class SCMResults(Results):
         The type of the returned value depends on the type of *variable* defined inside KF file. It can be: single int, list of ints, single float, list of floats, single boolean, list of booleans or string. """
         if self._kf:
             return self._kf.read(section, variable)
-        raise FileError('KFFile of %s not present in %s' % (self.job.name, self.job.path))
+        raise FileError('File {} not present in {}'.format(self.job.name+self.__class__._kfext, self.job.path))
 
 
     def newkf(self, filename):
@@ -73,7 +67,7 @@ class SCMResults(Results):
         if filename in self.files:
             return KFFile(opj(self.job.path, filename))
         else:
-            raise FileError('File %s not present in %s' % (filename, self.job.path))
+            raise FileError('File {} not present in {}'.format(filename, self.job.path))
 
 
     def get_molecule(self, section, variable, unit='bohr', internal=False, n=1):
@@ -125,7 +119,6 @@ class SCMResults(Results):
             return Results._export_attribute(self, attr, other)
 
 
-
     def _int2inp(self):
         """_int2inp()
         Obtain mapping from internal atom order to the input one. Abstract method.
@@ -135,7 +128,7 @@ class SCMResults(Results):
 
 
 class SCMJob(SingleJob):
-    """Abstract class gathering common mechanisms for jobs with all ADF Suite binaries."""
+    """Abstract class gathering common mechanisms for jobs with ADF Suite programs."""
     _result_type = SCMResults
     _top = ['title','units','define']
     _command = ''
@@ -234,7 +227,7 @@ class SCMJob(SingleJob):
             if 'errors' in status:
                 return False
             if 'warnings' in status:
-                log('Job %s reported warnings' % (self.name))
+                log('Job {} reported warnings. Please check the the output'.format(self.name), 1)
             return True
         return False
 
@@ -263,196 +256,3 @@ class SCMJob(SingleJob):
             smb = (smb+'.'+str(atom.name)).lstrip('.')
         return smb
 
-
-#===========================================================================
-#===========================================================================
-
-
-class ADFResults(SCMResults):
-    _kfext = '.t21'
-    _rename_map = {'TAPE21':'$JN'+_kfext, 'TAPE13':'$JN.t13', 'TAPE10':'$JN.t10'}
-
-    def _int2inp(self):
-        aoi = self.readkf('Geometry', 'atom order index')
-        n = len(aoi)//2
-        return aoi[:n]
-
-
-class ADFJob(SCMJob):
-    _result_type = ADFResults
-    _command = 'adf'
-
-    def _parsemol(self):
-        for i,atom in enumerate(self.molecule):
-            smb = self._atom_symbol(atom)
-            suffix = ''
-            if hasattr(atom,'fragment'):
-                suffix += 'f={fragment} '
-            if hasattr(atom,'block'):
-                suffix += 'b={block}'
-
-            self.settings.input.atoms['_'+str(i+1)] = ('%5i'%(i+1)) + atom.str(symbol=smb, suffix=suffix)
-
-    def _removemol(self):
-        if 'atoms' in self.settings.input:
-            del self.settings.input.atoms
-
-
-#===========================================================================
-#===========================================================================
-
-
-class BANDResults(SCMResults):
-    _kfext = '.runkf'
-    _rename_map = {'RUNKF':'$JN'+_kfext}
-
-    def _int2inp(self):
-        return self.readkf('geometry', 'Atom map new order')
-
-
-class BANDJob(SCMJob):
-    _result_type = BANDResults
-    _command = 'band'
-
-    def _parsemol(self):
-        for i,atom in enumerate(self.molecule):
-            self.settings.input.atoms['_'+str(i+1)] = atom.str(symbol=self._atom_symbol(atom), space=18, decimal=10)
-
-        if self.molecule.lattice:
-            for i,vec in enumerate(self.molecule.lattice):
-                self.settings.input.lattice['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
-
-    def _removemol(self):
-        if 'atoms' in self.settings.input:
-            del self.settings.input.atoms
-        if 'lattice' in self.settings.input:
-            del self.settings.input.lattice
-
-
-#===========================================================================
-#===========================================================================
-
-
-class DFTBResults(SCMResults):
-    _kfext = '.rkf'
-    _rename_map = {'dftb.rkf':'$JN'+_kfext}
-
-    def _int2inp(self):
-        return list(range(1, 1+len(self.job.molecule)))
-
-
-class DFTBJob(SCMJob):
-    _result_type = DFTBResults
-    _command = 'dftb'
-    _top = ['units', 'task']
-    _subblock_end = 'end'
-
-    def _parsemol(self):
-        s = self.settings.input
-        for i,atom in enumerate(self.molecule):
-            s[s.find_case('system')]['atoms']['_'+str(i+1)] = atom.str(symbol=self._atom_symbol(atom), space=18, decimal=10)
-        if self.molecule.lattice:
-            for i,vec in enumerate(self.molecule.lattice):
-                s[s.find_case('system')]['lattice']['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
-
-    def _removemol(self):
-        s = self.settings.input
-        system = s.find_case('system')
-        if system in s:
-            if 'atoms' in s[system]:
-                del s[system]['atoms']
-            if 'lattice' in s[system]:
-                del s[system]['lattice']
-
-
-
-#===========================================================================
-#===========================================================================
-
-
-class FCFResults(SCMResults):
-    _kfext = '.t61'
-    _rename_map = {'TAPE61':'$JN'+_kfext}
-
-    def get_molecule(self, *args, **kwargs):
-        raise PlamsError('FCFResults do not support get_molecule() method. You can get molecules from job1 or job2')
-
-
-class FCFJob(SCMJob):
-    """A class representing calculation of Franck-Condon factors using ``fcf`` program.
-
-    Two new attributes are introduced: ``inputjob1`` and ``inputjob2``. They are used to supply KF files from previous runs to ``fcf`` program. The value can either be a string with a path to KF file or an instance of any type of |SCMJob| or |SCMResults| (in this case the path to corresponding KF file will be extracted automatically). If the value of ``inputjob1`` or ``inputjob2`` is ``None``, no automatic handling occurs and user needs to manually supply paths to input jobs using proper keywords placed in ``myjob.settings.input`` (``STATES`` or ``STATE1`` and ``STATE2``).
-
-
-    The resulting ``TAPE61`` file is renamed to ``jobname.t61``.
-    """
-    _result_type = FCFResults
-    _command = 'fcf'
-    _top = ['states', 'state1', 'state2']
-
-    def __init__(self, inputjob1=None, inputjob2=None, **kwargs):
-        SCMJob.__init__(self,**kwargs)
-        self.inputjob1 = inputjob1
-        self.inputjob2 = inputjob2
-
-    def _parsemol(self):
-        if isinstance(self.inputjob1, str):
-            self.settings.input.state1 = self.inputjob1
-        elif hasattr(self.inputjob1, '_settings_reduce'):
-            self.settings.input.state1 = self.inputjob1._settings_reduce()
-
-        if isinstance(self.inputjob2, str):
-            self.settings.input.state2 = self.inputjob2
-        elif hasattr(self.inputjob2, '_settings_reduce'):
-            self.settings.input.state2 = self.inputjob2._settings_reduce()
-
-    def _removemol(self):
-        if 'state1' in self.settings.input:
-            del self.settings.input.state1
-        if 'state2' in self.settings.input:
-            del self.settings.input.state2
-
-
-#===========================================================================
-#===========================================================================
-
-
-class DensfResults(SCMResults):
-    _kfext = '.t41'
-    _rename_map = {'TAPE41':'$JN'+_kfext}
-
-    def get_molecule(self, *args, **kwargs):
-        raise PlamsError('DensfResults do not support get_molecule() method. You can get molecule from inputjob')
-
-
-class DensfJob(SCMJob):
-    """A class representing calculation of molecular properties on a grid using ``densf`` program.
-
-    A new attribute ``inputjob`` is introduced to supply KF file from previously run job. The value can either be a string with a path to KF file or an instance of any type of |SCMJob| or |SCMResults| (in this case the path to corresponding KF file will be extracted automatically). If the value of ``inputjob`` is ``None``, no automatic handling occurs and user needs to manually supply path to input job using ``INPUTFILE`` keyword placed in ``myjob.settings.input``.
-
-    The resulting ``TAPE41`` file is renamed to ``jobname.t41``.
-    """
-    _result_type = DensfResults
-    _command = 'densf'
-    _top = ['inputfile', 'units']
-
-    def __init__(self, inputjob=None, **kwargs):
-        SCMJob.__init__(self, **kwargs)
-        self.inputjob = inputjob
-
-    def _parsemol(self):
-        if isinstance(self.inputjob, str):
-            self.settings.input.inputfile = self.inputjob
-        elif hasattr(self.inputjob, '_settings_reduce'):
-            self.settings.input.inputfile = self.inputjob._settings_reduce()
-
-    def _removemol(self):
-        if 'inputjob' in self.settings.input:
-            del self.settings.input.inputjob
-
-    def check(self):
-        try:
-            grep = self.results.grep_file('$JN.err', 'NORMAL TERMINATION')
-        except:
-            return False
-        return len(grep) > 0
