@@ -16,12 +16,17 @@ class BANDJob(SCMJob):
     _command = 'band'
 
     def _parsemol(self):
+        s = self.settings.input
+        units = s.find_case('units')
+        length = s[units].find_case('length')
+        s[units][length] = 'angstrom'
+
         for i,atom in enumerate(self.molecule):
-            self.settings.input.atoms['_'+str(i+1)] = atom.str(symbol=self._atom_symbol(atom), space=18, decimal=10)
+            s.atoms['_'+str(i+1)] = atom.str(symbol=self._atom_symbol(atom), space=18, decimal=10)
 
         if self.molecule.lattice:
             for i,vec in enumerate(self.molecule.lattice):
-                self.settings.input.lattice['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
+                s.lattice['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
 
     def _removemol(self):
         if 'atoms' in self.settings.input:
