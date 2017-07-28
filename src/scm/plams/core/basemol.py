@@ -83,14 +83,14 @@ class Atom(object):
             raise TypeError('Atom: Invalid coordinates passed')
 
 
-    def str(self, symbol=True, suffix='', unit='angstrom', space=14, decimal=6):
+    def str(self, symbol=True, suffix='', suffix_dict={}, unit='angstrom', space=14, decimal=6):
         """Return a string representation of this atom.
 
         Returned string is a single line (no newline characters) that always contains atomic coordinates (and maybe more). Each atomic coordinate is printed using *space* characters, with *decimal* characters reserved for decimal digits. Coordinates values are expressed in *unit*.
 
         If *symbol* is ``True``, atomic symbol is added at the beginning of the line. If *symbol* is a string, this exact string is printed there.
 
-        *suffix* is an arbitrary string that is appended at the end of returned line. It can contain identifiers in curly brackets (like for example ``f={fragment}``) that will be replaced by values of corresponding attributes (in this case ``self.fragment``). It is done via new string formatting and entire ``self.__dict__`` is passed to formating method. See :ref:`string-formatting` for details.
+        *suffix* is an arbitrary string that is appended at the end of returned line. It can contain identifiers in curly brackets (like for example ``f={fragment}``) that will be replaced by values of corresponding keys from *suffix_dict* dictionary. See :ref:`formatstrings` for details.
 
         Example:
 
@@ -105,8 +105,8 @@ class Atom(object):
                  C2.13      1.000000      1.500000      2.000000
             >>> print(a.str(suffix='protein1'))
                      C      1.000000      1.500000      2.000000 protein1
-            >>> a.info = 'membrane'
-            >>> print(a.str(suffix='subsystem={info}'))
+            >>> a.properties.info = 'membrane'
+            >>> print(a.str(suffix='subsystem={info}', suffix_dict=a.properties))
                      C      1.000000      1.500000      2.000000 subsystem=membrane
 
         """
@@ -114,10 +114,10 @@ class Atom(object):
         numformat = '{:>%i.%if}'%(space,decimal)
         f = lambda x: numformat.format(Units.convert(x, 'angstrom', unit)) if isinstance(x, (int,float)) else strformat.format(str(x))
         if symbol is False:
-            return ('{0}{1}{2} '+suffix).format(*map(f,self.coords), **self.__dict__)
+            return ('{0}{1}{2} '+suffix).format(*map(f,self.coords), **suffix_dict)
         if symbol is True:
             symbol = self.symbol
-        return ('{0:>10s}{1}{2}{3} '+suffix).format(symbol, *map(f,self.coords), **self.__dict__)
+        return ('{0:>10s}{1}{2}{3} '+suffix).format(symbol, *map(f,self.coords), **suffix_dict)
 
 
     def __str__(self):

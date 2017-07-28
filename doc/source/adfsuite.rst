@@ -1,7 +1,7 @@
 ADF Suite
 -------------------------
 
-.. currentmodule:: scm.plams.interfaces.adfsuite
+.. currentmodule:: scm.plams.interfaces.adfsuite.scmjob
 
 PLAMS offers interfaces to three main binaries of the ADF Suite: ADF, BAND and DFTB as well as some other small utility binaries like DENSF of FCF. All possible input keywords and options are covered, as well as extraction of arbitrary data from binary files (called KF files) produced by these programs.
 
@@ -218,8 +218,13 @@ The main difference is that usually utility jobs don't need molecular coordinate
 Below you can find the list of dedicated job classes that are currently available. Details about input specification for those jobs can be found in corresponding part of ADF Suite documentation.
 
 
+.. currentmodule:: scm.plams.interfaces.adfsuite.fcf
+
 .. autoclass:: FCFJob(inputjob1=None, inputjob2=None, name='plamsjob', settings=None, depend=None)
     :exclude-members: _result_type
+
+
+.. currentmodule:: scm.plams.interfaces.adfsuite.densf
 
 .. autoclass:: DensfJob(inputjob=None, name='plamsjob', settings=None, depend=None)
     :exclude-members: _result_type

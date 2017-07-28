@@ -21,12 +21,12 @@ class ADFJob(SCMJob):
         for i,atom in enumerate(self.molecule):
             smb = self._atom_symbol(atom)
             suffix = ''
-            if hasattr(atom,'fragment'):
+            if 'adf' in atom.properties and 'fragment' in atom.properties.adf:
                 suffix += 'f={fragment} '
-            if hasattr(atom,'block'):
+            if 'adf' in atom.properties and 'block' in atom.properties.adf:
                 suffix += 'b={block}'
 
-            self.settings.input.atoms['_'+str(i+1)] = ('%5i'%(i+1)) + atom.str(symbol=smb, suffix=suffix)
+            self.settings.input.atoms['_'+str(i+1)] = ('%5i'%(i+1)) + atom.str(symbol=smb, suffix=suffix, suffix_dict=atom.properties.adf)
 
     def _removemol(self):
         if 'atoms' in self.settings.input:

@@ -135,7 +135,6 @@ class SCMJob(SingleJob):
     _subblock_end = 'subend'
 
 
-
     def get_input(self):
         """Transform all contents of ``setting.input`` branch into string with blocks, keys and values.
 
@@ -246,13 +245,14 @@ class SCMJob(SingleJob):
         """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path to the main KF file. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details."""
         return self.results._kfpath()
 
+
     @staticmethod
     def _atom_symbol(atom):
-        """Return the atomic symbol of *atom*. Ensure proper formatting for ADFSuite input taking into account ``ghost`` and ``name`` attributes of *atom*."""
+        """Return the atomic symbol of *atom*. Ensure proper formatting for ADFSuite input taking into account ``ghost`` and ``name`` entries in ``properties`` of *atom*."""
         smb = atom.symbol if atom.atnum > 0 else ''  #Dummy atom should have '' instead of 'Xx'
-        if hasattr(atom, 'ghost') and atom.ghost:
+        if 'ghost' in atom.properties and atom.properties.ghost:
             smb = ('Gh.'+smb).rstrip('.')
-        if hasattr(atom, 'name'):
-            smb = (smb+'.'+str(atom.name)).lstrip('.')
+        if 'name' in atom.properties:
+            smb = (smb+'.'+str(atom.properties.name)).lstrip('.')
         return smb
 
