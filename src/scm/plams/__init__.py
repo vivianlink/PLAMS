@@ -19,7 +19,7 @@ def __import_all(path):
     ret = []
     for dirpath, dirnames, filenames in os.walk(path):
         modules = [os.path.splitext(f)[0] for f in filter(is_module, filenames)]
-        relpath = dirpath.replace(path+'/', '').split('/')
+        relpath = dirpath.replace(path, '').split(os.sep)[1:]
         for mod in modules:
             imp = '.'.join(relpath + [mod])
             tmp = __import__(imp, globals=globals(), fromlist=['*'], level=1)
