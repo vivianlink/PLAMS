@@ -81,7 +81,8 @@ def finish(otherJM=None):
     if otherJM:
         for jm in otherJM:
             jm._clean()
-    log('PLAMS environment cleaned up', 5)
+    log('PLAMS environment cleaned up successfully', 5)
+    log('PLAMS run finished. Goodbye', 3)
 
     if config.erase_workdir is True:
         shutil.rmtree(config.jm.workdir)
