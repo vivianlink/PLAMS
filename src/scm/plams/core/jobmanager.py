@@ -156,7 +156,10 @@ class JobManager(object):
             for key in job._dont_pickle:
                 job.__dict__[key] = None
 
-        filename = os.path.abspath(filename)
+        if os.path.isfile(filename):
+            filename = os.path.abspath(filename)
+        else:
+            raise FileError('No such file: %s' % filename)
         path = os.path.dirname(filename)
         with open(filename, 'rb') as f:
             try:
