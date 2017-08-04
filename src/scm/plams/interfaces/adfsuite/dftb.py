@@ -24,7 +24,7 @@ class DFTBJob(SCMJob):
             s[system]['atoms']['_'+str(i+1)] = atom.str(symbol=self._atom_symbol(atom), space=18, decimal=10)
         if self.molecule.lattice:
             for i,vec in enumerate(self.molecule.lattice):
-                s[system]['lattice']['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
+                s[system]['lattice']['_'+str(i+1)] = '{:16.10f} {:16.10f} {:16.10f}'.format(*vec)
 
     def _removemol(self):
         s = self.settings.input

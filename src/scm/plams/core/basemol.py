@@ -1049,7 +1049,7 @@ class Molecule (object):
         if self.lattice:
             s += '  Lattice:\n'
             for vec in self.lattice:
-               s += '    %10.6f %10.6f %10.6f\n'%vec
+                s += '    {:16.10f} {:16.10f} {:16.10f}\n'.format(*vec)
         return s
 
 
