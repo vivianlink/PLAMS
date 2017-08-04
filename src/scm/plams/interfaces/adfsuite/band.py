@@ -26,7 +26,7 @@ class BANDJob(SCMJob):
 
         if self.molecule.lattice:
             for i,vec in enumerate(self.molecule.lattice):
-                s.lattice['_'+str(i+1)] = '%16.10f %16.10f %16.10f'%vec
+                s.lattice['_'+str(i+1)] = '{:16.10f} {:16.10f} {:16.10f}'.format(*vec)
 
     def _removemol(self):
         if 'atoms' in self.settings.input:
