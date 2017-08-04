@@ -12,7 +12,11 @@ from ...tools.geometry import rotation_matrix
 from .scmjob import SCMResults
 from .scmjob import SCMJob, SCMResults
 
+
+
 __all__ = ['ReaxFFJob', 'ReaxFFResults', 'load_reaxff_control']
+
+
 
 class ReaxFFResults(SCMResults):
     _rename_map = {'reaxout.kf':'$JN.kf'}
@@ -22,17 +26,21 @@ class ReaxFFResults(SCMResults):
         return list(range(1, 1+len(self.job.molecule)))
 
 
+
+
 class ReaxFFJob(SingleJob):
     _filenames = {'inp':'control', 'run':'$JN.run', 'out':'$JN.out', 'err': '$JN.err'}
     _result_type = ReaxFFResults
     ffield_path = opj('$ADFHOME','atomicdata','ForceFields','ReaxFF')
     default_cell_size = 100.0
+
     check = SCMJob.check
 
 
     def __init__(self, **kwargs):
         SingleJob.__init__(self, **kwargs)
         self.settings.keep = ['$JN.*', 'geo', 'control', 'ffield']
+
 
     def get_input(self):
         s = self.settings.input.control
@@ -57,7 +65,12 @@ class ReaxFFJob(SingleJob):
 
     def _get_ready(self):
         SingleJob._get_ready(self)
+        self._write_ffield()
+        self._write_geo()
 
+
+
+    def _write_ffield(self):
         ffield = self.settings.input.ffield
         if os.path.isfile(ffield):
             shutil.copy(ffield, opj(self.path, 'ffield'))
@@ -68,6 +81,8 @@ class ReaxFFJob(SingleJob):
             else:
                 raise FileError('settings.input.ffield={} is neither a path to a file nor an existing force field from {}'.format(ffield, self.ffield_path))
 
+
+    def _write_geo(self):
         geo = self.settings.input.geo
         if isinstance(geo, str) and os.path.isfile(geo):
             shutil.copy(geo, opj(self.path, 'geo'))
@@ -98,6 +113,7 @@ class ReaxFFJob(SingleJob):
             with open(opj(self.path,'geo'), 'w') as f:
                 f.writelines(header)
                 f.writelines(atoms)
+
 
 
     def _align_lattice(self, default_len):
@@ -131,6 +147,7 @@ class ReaxFFJob(SingleJob):
         return a, b, c, al, be, ga
 
 
+#===========================================================================
 
 
 def load_reaxff_control(filename, keep_order=True):
