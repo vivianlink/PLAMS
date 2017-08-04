@@ -8,6 +8,7 @@ from ...core.basejob import SingleJob
 from ...core.errors import FileError
 from ...core.settings import Settings
 from ...tools.units import Units
+from ...tools.geometry import rotation_matrix
 from .scmjob import SCMResults
 from .scmjob import SCMJob, SCMResults
 
@@ -25,6 +26,7 @@ class ReaxFFJob(SingleJob):
     _filenames = {'inp':'control', 'run':'$JN.run', 'out':'$JN.out', 'err': '$JN.err'}
     _result_type = ReaxFFResults
     ffield_path = opj('$ADFHOME','atomicdata','ForceFields','ReaxFF')
+    default_cell_size = 100.0
     check = SCMJob.check
 
 
@@ -83,8 +85,7 @@ class ReaxFFJob(SingleJob):
                 else:
                     header.append('{:6} {}\n'.format(key.upper(), val))
 
-
-            self.molecule = self._align_lattice(self.molecule)
+            self._align_lattice(self.default_cell_size)
 
             header.append('CRYSTX  {:10.5f} {:10.5f} {:10.5f} {:10.5f} {:10.5f} {:10.5f}\n'.format(*self._convert_lattice(self.molecule.lattice)))
 
@@ -99,10 +100,25 @@ class ReaxFFJob(SingleJob):
                 f.writelines(atoms)
 
 
-    @staticmethod
-    def _align_lattice(molecule):
-        molecule.lattice = [[100,0,0],[0,100,0],[0,0,100]]
-        return molecule
+    def _align_lattice(self, default_len):
+        lattice = self.molecule.lattice
+        dim = len(lattice)
+
+        if dim >= 1 and (abs(lattice[0][1]) > 1e-10 or abs(lattice[0][2]) > 1e-10):
+            mat = rotation_matrix(lattice[0], [1.0, 0.0, 0.0])
+            self.molecule.rotate(mat)
+            lattice = [tuple(numpy.dot(mat,i)) for i in lattice]
+
+        if dim >= 2 and abs(lattice[1][2]) > 1e-10:
+            mat = rotation_matrix([0.0, lattice[1][1], lattice[1][2]], [0.0, 1.0, 0.0])
+            self.molecule.rotate(mat)
+            lattice = [numpy.dot(mat,i) for i in lattice]
+
+        f = lambda x: [default_len * int(i==x) for i in range(3)]
+        while len(lattice) < 3:
+            lattice.append(f(len(lattice)))
+
+        self.molecule.lattice = lattice
 
 
     @staticmethod
