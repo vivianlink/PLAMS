@@ -159,7 +159,7 @@ class JobManager(object):
         if os.path.isfile(filename):
             filename = os.path.abspath(filename)
         else:
-            raise FileError('No such file: {}'.format(filename))
+            raise FileError('File {} not present'.format(filename))
         path = os.path.dirname(filename)
         with open(filename, 'rb') as f:
             try:

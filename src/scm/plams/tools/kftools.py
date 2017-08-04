@@ -36,7 +36,7 @@ class KFReader(object):
         if os.path.isfile(path):
             self.path = os.path.abspath(path)
         else:
-            raise FileError('No such file: %s' % path)
+            raise FileError('File {} not present'.format(path))
 
         self._blocksize = blocksize
         self.endian = '<'   # endian: '<' = little, '>' = big
