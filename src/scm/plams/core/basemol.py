@@ -1431,7 +1431,7 @@ class Molecule (object):
             else:
                 inputformat = 'xyz'
         if inputformat in self.__class__._readformat:
-            with open(filename, 'rU') as f:
+            with open(filename, 'r') as f:
                 ret = self._readformat[inputformat](self, f, frame)
             return ret
         else:

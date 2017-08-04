@@ -27,9 +27,9 @@ class DiracResults(Results):
         if diracfile in self.files:
             pampath = opj(self.job.path, pamfile)
             diracpath = opj(self.job.path, diracfile)
-            with open(pampath, 'rU') as f:
+            with open(pampath, 'r') as f:
                 pamoutput = f.readlines()
-            with open(diracpath, 'rU') as f:
+            with open(diracpath, 'r') as f:
                 diracoutput = f.readlines()
             with open(pampath, 'w') as f:
                 f.writelines(diracoutput)

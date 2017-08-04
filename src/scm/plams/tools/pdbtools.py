@@ -77,7 +77,7 @@ class PDBHandler(object):
         if textfile is not None:
             if isinstance(textfile, str):
                 try:
-                    f = open(textfile, 'rU')
+                    f = open(textfile, 'r')
                 except:
                     raise FileError('PDBHandler: Error reading file %s' % textfile)
                 self.read(f)
