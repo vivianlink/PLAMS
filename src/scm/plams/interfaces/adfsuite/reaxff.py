@@ -65,13 +65,27 @@ class ReaxFFJob(SingleJob):
 
     def _get_ready(self):
         SingleJob._get_ready(self)
-        self._write_ffield()
-        self._write_geo()
+        self._write_ffield(self.settings.input.ffield)
+        self._write_geo(self.settings.input.geo)
+
+        if 'external' in self.settings.input:
+            ext = self.settings.input.external
+            if isinstance(ext, list):
+                for val in ext:
+                    if os.path.isfile(val):
+                        shutil.copy(val, self.path)
+                    else:
+                        raise FileError('File {} not present'.format(val))
+            elif isinstance(ext, dict):
+                for key, val in ext.items():
+                    if os.path.isfile(val):
+                        shutil.copy(val, opj(self.path, key))
+                    else:
+                        raise FileError('File {} not present'.format(val))
 
 
 
-    def _write_ffield(self):
-        ffield = self.settings.input.ffield
+    def _write_ffield(self, ffield):
         if os.path.isfile(ffield):
             shutil.copy(ffield, opj(self.path, 'ffield'))
         else:
@@ -82,8 +96,8 @@ class ReaxFFJob(SingleJob):
                 raise FileError('settings.input.ffield={} is neither a path to a file nor an existing force field from {}'.format(ffield, self.ffield_path))
 
 
-    def _write_geo(self):
-        geo = self.settings.input.geo
+
+    def _write_geo(self, geo):
         if isinstance(geo, str) and os.path.isfile(geo):
             shutil.copy(geo, opj(self.path, 'geo'))
         else:
@@ -151,10 +165,9 @@ class ReaxFFJob(SingleJob):
 
 
 def load_reaxff_control(filename, keep_order=True):
-    if os.path.isfile(filename):
-        filename = os.path.abspath(filename)
-    else:
-        raise FileError('No such file: {}'.format(filename))
+
+    if not os.path.isfile(filename):
+        raise FileError('File {} not present'.format(filename))
 
     with open(filename, 'r') as f:
         lines = f.readlines()
