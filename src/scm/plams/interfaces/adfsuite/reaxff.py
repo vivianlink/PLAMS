@@ -37,11 +37,6 @@ class ReaxFFJob(SingleJob):
     check = SCMJob.check
 
 
-    def __init__(self, **kwargs):
-        SingleJob.__init__(self, **kwargs)
-        self.settings.keep = ['$JN.*', 'geo', 'control', 'ffield']
-
-
     def get_input(self):
         s = self.settings.input.control
         ret = ''
