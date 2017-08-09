@@ -102,10 +102,13 @@ class ReaxFFJob(SingleJob):
             if descrp not in settings:
                 settings.descrp = description
 
-            for key, val in settings.items():
+            for key in settings:
+                val = settings[key]
                 if isinstance(val, list):
                     for el in val:
                         header.append('{:6} {}\n'.format(key.upper(), el))
+                elif isinstance(val, tuple):
+                    header.append(('{:6} '+'{} '*len(val)+'\n').format(key.upper(), *val))
                 else:
                     header.append('{:6} {}\n'.format(key.upper(), val))
             if lattice:
