@@ -61,7 +61,7 @@ class ReaxFFJob(SingleJob):
     def _get_ready(self):
         SingleJob._get_ready(self)
         self._write_ffield(self.settings.input.ffield)
-        self._write_geo(self.settings.input.geo)
+        self._write_geofile(molecule=self.molecule, filename='geo', settings=self.settings.input.geo, description=self.name, lattice=True)
 
         if 'external' in self.settings.input:
             ext = self.settings.input.external
@@ -92,58 +92,59 @@ class ReaxFFJob(SingleJob):
 
 
 
-    def _write_geo(self, geo):
-        if isinstance(geo, str) and os.path.isfile(geo):
-            shutil.copy(geo, opj(self.path, 'geo'))
+    def _write_geofile(self, molecule, filename, settings, description, lattice=False):
+        if isinstance(settings, str) and os.path.isfile(settings):
+            shutil.copy(settings, opj(self.path, filename))
         else:
             header = ['BIOGRF 200\n']
 
-            descrp = geo.find_case('descrp')
-            if descrp not in geo:
-                geo.descrp = self.name
+            descrp = settings.find_case('descrp')
+            if descrp not in settings:
+                settings.descrp = description
 
-            for key, val in geo.items():
+            for key, val in settings.items():
                 if isinstance(val, list):
                     for el in val:
                         header.append('{:6} {}\n'.format(key.upper(), el))
                 else:
                     header.append('{:6} {}\n'.format(key.upper(), val))
-
-            self._align_lattice(self.default_cell_size)
-
-            header.append('CRYSTX  {:10.5f} {:10.5f} {:10.5f} {:10.5f} {:10.5f} {:10.5f}\n'.format(*self._convert_lattice(self.molecule.lattice)))
+            if lattice:
+                self._align_lattice(molecule, self.default_cell_size)
+                header.append('CRYSTX  {:10.5f} {:10.5f} {:10.5f} {:10.5f} {:10.5f} {:10.5f}\n'.format(*self._convert_lattice(molecule.lattice)))
 
             atoms = []
-            for i,at in enumerate(self.molecule):
+            for i,at in enumerate(molecule):
                 newline = 'HETATM {:>5d} {:<2}                 {: 8.5f}  {: 8.5f}  {: 8.5f} {:<2}     1 1  0.0\n'.format(i+1, at.symbol, *at.coords, at.symbol)
                 atoms.append(newline)
             atoms.append('END\n')
 
-            with open(opj(self.path,'geo'), 'w') as f:
+            with open(opj(self.path, filename), 'w') as f:
                 f.writelines(header)
                 f.writelines(atoms)
 
 
 
-    def _align_lattice(self, default_len):
-        lattice = self.molecule.lattice
+    @staticmethod
+    def _align_lattice(molecule, default_len):
+        lattice = molecule.lattice
         dim = len(lattice)
 
         if dim >= 1 and (abs(lattice[0][1]) > 1e-10 or abs(lattice[0][2]) > 1e-10):
             mat = rotation_matrix(lattice[0], [1.0, 0.0, 0.0])
-            self.molecule.rotate(mat)
+            molecule.rotate(mat)
             lattice = [tuple(numpy.dot(mat,i)) for i in lattice]
 
         if dim >= 2 and abs(lattice[1][2]) > 1e-10:
             mat = rotation_matrix([0.0, lattice[1][1], lattice[1][2]], [0.0, 1.0, 0.0])
-            self.molecule.rotate(mat)
+            molecule.rotate(mat)
             lattice = [numpy.dot(mat,i) for i in lattice]
 
         f = lambda x: [default_len * int(i==x) for i in range(3)]
         while len(lattice) < 3:
             lattice.append(f(len(lattice)))
 
-        self.molecule.lattice = lattice
+        molecule.lattice = lattice
+
 
 
     @staticmethod
