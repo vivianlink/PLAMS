@@ -34,7 +34,7 @@ During |run|, just before the actual job execution, an unique identifier of a jo
 
 The crucial part of the whole rerun prevention mechanism is properly working :meth:`~scm.plams.core.basejob.Job.hash` function. It needs to produce different hashes for different jobs and exactly the same hashes for jobs that do exactly the same work. It is difficult to come up with the scheme that works well for all kind of external binaries, since the technical details about job preparation can differ a lot. Currently implemented method works based on calculating SHA256 hash of input and/or runscript contents. The value of ``hashing`` key in job manager's ``settings`` can be one of the following: ``'input'``, ``'runscript'``, ``'input+runscript'`` (or ``None`` to disable the rerun prevention).
 
-If you decide to implement your own hashing method, it can be done by overriding :meth:`~scm.plams.core.basejob.SingleJob.hash`. Make sure that your version of this method supports three basic modes listed above.
+If you decide to implement your own hashing method, it can be done by overriding :meth:`~scm.plams.core.basejob.SingleJob.hash_input` and/or meth:`~scm.plams.core.basejob.SingleJob.hash_runscript`.
 
 .. warning::
 

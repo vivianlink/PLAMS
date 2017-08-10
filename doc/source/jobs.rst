@@ -218,7 +218,7 @@ This is sufficient for your new job to work properly with other PLAMS components
     >>>         ...
     >>>         return 'string with runscript'
 
-*   :meth:`~Job.hash` -- see |RPM| for details
+*   :meth:`~Job.hash_input` and :meth:`~Job.hash_runscript` -- see |RPM| for details
 *   if your new job requires some special preparations regarding input or runscript files these preparations can be done for example in |prerun|. However, if you wish to leave |prerun| clean for further subclassing or adjusting in instance-based fashion, you can use another method called :meth:`~SingleJob._get_ready`. This method is responsible for input and runscript creation, so if you decide to override it you **must** call its parent version in your version::
 
     >>> def _get_ready(self):
