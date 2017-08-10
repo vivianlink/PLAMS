@@ -53,7 +53,7 @@ def init(path=None, folder=None):
 
     log('Running PLAMS located in {}'.format(dirname(dirname(__file__))) ,5)
     log('Using Python {}.{}.{} located in {}'.format(*sys.version_info[:3], sys.executable), 5)
-    log('PLAMS defaults were loaded from in {}'.format(defaults) ,5)
+    log('PLAMS defaults were loaded from {}'.format(defaults) ,5)
 
     log('PLAMS environment initialized', 5)
     log('PLAMS working folder: {}'.format(config.jm.workdir), 1)
