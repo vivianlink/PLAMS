@@ -305,6 +305,18 @@ class SingleJob(Job):
         """
         raise PlamsError('Trying to run an abstract method SingleJob._get_runscript()')
 
+    def hash_input(self):
+        """Calculate SHA256 hash of the input file."""
+        h = hashlib.sha256()
+        h.update(self.get_input().encode())
+        return h.hexdigest()
+
+
+    def hash_runscript(self):
+        """Calculate SHA256 hash of the runscript."""
+        h = hashlib.sha256()
+        h.update(self._full_runscript().encode())
+        return h.hexdigest()
 
 
     def hash(self):
@@ -312,12 +324,14 @@ class SingleJob(Job):
 
         The behavior of this method is adjusted by the value of ``hashing`` key in |JobManager| settings. If no |JobManager| is yet associated with this job, default setting from ``config.jobmanager.hashing`` is used.
 
+        Methods :meth:`~SingleJob.hash_input` and :meth:`~SingleJob.hash_runscript` are used to obtain hashes of, respectively, input and runscript.
+
         Currently supported values for ``hashing`` are:
 
         *   ``False`` or ``None`` -- returns ``None`` and disables |RPM|.
-        *   ``input`` -- returns SHA256 hash of the input file.
-        *   ``runscript`` -- returns SHA256 hash of the runscript.
-        *   ``input+runscript`` -- returns SHA256 hash of the concatenation of input and runscript.
+        *   ``input`` -- returns hash of the input file.
+        *   ``runscript`` -- returns hash of the runscript.
+        *   ``input+runscript`` -- returns SHA256 hash of the concatenation of **hashes** of input and runscript.
         """
 
         if self.jobmanager:
@@ -327,17 +341,17 @@ class SingleJob(Job):
 
         if not mode:
             return None
-        h = hashlib.sha256()
         if mode == 'input':
-            h.update(self.get_input().encode())
+            return self.hash_input()
         elif mode == 'runscript':
-            h.update(self._full_runscript().encode())
+            return self.hash_runscript()
         elif mode == 'input+runscript':
-            h.update(self.get_input().encode())
-            h.update(self._full_runscript().encode())
+            h = hashlib.sha256()
+            h.update(self.hash_input().encode())
+            h.update(self.hash_runscript().encode())
+            return h.hexdigest()
         else:
             raise PlamsError('Unsupported hashing method: ' + str(mode))
-        return h.hexdigest()
 
 
     def _full_runscript(self):
