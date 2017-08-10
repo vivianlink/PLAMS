@@ -117,7 +117,7 @@ class ReaxFFJob(SingleJob):
 
             atoms = []
             for i,at in enumerate(molecule):
-                newline = 'HETATM {:>5d} {:<2}                 {: 8.5f}  {: 8.5f}  {: 8.5f} {:<2}     1 1  0.0\n'.format(i+1, at.symbol, *at.coords, at.symbol)
+                newline = 'HETATM {:>5d} {:<2}               {: >10.5f}{: >10.5f}{: >10.5f} {:<2}     1 1  0.0\n'.format(i+1, at.symbol, *at.coords, at.symbol)
                 atoms.append(newline)
             atoms.append('END\n')
 
