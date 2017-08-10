@@ -26,13 +26,13 @@ class DensfJob(SCMJob):
         SCMJob.__init__(self, **kwargs)
         self.inputjob = inputjob
 
-    def _parsemol(self):
+    def _serialize_mol(self):
         if isinstance(self.inputjob, str):
             self.settings.input.inputfile = self.inputjob
         elif hasattr(self.inputjob, '_settings_reduce'):
             self.settings.input.inputfile = self.inputjob._settings_reduce()
 
-    def _removemol(self):
+    def _remove_mol(self):
         if 'inputjob' in self.settings.input:
             del self.settings.input.inputjob
 

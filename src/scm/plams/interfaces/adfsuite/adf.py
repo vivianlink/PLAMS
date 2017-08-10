@@ -17,7 +17,7 @@ class ADFJob(SCMJob):
     _result_type = ADFResults
     _command = 'adf'
 
-    def _parsemol(self):
+    def _serialize_mol(self):
         for i,atom in enumerate(self.molecule):
             smb = self._atom_symbol(atom)
             suffix = ''
@@ -28,6 +28,6 @@ class ADFJob(SCMJob):
 
             self.settings.input.atoms['_'+str(i+1)] = ('%5i'%(i+1)) + atom.str(symbol=smb, suffix=suffix, suffix_dict=atom.properties.adf)
 
-    def _removemol(self):
+    def _remove_mol(self):
         if 'atoms' in self.settings.input:
             del self.settings.input.atoms

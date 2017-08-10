@@ -17,7 +17,7 @@ class UFFJob(SCMJob):
     _top = ['title', 'units']
     _subblock_end = 'end'
 
-    def _parsemol(self):
+    def _serialize_mol(self):
         s = self.settings.input
         system = s.find_case('system')
 
@@ -43,7 +43,7 @@ class UFFJob(SCMJob):
             for i,vec in enumerate(self.molecule.lattice):
                 s[system]['lattice']['_'+str(i+1)] = '{:16.10f} {:16.10f} {:16.10f}'.format(*vec)
 
-    def _removemol(self):
+    def _remove_mol(self):
         s = self.settings.input
         system = s.find_case('system')
 

@@ -127,6 +127,7 @@ class SCMResults(Results):
 
 
 
+
 class SCMJob(SingleJob):
     """Abstract class gathering common mechanisms for jobs with ADF Suite programs."""
     _result_type = SCMResults
@@ -136,6 +137,12 @@ class SCMJob(SingleJob):
 
 
     def get_input(self):
+        spec = (SCMJob, SCMResults, KFFile)
+        f = lambda x: x._settings_reduce()
+        return self._serialize_input(spec, f)
+
+
+    def _serialize_input(self, special, special_func):
         """Transform all contents of ``setting.input`` branch into string with blocks, keys and values.
 
         On the highest level alphabetic order of iteration is modified: keys occuring in attribute ``_top`` are printed first.
@@ -143,58 +150,65 @@ class SCMJob(SingleJob):
         Automatic handling of ``molecule`` can be disabled with ``settings.ignore_molecule = True``.
         """
 
-        def parse(key, value, indent=''):
+        def _serialize(key, value, indent, spec, func):
+            """Given a *key* and its corresponding *value* from the |Settings| instance produce a snippet of the input file representing this pair.
+
+            If the value is a nested |Settings| instance, use recursive calls to build the snippet for the entire block. Indent the result with *indent* spaces. Special values can be indicated with *spec* argument, which should be a tuple of types. Each value of the special type is treated with *func*, which should be a function taking an object of type from *spec* and returning string.
+            """
             ret = ''
             if isinstance(value, Settings):
-                ret += indent + key
+                ret += ' '*indent + key
                 if '_h' in value:
                     ret += ' ' + value['_h']
                 ret += '\n'
 
                 i = 1
                 while ('_'+str(i)) in value:
-                    ret += parse('', value['_'+str(i)], indent+'  ')
+                    ret += _serialize('', value['_'+str(i)], indent+2, spec, func)
                     i += 1
 
                 for el in value:
                     if not el.startswith('_'):
-                        ret += parse(el, value[el], indent+'  ')
+                        ret += _serialize(el, value[el], indent+2, spec, func)
 
-                if indent == '':
+                if indent == 0:
                     ret += 'end\n'
                 else:
-                    ret += indent + self._subblock_end + '\n'
+                    ret += ' '*indent + self._subblock_end + '\n'
             elif isinstance(value, list):
                 for el in value:
-                    ret += parse(key, el, indent)
-            elif isinstance(value, (SCMJob, SCMResults, KFFile)):
-                ret += parse(key, value._settings_reduce(), indent)
+                    ret += _serialize(key, el, indent, spec, func)
+            elif isinstance(value, special):
+                ret += _serialize(key, special_func(value), indent, spec, func)
             elif value is '' or value is True:
-                ret += indent + key + '\n'
+                ret += ' '*indent + key + '\n'
             elif value is False:
                 pass
             else:
                 value = str(value)
-                ret += indent + key
+                ret += ' '*indent + key
                 if key != '' and not value.startswith('='):
                     ret += ' '
                 ret += value + '\n'
             return ret
 
-        inp = ''
+
         use_molecule = ('ignore_molecule' not in self.settings) or (self.settings.ignore_molecule == False)
         if use_molecule:
-            self._parsemol()
+            self._serialize_mol()
+
+        inp = ''
         for item in self._top:
             item = self.settings.input.find_case(item)
             if item in self.settings.input:
-                inp += parse(item, self.settings.input[item]) + '\n'
+                inp += _serialize(item, self.settings.input[item], 0, special, special_func) + '\n'
         for item in self.settings.input:
             if item.lower() not in self._top:
-                inp += parse(item, self.settings.input[item]) + '\n'
+                inp += _serialize(item, self.settings.input[item], 0, special, special_func) + '\n'
         inp += 'end input\n'
+
         if use_molecule:
-            self._removemol()
+            self._remove_mol()
         return inp
 
 
@@ -231,14 +245,14 @@ class SCMJob(SingleJob):
         return False
 
 
-    def _parsemol(self):
+    def _serialize_mol(self):
         """Process |Molecule| instance stored in ``molecule`` attribute and add it as relevant entries of ``settings.input`` branch. Abstract method."""
-        raise PlamsError('Trying to run an abstract method SCMJob._parsemol()')
+        raise PlamsError('Trying to run an abstract method SCMJob._serialize_mol()')
 
 
-    def _removemol(self):
-        """Remove from ``settings.input`` all entries added by :meth:`_parsemol`. Abstract method."""
-        raise PlamsError('Trying to run an abstract method SCMJob._removemol()')
+    def _remove_mol(self):
+        """Remove from ``settings.input`` all entries added by :meth:`_serialize_mol`. Abstract method."""
+        raise PlamsError('Trying to run an abstract method SCMJob._remove_mol()')
 
 
     def _settings_reduce(self):
