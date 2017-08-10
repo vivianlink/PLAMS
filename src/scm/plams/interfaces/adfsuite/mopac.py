@@ -1,5 +1,5 @@
-from ..core.basejob import SingleJob
-from ..interfaces.adfsuite.scmjob import SCMResults
+from ...core.basejob import SingleJob
+from .scmjob import SCMResults
 
 __all__ = ['MOPACJob', 'MOPACResults']
 
