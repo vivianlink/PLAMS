@@ -1,3 +1,4 @@
+import hashlib
 import os
 
 from os.path import join as opj
@@ -243,6 +244,14 @@ class SCMJob(SingleJob):
                 log('Job {} reported warnings. Please check the the output'.format(self.name), 1)
             return True
         return False
+
+
+    def hash_input(self):
+        spec = (SCMJob, SCMResults)
+        f = lambda x: x.hash_input() if isinstance(x, SCMJob) else x.job.hash_input()
+        h = hashlib.sha256()
+        h.update(self._serialize_input(spec, f).encode())
+        return h.hexdigest()
 
 
     def _serialize_mol(self):
