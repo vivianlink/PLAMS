@@ -1,7 +1,7 @@
 MOPAC
 -------------------------
 
-.. currentmodule:: scm.plams.interfaces.mopac
+.. currentmodule:: scm.plams.interfaces.adfsuite.mopac
 
 
 MOPAC (Molecular Orbital PACkage) is a semiempirical quantum chemistry program based on NDDO approximation. More information about MOPAC can be found on its `official website <http://openmopac.net/>`_. MOPAC is also distributed as a part of ADFSuite, where it is integrated with suite's graphical interface.
