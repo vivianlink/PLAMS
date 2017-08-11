@@ -100,11 +100,12 @@ class SCMResults(Results):
         return opj(self.job.path, self.job.name + self.__class__._kfext)
 
 
-    def _settings_reduce(self):
-        """_settings_reduce()
-        When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path to the main KF file. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details.
-        """
-        return self._kfpath()
+    def _reduce(self, context):
+        """_reduce(context)
+        When this object is present as a value in a |Settings| instance associated with some other |SCMJob| and the input file of that other job is being generated, use the absolute path to the main KF file."""
+        if context == SCMJob:
+            return self._kfpath()
+        return self
 
 
     def _export_attribute(self, attr, other):
@@ -139,7 +140,7 @@ class SCMJob(SingleJob):
 
     def get_input(self):
         spec = (SCMJob, SCMResults, KFFile)
-        f = lambda x: x._settings_reduce()
+        f = lambda x: x._reduce(SCMJob)
         return self._serialize_input(spec, f)
 
 
@@ -264,9 +265,11 @@ class SCMJob(SingleJob):
         raise PlamsError('Trying to run an abstract method SCMJob._remove_mol()')
 
 
-    def _settings_reduce(self):
-        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path to the main KF file. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details."""
-        return self.results._kfpath()
+    def _reduce(self, context):
+        """When this object is present as a value in a |Settings| instance associated with some other |SCMJob| and the input file of that other job is being generated, use the absolute path to the main KF file."""
+        if context == SCMJob:
+            return self.results._kfpath()
+        return self
 
 
     @staticmethod

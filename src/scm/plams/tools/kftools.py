@@ -90,8 +90,10 @@ class KFReader(object):
                 yield section, variable
 
 
-    def _settings_reduce(self):
-        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details."""
+    def _reduce(self, context):
+        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details.
+
+        Returned value is *context* agnostic and it's always ``self.path``."""
         return self.path
 
 
@@ -360,8 +362,10 @@ class KFFile(object):
             yield i
 
 
-    def _settings_reduce(self):
-        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details."""
+    def _reduce(self, context):
+        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details.
+
+        Returned value is *context* agnostic and it's always ``self.path``."""
         return self.path
 
 

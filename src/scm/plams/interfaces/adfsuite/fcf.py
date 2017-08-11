@@ -29,15 +29,8 @@ class FCFJob(SCMJob):
         self.inputjob2 = inputjob2
 
     def _serialize_mol(self):
-        if isinstance(self.inputjob1, str):
-            self.settings.input.state1 = self.inputjob1
-        elif hasattr(self.inputjob1, '_settings_reduce'):
-            self.settings.input.state1 = self.inputjob1._settings_reduce()
-
-        if isinstance(self.inputjob2, str):
-            self.settings.input.state2 = self.inputjob2
-        elif hasattr(self.inputjob2, '_settings_reduce'):
-            self.settings.input.state2 = self.inputjob2._settings_reduce()
+        self.settings.input.state1 = self.inputjob1
+        self.settings.input.state2 = self.inputjob2
 
     def _remove_mol(self):
         if 'state1' in self.settings.input:

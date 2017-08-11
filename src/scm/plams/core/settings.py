@@ -115,14 +115,14 @@ class Settings(dict):
     def __reduce__(self):
         """Magic method used when an instance of |Settings| is pickled.
 
-        All stored values that have ``_settings_reduce`` method defined are reduced according to that method. ``_settings_reduce`` should take no arguments (other than ``self``) and return picklable object (preferably a string).
+        All stored values that have ``_reduce`` method defined are reduced according to that method with |Settings| as context. ``_reduce`` should take one argument *context*, and return a picklable object (preferably a string). In this case the argument passed as *context* is ``Settings`` (whole class).
 
-        |Settings| instances are present in many different places of PLAMS environment. Usually values stored in them are simple numbers, strings or booleans. However, in some contexts other type of objects are stored and it sometimes causes problems with pickling. Problematic objects can then define ``_settings_reduce`` method to avoid failure on pickle attempt.
+        |Settings| instances are present in many different places of PLAMS environment. Usually values stored in them are simple numbers, strings or booleans. However, in some contexts other type of objects are stored and it sometimes causes problems with pickling. Problematic objects can then define ``_reduce`` method to avoid failure on pickle attempt.
         """
         a,(b,c,d) = dict.__reduce__(self)
         for key in d:
-            if not isinstance(d[key], Settings) and not inspect.isclass(d[key]) and hasattr(d[key], '_settings_reduce'):
-                d[key] = d[key]._settings_reduce()
+            if not isinstance(d[key], Settings) and not inspect.isclass(d[key]) and hasattr(d[key], '_reduce'):
+                d[key] = d[key]._reduce(self.__class__)
         return a,(b,c,d)
 
 
