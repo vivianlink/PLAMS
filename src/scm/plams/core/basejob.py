@@ -1,5 +1,4 @@
 import copy
-import hashlib
 import os
 import stat
 import threading
@@ -12,7 +11,7 @@ except ImportError:
 
 from os.path import join as opj
 
-from .common import log
+from .common import log, _hash
 from .errors import PlamsError, ResultsError
 from .results import Results
 from .settings import Settings
@@ -305,19 +304,14 @@ class SingleJob(Job):
         """
         raise PlamsError('Trying to run an abstract method SingleJob._get_runscript()')
 
+
     def hash_input(self):
         """Calculate SHA256 hash of the input file."""
-        h = hashlib.sha256()
-        h.update(self.get_input().encode())
-        return h.hexdigest()
-
+        return _hash(self.get_input())
 
     def hash_runscript(self):
         """Calculate SHA256 hash of the runscript."""
-        h = hashlib.sha256()
-        h.update(self._full_runscript().encode())
-        return h.hexdigest()
-
+        return _hash(self._full_runscript())
 
     def hash(self):
         """Calculate unique hash of this instance.
@@ -346,10 +340,7 @@ class SingleJob(Job):
         elif mode == 'runscript':
             return self.hash_runscript()
         elif mode == 'input+runscript':
-            h = hashlib.sha256()
-            h.update(self.hash_input().encode())
-            h.update(self.hash_runscript().encode())
-            return h.hexdigest()
+            return _hash(self.hash_input() + self.hash_runscript())
         else:
             raise PlamsError('Unsupported hashing method: ' + str(mode))
 

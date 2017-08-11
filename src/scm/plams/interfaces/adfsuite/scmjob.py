@@ -1,10 +1,9 @@
-import hashlib
 import os
 
 from os.path import join as opj
 
 from ...core.basejob import SingleJob
-from ...core.common import log
+from ...core.common import log, _hash
 from ...core.errors import PlamsError
 from ...core.results import Results
 from ...core.settings import Settings
@@ -250,9 +249,7 @@ class SCMJob(SingleJob):
     def hash_input(self):
         spec = (SCMJob, SCMResults)
         f = lambda x: x.hash_input() if isinstance(x, SCMJob) else x.job.hash_input()
-        h = hashlib.sha256()
-        h.update(self._serialize_input(spec, f).encode())
-        return h.hexdigest()
+        return _hash(self._serialize_input(spec, f))
 
 
     def _serialize_mol(self):
