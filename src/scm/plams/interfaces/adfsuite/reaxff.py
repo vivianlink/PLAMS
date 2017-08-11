@@ -58,6 +58,10 @@ class ReaxFFJob(SingleJob):
         return ret
 
 
+    def hash_input(self):
+        return None
+
+
     def _get_ready(self):
         SingleJob._get_ready(self)
         self._write_ffield(self.settings.input.ffield)
