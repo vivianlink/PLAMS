@@ -133,24 +133,18 @@ class ReaxFFJob(SingleJob):
 
     @staticmethod
     def _align_lattice(molecule, default_len):
-        lattice = molecule.lattice
-        dim = len(lattice)
+        dim = len(molecule.lattice)
 
-        if dim >= 1 and (abs(lattice[0][1]) > 1e-10 or abs(lattice[0][2]) > 1e-10):
-            mat = rotation_matrix(lattice[0], [1.0, 0.0, 0.0])
-            molecule.rotate(mat)
-            lattice = [tuple(numpy.dot(mat,i)) for i in lattice]
-
-        if dim >= 2 and abs(lattice[1][2]) > 1e-10:
-            mat = rotation_matrix([0.0, lattice[1][1], lattice[1][2]], [0.0, 1.0, 0.0])
-            molecule.rotate(mat)
-            lattice = [numpy.dot(mat,i) for i in lattice]
+        if dim == 3 and (abs(molecule.lattice[2][0]) > 1e-10 or abs(molecule.lattice[2][1]) > 1e-10):
+            mat = rotation_matrix(molecule.lattice[2], [0.0, 0.0, 1.0])
+            molecule.rotate(mat, lattice=True)
+        if dim >= 2 and abs(molecule.lattice[1][0]) > 1e-10:
+            mat = rotation_matrix([molecule.lattice[1][0], molecule.lattice[1][1], 0.0], [0.0, 1.0, 0.0])
+            molecule.rotate(mat, lattice=True)
 
         f = lambda x: [default_len * int(i==x) for i in range(3)]
-        while len(lattice) < 3:
-            lattice.append(f(len(lattice)))
-
-        molecule.lattice = lattice
+        while len(molecule.lattice) < 3:
+            molecule.lattice.append(f(len(molecule.lattice)))
 
 
 
