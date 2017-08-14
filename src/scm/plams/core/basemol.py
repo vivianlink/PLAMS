@@ -807,8 +807,20 @@ class Molecule (object):
             at.translate(vector, unit)
 
 
-    def rotate(self, matrix):
-        """Rotate this molecule according to rotation *matrix*.
+    def rotate_lattice(self, matrix):
+        """Rotate **only** lattice vectors of this molecule with given rotation *matrix*.
+
+        *matrix* should be a container with 9 numerical values. It can be a list (tuple, numpy array etc.) listing matrix elements row-wise, either flat (``[1,2,3,4,5,6,7,8,9]``) or in two-level fashion (``[[1,2,3],[4,5,6],[7,8,9]]``).
+
+        .. note::
+
+            This method does not check if supplied matrix is a proper rotation matrix.
+        """
+        self.lattice = [tuple(numpy.dot(matrix,i)) for i in self.lattice]
+
+
+    def rotate(self, matrix, lattice=False):
+        """Rotate this molecule with given rotation *matrix*. If *lattice* is ``True``, rotate also the lattice vectors.
 
         *matrix* should be a container with 9 numerical values. It can be a list (tuple, numpy array etc.) listing matrix elements row-wise, either flat (``[1,2,3,4,5,6,7,8,9]``) or in two-level fashion (``[[1,2,3],[4,5,6],[7,8,9]]``).
 
@@ -818,6 +830,9 @@ class Molecule (object):
         """
         for at in self.atoms:
             at.rotate(matrix)
+        if lattice:
+            self.rotate_lattice(matrix)
+
 
 
     def rotate_bond(self, bond, atom, angle, unit='radian'):
