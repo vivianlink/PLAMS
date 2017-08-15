@@ -10,7 +10,7 @@ except ImportError:
 from os.path import join as opj
 
 from .common import log
-from .errors import PlamsError
+from .errors import PlamsError, FileError
 from .basejob import MultiJob
 
 __all__ = ['JobManager']
