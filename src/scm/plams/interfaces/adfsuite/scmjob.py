@@ -9,6 +9,8 @@ from ...core.results import Results
 from ...core.settings import Settings
 from ...tools.kftools import KFFile
 
+
+
 class SCMResults(Results):
     """Abstract class gathering common mechanisms for results of ADFSuite programs."""
     _kfext = ''
@@ -77,19 +79,30 @@ class SCMResults(Results):
         Returned |Molecule| instance is created by copying a molecule from associated |SCMJob| instance and updating atomic coordinates with values read from *section*/*variable*. The format in which coordinates are stored is not consistent for all programs or even for different sections of the same KF file. Sometimes coordinates are stored in bohr, sometimes in angstrom. The order of atoms can be either input order or internal order. These settings can be adjusted with *unit* and *internal* parameters. Some variables store more than one geometry, in those cases *n* can be used to choose the preferred one.
         """
         if self.job.molecule:
-            m = self.job.molecule.copy()
-            natoms = len(m)
-            coords = self.readkf(section, variable)
-            coords = [coords[i:i+3] for i in range(0,len(coords),3)]
-            if len(coords) > natoms:
-                coords = coords[(n-1)*natoms:n*natoms]
-            if internal:
-                mapping = self._int2inp()
-                coords = [coords[mapping[i]-1] for i in range(len(coords))]
-            for at,coord in zip(m,coords):
-                at.move_to(coord, unit)
-            return m
-        raise PlamsError('get_molecule() failed. Corresponding job has no molecule associated')
+            mol = self.job.molecule.copy()
+        else:
+            mol = self.get_main_molecule()
+
+        natoms = len(mol)
+        coords = self.readkf(section, variable)
+        coords = [coords[i:i+3] for i in range(0,len(coords),3)]
+        if len(coords) > natoms:
+            if len(coords) < n*natoms:
+                raise PlamsError('get_molecule() failed. Not enough data in {}%{} to extract geometry no {}'.format(section, variable, n))
+            coords = coords[(n-1)*natoms : n*natoms]
+        if internal:
+            mapping = self._int2inp()
+            coords = [coords[mapping[i]-1] for i in range(len(coords))]
+        for at,coord in zip(mol,coords):
+            at.move_to(coord, unit)
+        return mol
+
+
+    def get_main_molecule(self):
+        """get_main_molecule()
+        Return a |Molecule| instance created based only on the information in the main KF file. Depending on a program and type of run this can be either initial or final geometry. Abstract method.
+        """
+        raise PlamsError('Trying to run an abstract method SCMResults.get_main_molecule()')
 
 
     def _kfpath(self):
@@ -125,7 +138,6 @@ class SCMResults(Results):
         Obtain mapping from internal atom order to the input one. Abstract method.
         """
         raise PlamsError('Trying to run an abstract method SCMResults._int2inp()')
-
 
 
 
