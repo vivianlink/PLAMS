@@ -20,7 +20,7 @@ class DFTBResults(SCMResults):
 
     def get_properties(self):
         """get_properties()
-        Return a dictionary with all the entries from ``Properties`` section in the main ``.rkf`` file.
+        Return a dictionary with all the entries from ``Properties`` section in the main KF file (``$JN.rkf``).
         """
         n = self.readkf('Properties', 'nEntries')
         ret = {}
@@ -35,19 +35,13 @@ class DFTBResults(SCMResults):
 
     def get_main_molecule(self):
         """get_main_molecule()
-        Return a |Molecule| instance based on the ``Molecule`` section in the main ``.rkf`` file.
+        Return a |Molecule| instance based on the ``Molecule`` section in the main KF file (``$JN.rkf``).
 
-        For runs with multiple geometries (geometry optimization, transition state search, molecular dynamics) this is the **final** geometry. To access the initial (or any intermediate) coordinates please extract them from section ``History``, variable ``Coords(i)``. Mind the fact that all coordinates written by DFTB to ``.rkf`` file are in bohr::
+        For runs with multiple geometries (geometry optimization, transition state search, molecular dynamics) this is the **final** geometry. In such a case, to access the initial (or any intermediate) coordinates please extract them from section ``History``, variable ``Coords(i)``. Mind the fact that all coordinates written by DFTB to ``.rkf`` file are in bohr::
 
             mol = results.get_molecule(section='History', variable='Coords(1)', unit='bohr')
-
         """
-        ret = Molecule()
-        atomic_numbers = self.readkf('Molecule', 'AtomicNumbers')
-        coords = self.readkf('Molecule', 'Coords')
-        coords = [coords[i:i+3] for i in range(0,len(coords),3)]
-        for z, xyz in zip(atomic_numbers, coords):
-            ret.add_atom(Atom(atnum=z, coords=xyz, unit='bohr'))
+        ret = self.get_molecule(section='Molecule', variable='Coords', unit='bohr')
         ret.properties.charge = self.readkf('Molecule', 'Charge')
         if ('Molecule', 'LatticeVectors') in self._kf:
             lattice = self.readkf('Molecule', 'LatticeVectors')
@@ -55,6 +49,23 @@ class DFTBResults(SCMResults):
             ret.lattice = [tuple(lattice[i:i+3]) for i in range(0,len(lattice),3)]
         return ret
 
+
+    def get_input_molecule(self):
+        """get_input_molecule()
+        Return a |Molecule| instance with initial coordinates.
+
+        All data used by this method is taken from ``$JN.rkf`` file. The ``molecule`` attribute of the corresponding job is ignored.
+        """
+        if ('History', 'nEntries') in self._kf:
+            return self.get_molecule(section='History', variable='Coords(1)', unit='bohr')
+        return self.get_main_molecule()
+
+
+    def _atomic_numbers_input_order(self):
+        """_atomic_numbers_input_order()
+        Return a list of atomic numbers, in the input order.
+        """
+        return self.readkf('Molecule', 'AtomicNumbers')
 
 
 
