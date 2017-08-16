@@ -8,7 +8,6 @@ from ...core.basejob import SingleJob
 from ...core.errors import FileError
 from ...core.settings import Settings
 from ...tools.units import Units
-from ...tools.geometry import rotation_matrix
 from .scmjob import SCMResults
 from .scmjob import SCMJob, SCMResults
 
@@ -38,6 +37,8 @@ class ReaxFFJob(SingleJob):
 
 
     def get_input(self):
+        """Produce the ``control`` file based on key-value pairs present in ``settings.input.control`` branch."""
+
         s = self.settings.input.control
         ret = ''
         order = s._order if '_order' in s else iter(s)
@@ -47,6 +48,10 @@ class ReaxFFJob(SingleJob):
 
 
     def get_runscript(self):
+        """Generate a runscript.
+
+        Returned string is just ``$ADFBIN/reaxff``, possibly prefixed with ``export NSCM=(number)`` if ``settings.runscript.nproc`` is present.
+        """
         s = self.settings.runscript
         ret = ''
         if 'nproc' in s:
@@ -59,13 +64,25 @@ class ReaxFFJob(SingleJob):
 
 
     def hash_input(self):
+        """Disable hashing for ReaxFF jobs.
+
+        It is a common task in molecular dynamics to run several trajectories with the same initial conditions. In such a case |RPM| would prevent second and all consecutive executions. Hence we decided to disable |RPM| for ReaxFF.
+
+        If you wish to bring it back, simply put ``ReaxFFJob.hash_input = SingleJob.hash_inputs`` somehwere at the beginning of your script.
+        """
         return None
 
 
     def _get_ready(self):
+        """Prepare contents of the job folder for execution.
+
+        Use the parent method from |SingleJob| to produce the runscript and the input file (``control``). Then create ``ffield`` and ``geo`` files using, respectively, :meth:`_write_ffield` and :meth:`_write_geofile`.
+
+        Then copy to the job folder all files listed in ``settings.input.external``. The value of this key should either be a list of strings with paths to files or a dictionary (also |Settings|) with paths to files as values and names under which these files should be copied to the job folder as keys.
+        """
         SingleJob._get_ready(self)
         self._write_ffield(self.settings.input.ffield)
-        self._write_geofile(molecule=self.molecule, filename='geo', settings=self.settings.input.geo, description=self.name, lattice=True)
+        self._write_geofile(molecule=self.molecule, filename=opj(self.path, 'geo'), settings=self.settings.input.geo, description=self.name, lattice=True)
 
         if 'external' in self.settings.input:
             ext = self.settings.input.external
@@ -85,6 +102,13 @@ class ReaxFFJob(SingleJob):
 
 
     def _write_ffield(self, ffield):
+        """Copy to the job folder a force field file indicated by *ffield**.
+
+        *ffield* should be a string with a path to some external file or with a filename present in ``$ADFHOME/atomicdata/ForceFields/ReaxFF``. The location of this search folder is defined by ``ffield_path`` class attribute).
+
+        Given file is always coied to the job folder as ``ffield``, due to ReaxFF program requirements.
+        """
+
         if os.path.isfile(ffield):
             shutil.copy(ffield, opj(self.path, 'ffield'))
         else:
@@ -97,6 +121,20 @@ class ReaxFFJob(SingleJob):
 
 
     def _write_geofile(self, molecule, filename, settings, description, lattice=False):
+        """Write to *filename* a geo-file describing *molecule*.
+
+        *settings* should be a |Settings| instance containing all the additional key-value pairs that should be present in the resulting geo-file. To obtain multiple occurrences of the same key in the geo-file, put all the values as a list in *settings*.
+
+        *description* is the default value for ``DESCRP`` key. It is used only if ``descrp`` key is not present in *settings*.
+
+        If *lattice* is ``True``, the information about periodicity is printed to the resulting geo-file with ``CRYSTX`` key. If the supplied *molecule* does not contain lattice vectors (or contains less then 3 of them), this method will add them (and hence alter *molecule*!).  The length of added vectors is defined by ``default_cell_size`` class attribute.
+
+        *settings* can also be a single string with a path to a file -- in that case this file is copied as *filename* and all the rest of this method is skipped.
+
+        .. note::
+
+            If *lattice* is ``True`` and the lattice present in *molecule* does not follow ReaxFF convention (the third vector aligned with Z axis, the second one with YZ plane), this method will rotate the *molecule* to fulfill these requirements.
+        """
         if isinstance(settings, str) and os.path.isfile(settings):
             shutil.copy(settings, opj(self.path, filename))
         else:
@@ -115,8 +153,14 @@ class ReaxFFJob(SingleJob):
                     header.append(('{:6} '+'{} '*len(val)+'\n').format(key.upper(), *val))
                 else:
                     header.append('{:6} {}\n'.format(key.upper(), val))
-            if lattice:
-                self._align_lattice(molecule, self.default_cell_size)
+
+            if lattice is True:
+                molecule.align_lattice(convention='z')
+
+                f = lambda x: tuple([self.default_cell_size * int(i==x) for i in range(3)])
+                while len(molecule.lattice) < 3:
+                    molecule.lattice.append(f(len(molecule.lattice)))
+
                 header.append('CRYSTX  {:10.5f} {:10.5f} {:10.5f} {:10.5f} {:10.5f} {:10.5f}\n'.format(*self._convert_lattice(molecule.lattice)))
 
             atoms = []
@@ -132,24 +176,9 @@ class ReaxFFJob(SingleJob):
 
 
     @staticmethod
-    def _align_lattice(molecule, default_len):
-        dim = len(molecule.lattice)
-
-        if dim == 3 and (abs(molecule.lattice[2][0]) > 1e-10 or abs(molecule.lattice[2][1]) > 1e-10):
-            mat = rotation_matrix(molecule.lattice[2], [0.0, 0.0, 1.0])
-            molecule.rotate(mat, lattice=True)
-        if dim >= 2 and abs(molecule.lattice[1][0]) > 1e-10:
-            mat = rotation_matrix([molecule.lattice[1][0], molecule.lattice[1][1], 0.0], [0.0, 1.0, 0.0])
-            molecule.rotate(mat, lattice=True)
-
-        f = lambda x: [default_len * int(i==x) for i in range(3)]
-        while len(molecule.lattice) < 3:
-            molecule.lattice.append(f(len(molecule.lattice)))
-
-
-
-    @staticmethod
     def _convert_lattice(lattice):
+        """Convert a *lattice* expressed as three 3-dimensional vectors to (*a*, *b*, *c*, *alpha*, *beta*, *gamma*) format. Lengths of lattice vectors are expressed as *a*, *b* and *c*, angles between them as *alpha*, *beta*, *gamma*.
+        """
         a, b, c = map(numpy.linalg.norm, lattice)
         al = numpy.dot(lattice[1], lattice[2])/(b*c)
         be = numpy.dot(lattice[0], lattice[2])/(a*c)
@@ -162,6 +191,10 @@ class ReaxFFJob(SingleJob):
 
 
 def load_reaxff_control(filename, keep_order=True):
+    """Return a |Settings| instance containing all data from an existing ``control`` file, indicated by *filename*.
+
+    If *keep_order* is ``True``, the returned |Settings| instance is enriched with the ``_order`` key containing a list of all keys in the same order they were present in the loaded ``contol`` file.
+    """
 
     if not os.path.isfile(filename):
         raise FileError('File {} not present'.format(filename))
