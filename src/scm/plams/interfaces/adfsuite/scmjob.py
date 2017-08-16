@@ -78,12 +78,8 @@ class SCMResults(Results):
 
         Returned |Molecule| instance is created by copying a molecule from associated |SCMJob| instance and updating atomic coordinates with values read from *section*/*variable*. The format in which coordinates are stored is not consistent for all programs or even for different sections of the same KF file. Sometimes coordinates are stored in bohr, sometimes in angstrom. The order of atoms can be either input order or internal order. These settings can be adjusted with *unit* and *internal* parameters. Some variables store more than one geometry, in those cases *n* can be used to choose the preferred one.
         """
-        if self.job.molecule:
-            mol = self.job.molecule.copy()
-        else:
-            mol = self.get_main_molecule()
-
-        natoms = len(mol)
+        atnums = self._atomic_numbers_input_order()
+        natoms = len(atnums)
         coords = self.readkf(section, variable)
         coords = [coords[i:i+3] for i in range(0,len(coords),3)]
         if len(coords) > natoms:
@@ -93,21 +89,22 @@ class SCMResults(Results):
         if internal:
             mapping = self._int2inp()
             coords = [coords[mapping[i]-1] for i in range(len(coords))]
-        for at,coord in zip(mol,coords):
-            at.move_to(coord, unit)
-        return mol
+        ret = Molecule()
+        for z,crd in zip(atnums,coords):
+            ret.add_atom(Atom(atnum=z, coords=crd))
+        return ret
 
 
-    def get_main_molecule(self):
-        """get_main_molecule()
-        Return a |Molecule| instance created based only on the information in the main KF file. Depending on a program and type of run this can be either initial or final geometry. Abstract method.
+    def _atomic_numbers_input_order(self):
+        """_atomic_numbers_input_order()
+        Return a list of atomic numbers, in the input order. Abstract method.
         """
-        raise PlamsError('Trying to run an abstract method SCMResults.get_main_molecule()')
+        raise PlamsError('Trying to run an abstract method SCMResults._atomic_numbers_input_order()')
 
 
     def _kfpath(self):
         """_kfpath()
-        Return an absolute path to the main KF file.
+        Return the absolute path to the main KF file.
         """
         return opj(self.job.path, self.job.name + self.__class__._kfext)
 
