@@ -134,12 +134,19 @@ class Units(object):
 
     @classmethod
     def convert(cls, value, inp, out):
-        """Convert *value* from unit *inp* to *out*. *value* has to be either a single number or a container (list, tuple etc.) containing only numbers. In this case container of the same type and length is returned."""
-        r = cls.conversion_ratio(inp,out)
+        """Convert *value* from unit *inp* to *out*.
+
+        *value* can be a single number or a container (list, tuple, numpy.array etc.). In the latter case a container of the same type and length is returned. Conversion happens recursively, so this method can be used to convert, for example, a list of lists of numbers, or any other hierarchical container structure. Conversion is applied on all levels, to all values that are numbers (also numpy number types). All other values (strings, bools etc.) remain unchanged.
+        """
+        if value is None or isinstance(value, (bool, str)):
+            return value
         if isinstance(value, collections.Iterable):
             t = type(value)
             if t == numpy.ndarray:
                 t = numpy.array
-            v = [i*r for i in value]
+            v = [cls.convert(i, inp, out) for i in value]
             return t(v)
-        return value * r
+        if isinstance(value, (int, float, numpy.generic)):
+            return value * cls.conversion_ratio(inp,out)
+        return value
+
