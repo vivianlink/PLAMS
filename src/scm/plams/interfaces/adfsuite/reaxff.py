@@ -5,6 +5,7 @@ import shutil
 from os.path import join as opj
 
 from ...core.basejob import SingleJob
+from ...core.common import log
 from ...core.errors import FileError
 from ...core.settings import Settings
 from ...tools.units import Units
@@ -155,7 +156,8 @@ class ReaxFFJob(SingleJob):
                     header.append('{:6} {}\n'.format(key.upper(), val))
 
             if lattice is True:
-                molecule.align_lattice(convention='z')
+                if molecule.align_lattice(convention='z'):
+                    log("The lattice supplied for job {} did not follow the convention required by ReaxFF. I rotated the whole system for you. You're welcome".format(self.name), 3)
 
                 f = lambda x: tuple([self.default_cell_size * int(i==x) for i in range(3)])
                 while len(molecule.lattice) < 3:
