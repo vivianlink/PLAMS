@@ -846,34 +846,41 @@ class Molecule (object):
         *   ``z`` (convention used by `ReaxFF <https://www.scm.com/product/reaxff>`_) -- second lattice vector (if present) aligned with YZ plane. Third vector (if present) aligned with Z axis.
 
         *zero* argument can be used to specify the numerical tolerance for zero (used to determine if some vector is already aligned with a particular axis or plane).
+
+        The returned value is ``True`` if any rotation happened, ``False`` otherwise.
         """
         dim = len(self.lattice)
 
         if dim == 0:
             log('NOTE: align_lattice called on a Molecule without any lattice', 5)
-            return
+            return False
 
+        rotated = False
         if convention == 'x':
             if abs(self.lattice[0][1]) > zero or abs(self.lattice[0][2]) > zero:
                 mat = rotation_matrix(self.lattice[0], [1.0, 0.0, 0.0])
                 self.rotate(mat, lattice=True)
+                rotated = True
 
             if dim >= 2 and abs(self.lattice[1][2]) > zero:
                 mat = rotation_matrix([0.0, self.lattice[1][1], self.lattice[1][2]], [0.0, 1.0, 0.0])
                 self.rotate(mat, lattice=True)
+                rotated = True
 
         elif convention == 'z':
             if dim == 3 and (abs(self.lattice[2][0]) > zero or abs(self.lattice[2][1]) > zero):
                 mat = rotation_matrix(self.lattice[2], [0.0, 0.0, 1.0])
                 self.rotate(mat, lattice=True)
+                rotated = True
 
             if dim >= 2 and abs(self.lattice[1][0]) > zero:
                 mat = rotation_matrix([self.lattice[1][0], self.lattice[1][1], 0.0], [0.0, 1.0, 0.0])
                 self.rotate(mat, lattice=True)
+                rotated = True
 
         else:
             raise MoleculeError("align_lattice: unknown convention: {}. Possible values are 'x' or 'z'".format(convention))
-
+        return rotated
 
 
     def rotate_bond(self, bond, atom, angle, unit='radian'):
