@@ -257,7 +257,7 @@ class Job(object):
 class SingleJob(Job):
     """Abstract class representing a job consisting of a single execution of some external binary (or arbitrary shell script in general).
 
-    In addition to constructor arguments and attributes defined by |Job|, the constructor of this class accepts the keyword argument ``molecule`` that should be a |Molecule| instance.
+    In addition to constructor arguments and attributes defined by |Job|, the constructor of this class accepts the keyword argument ``molecule`` that should be a |Molecule| instance. The constructor creates a copy of the supplied |Molecule| and stores it as the ``molecule`` attribute.
 
     Class attribute ``_filenames`` defines default names for input, output, runscript and error files. If you wish to override this attribute it should be a dictionary with string keys ``'inp'``, ``'out'``, ``'run'``, ``'err'``. The value for each key should be a string describing corresponding file's name. Shortcut ``$JN`` can be used for job's name. The default value is defined in the following way::
 
@@ -270,7 +270,7 @@ class SingleJob(Job):
 
     def __init__(self, molecule=None, **kwargs):
         Job.__init__(self, **kwargs)
-        self.molecule = molecule
+        self.molecule = molecule.copy()
 
 
 
@@ -327,7 +327,6 @@ class SingleJob(Job):
         *   ``runscript`` -- returns hash of the runscript.
         *   ``input+runscript`` -- returns SHA256 hash of the concatenation of **hashes** of input and runscript.
         """
-
         if self.jobmanager:
             mode = self.jobmanager.settings.hashing
         else:
