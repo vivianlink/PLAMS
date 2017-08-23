@@ -2,12 +2,14 @@ import os
 
 from os.path import join as opj
 
+from ...core.basemol import Molecule, Atom
 from ...core.basejob import SingleJob
 from ...core.common import log, _hash
-from ...core.errors import PlamsError
+from ...core.errors import PlamsError, ResultsError
 from ...core.results import Results
 from ...core.settings import Settings
 from ...tools.kftools import KFFile
+from ...tools.units import Units
 
 
 
@@ -84,15 +86,25 @@ class SCMResults(Results):
         coords = [coords[i:i+3] for i in range(0,len(coords),3)]
         if len(coords) > natoms:
             if len(coords) < n*natoms:
-                raise PlamsError('get_molecule() failed. Not enough data in {}%{} to extract geometry no {}'.format(section, variable, n))
+                raise ResultsError('get_molecule() failed. Not enough data in {}%{} to extract geometry no {}'.format(section, variable, n))
             coords = coords[(n-1)*natoms : n*natoms]
         if internal:
             mapping = self._int2inp()
             coords = [coords[mapping[i]-1] for i in range(len(coords))]
         ret = Molecule()
         for z,crd in zip(atnums,coords):
-            ret.add_atom(Atom(atnum=z, coords=crd))
+            ret.add_atom(Atom(atnum=z, coords=crd, unit=unit))
         return ret
+
+
+    def _get_single_value(self, section, variable, output_unit, native_unit='au'):
+        """_get_single_value(section, variable, output_unit, native_unit='au')
+
+        A small method template for all the single number "get_something()" methods extracting data from main KF file. Returned value is converted from *native_unit* to *output_unit*.
+        """
+        if (section, variable) in self._kf:
+            return Units.convert(self.readkf(section, variable), native_unit, output_unit)
+        raise ResultsError("'{}%{}' not present in {}".format(section, variable, self._kfpath()))
 
 
     def _atomic_numbers_input_order(self):
