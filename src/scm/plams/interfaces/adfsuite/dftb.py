@@ -31,9 +31,9 @@ class DFTBResults(SCMResults):
         """get_main_molecule()
         Return a |Molecule| instance based on the ``Molecule`` section in the main KF file (``$JN.rkf``).
 
-        For runs with multiple geometries (geometry optimization, transition state search, molecular dynamics) this is the **final** geometry. In such a case, to access the initial (or any intermediate) coordinates please extract them from section ``History``, variable ``Coords(i)``. Mind the fact that all coordinates written by DFTB to ``.rkf`` file are in bohr::
+        For runs with multiple geometries (geometry optimization, transition state search, molecular dynamics) this is the **final** geometry. In such a case, to access the initial (or any intermediate) coordinates please extract them from section ``History``, variable ``Coords(i)`` or use :meth:`get_input_molecule`. Mind the fact that all coordinates written by DFTB to ``.rkf`` file are in bohr::
 
-            input_mol = results.get_molecule(section='History', variable='Coords(1)', unit='bohr')
+            mol = results.get_molecule(section='History', variable='Coords(1)', unit='bohr')
         """
         ret = self.get_molecule(section='Molecule', variable='Coords', unit='bohr')
         ret.properties.charge = self.readkf('Molecule', 'Charge')

@@ -32,9 +32,9 @@ class BANDResults(SCMResults):
         """get_main_molecule()
         Return a |Molecule| instance based on the ``Molecule`` section in the main KF file (``$JN.runkf``).
 
-        For runs with multiple geometries (geometry optimization, transition state search, molecular dynamics) this is the **final** geometry. In such a case, to access the initial (or any intermediate) coordinates please extract them from section ``History``, variables ``xyz0``, ``xyz1`` and so on. Mind the fact that all coordinates written by BAND to ``History`` section are in bohr and internal atom order::
+        For runs with multiple geometries (geometry optimization, transition state search, molecular dynamics) this is the **final** geometry. In such a case, to access the initial (or any intermediate) coordinates please use :meth:`get_input_molecule` or extract coordinates from section ``History``, variables ``xyz0``, ``xyz1`` and so on. Mind the fact that all coordinates written by BAND to ``History`` section are in bohr and internal atom order::
 
-            input_mol = results.get_molecule(section='History', variable='xyz0', unit='bohr', internal=True)
+            mol = results.get_molecule(section='History', variable='xyz0', unit='bohr', internal=True)
         """
         ret = self.get_molecule(section='Molecule', variable='Coords', unit='bohr', internal=True)
         ret.properties.charge = self.readkf('Molecule', 'Charge')

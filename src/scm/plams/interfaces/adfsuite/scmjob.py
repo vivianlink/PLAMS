@@ -268,6 +268,10 @@ class SCMJob(SingleJob):
 
 
     def hash_input(self):
+        """Calculate the hash of the input file.
+
+        All instances of |SCMJob| or |SCMResults| present as values in ``settings.input`` branch are replaced with hashes of corresponding job's inputs.
+        """
         spec = (SCMJob, SCMResults)
         f = lambda x: x.hash_input() if isinstance(x, SCMJob) else x.job.hash_input()
         return _hash(self._serialize_input(spec, f))
