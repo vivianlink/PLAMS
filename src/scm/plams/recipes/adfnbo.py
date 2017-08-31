@@ -21,7 +21,6 @@ class ADFNBOJob(ADFJob):
         else:
             s[save] = 'TAPE15'
 
-        self.results._rename_map['TAPE15'] = '$JN.t15'
         self.settings.runscript.post =  """
 $ADFBIN/adfnbo <<eor
 write
