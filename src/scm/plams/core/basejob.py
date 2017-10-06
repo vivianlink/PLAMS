@@ -11,6 +11,7 @@ except ImportError:
 
 from os.path import join as opj
 
+from .basemol import Molecule
 from .common import log, _hash
 from .errors import PlamsError, ResultsError
 from .results import Results
@@ -270,7 +271,7 @@ class SingleJob(Job):
 
     def __init__(self, molecule=None, **kwargs):
         Job.__init__(self, **kwargs)
-        self.molecule = molecule.copy()
+        self.molecule = molecule.copy() if isinstance(molecule, Molecule) else molecule
 
 
 
