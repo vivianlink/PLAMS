@@ -28,9 +28,10 @@ The first step to run a job using PLAMS is to create a job object. You need to p
     >>> myjob = ADFJob(name='myfirstjob')
 
 Various keyword arguments (arguments of the form ``arg=value``, like ``name`` in the example above) can be passed to a job constructor, depending on the type of your job. However, the following keyword arguments are common for all types of jobs:
-    *   ``name`` -- a string containing the name of the job. If not supplied, default name ``plamsjob`` is used. Job's name cannot contain path separator (``\`` in Linux, ``/`` in Windows).
-    *   ``settings`` -- a |Settings| instance to be used by this job. It gets copied (using :meth:`~scm.plams.settings.Settings.copy`) so you can pass the same instance to several different jobs and changes made afterwards won't interfere. Any instance of |Job| can be also passed as a value of this argument. In that case |Settings| associated with the passed job are copied.
-    *   ``depend`` -- a list of jobs that need to be finished before this job can start. This is useful when you want to execute your jobs in parallel. Usually there is no need to use this argument, since dependencies between jobs are resolved automatically (see |parallel|). However, sometimes one needs to explicitly state such a dependency and this option is then helpful.
+
+*   ``name`` -- a string containing the name of the job. If not supplied, default name ``plamsjob`` is used. Job's name cannot contain path separator (``\`` in Linux, ``/`` in Windows).
+*   ``settings`` -- a |Settings| instance to be used by this job. It gets copied (using :meth:`~scm.plams.core.settings.Settings.copy`) so you can pass the same instance to several different jobs and changes made afterwards won't interfere. Any instance of |Job| can be also passed as a value of this argument. In that case |Settings| associated with the passed job are copied.
+*   ``depend`` -- a list of jobs that need to be finished before this job can start. This is useful when you want to execute your jobs in parallel. Usually there is no need to use this argument, since dependencies between jobs are resolved automatically (see |parallel|). However, sometimes one needs to explicitly state such a dependency and this option is then helpful.
 
 Those values do not need to be passed to the constructor, they can be set or changed later (but they should be fixed before the job starts to run)::
 
@@ -48,18 +49,19 @@ Contents of job's settings
 ++++++++++++++++++++++++++
 
 The following keys and branches of job's settings are meaningful for all kinds of jobs:
-    *   ``myjob.settings.input.`` is a branch storing settings regarding input file of a job. The way data present in this branch is used depends on the type of job and is specified in respective subclasses of |Job|.
-    *   ``myjob.settings.runscript.`` holds runscript information, either program-specific or general:
 
-        -   ``myjob.settings.runscript.shebang`` -- the first line of the runscript, starting with ``#!``, describing interpreter to use
-        -   ``myjob.settings.runscript.pre`` -- an arbitrary string that will be placed in the runscript file just below the shebang line, before the actual contents
-        -   ``myjob.settings.runscript.post`` -- an arbitrary string to put at the end of the runscript.
-        -   ``myjob.settings.runscript.stdout_redirect`` -- boolean flag defining if standard output redirection should be handled inside the runscript. If set to ``False``, the redirection will be done by Python outside the runscript. If set to ``True``, standard output will be redirected inside the runscript using ``>``.
+*   ``myjob.settings.input.`` is a branch storing settings regarding input file of a job. The way data present in this branch is used depends on the type of job and is specified in respective subclasses of |Job|.
+*   ``myjob.settings.runscript.`` holds runscript information, either program-specific or general:
 
-    *   ``myjob.settings.run.`` branch stores run flags for the job (see below)
-    *   ``myjob.settings.pickle`` is a boolean defining if job object should be pickled after finishing
-    *   ``myjob.settings.keep`` and ``myjob.settings.save`` are keys adjusting |cleaning|.
-    *   ``myjob.settings.link_files`` decides if files from job folder can be linked rather than copied when copying is requested
+    -   ``myjob.settings.runscript.shebang`` -- the first line of the runscript, starting with ``#!``, describing interpreter to use
+    -   ``myjob.settings.runscript.pre`` -- an arbitrary string that will be placed in the runscript file just below the shebang line, before the actual contents
+    -   ``myjob.settings.runscript.post`` -- an arbitrary string to put at the end of the runscript.
+    -   ``myjob.settings.runscript.stdout_redirect`` -- boolean flag defining if standard output redirection should be handled inside the runscript. If set to ``False``, the redirection will be done by Python outside the runscript. If set to ``True``, standard output will be redirected inside the runscript using ``>``.
+
+*   ``myjob.settings.run.`` branch stores run flags for the job (see below)
+*   ``myjob.settings.pickle`` is a boolean defining if job object should be pickled after finishing
+*   ``myjob.settings.keep`` and ``myjob.settings.save`` are keys adjusting |cleaning|.
+*   ``myjob.settings.link_files`` decides if files from job folder can be linked rather than copied when copying is requested
 
 
 .. _default-settings:
@@ -72,7 +74,7 @@ Every job instance has an attribute called ``default_settings`` that stores a li
     >>> myjob.default_settings.append(sometemplate)
     >>> myjob.default_settings += [temp1, temp2]
 
-During job execution (just after ``prerun()`` is finished) job's own ``settings`` are soft-updated with all elements of ``default_settings`` list, one by one, starting with **last**. That way if you want to adjust some setting for all jobs run in your script you don't need to go to each job and set it there every time, one change in ``config.job`` is enough. Similarly, if you have a group of jobs that need the same ``settings`` adjustments, you can create an empty |Settings| instance, put those adjustments in it and add it to each job's ``default_settings``. Keep in mind that :meth:`~scm.plams.settings.Settings.soft_update` is used so any key in a template in ``default_settings`` will end up in job's ``settings`` only if such a key is not yet present there. Thanks to that the order of templates in ``default_settings`` somehow defines their importance: data from a preceding template will never override the following one, it can only enrich it.
+During job execution (just after ``prerun()`` is finished) job's own ``settings`` are soft-updated with all elements of ``default_settings`` list, one by one, starting with **last**. That way if you want to adjust some setting for all jobs run in your script you don't need to go to each job and set it there every time, one change in ``config.job`` is enough. Similarly, if you have a group of jobs that need the same ``settings`` adjustments, you can create an empty |Settings| instance, put those adjustments in it and add it to each job's ``default_settings``. Keep in mind that :meth:`~scm.plams.core.settings.Settings.soft_update` is used so any key in a template in ``default_settings`` will end up in job's ``settings`` only if such a key is not yet present there. Thanks to that the order of templates in ``default_settings`` somehow defines their importance: data from a preceding template will never override the following one, it can only enrich it.
 
 
 .. _job-life-cycle:
@@ -87,18 +89,19 @@ After creating a job instance and adjusting its settings you can finally run it.
 Again, various keyword arguments can be passed here. With ``jobrunner`` and ``jobmanager`` you can specify which |JobRunner| and |JobManager| to use for your job. If those arguments are omitted, the default instances stored in ``config.default_jobrunner`` and ``config.jm`` are taken. All other keyword arguments passed here are collected and stored in ``myjob.settings.run`` branch as one flat level. They can be used later by various objects involved in running your job, for example |GridRunner| uses them to build command executed to submit runscript to the queueing system.
 
 The following steps are taken after the |run| method is called:
-    1. ``myjob.settings.run`` is soft-updated with |run| keyword arguments.
-    2. If a parallel |JobRunner| was used, a new thread is spawned and all further steps of this list happen in this thread.
-    3. Explicit dependencies from ``myjob.depend`` are resolved. This means waiting for all jobs listed there to finish.
-    4. Job's name gets registered in the job manager and the job folder is created.
-    5. Job's |prerun| method is called.
-    6. ``myjob.settings`` are updated according to contents of ``myjob.default_settings``.
-    7. The hash of a job is calculated and checked (see |RPM|). If the same job was found as previously run, its results are copied (or linked) to the current job's folder and |run| finishes.
-    8. Now the real job execution happens. If your job is a single job, an input file and a runscript are produced and passed to job runner's method :meth:`~scm.plams.jobrunner.JobRunner.call`. In case of multijob, |run| method is called for all children jobs.
-    9. After the execution is finished, result files produced by the job are collected and :meth:`~Job.check` is used to test if the execution was successful.
-    10. The job folder is cleaned using ``myjob.settings.keep``. See |cleaning| for details.
-    11. Job's |postrun| method is called.
-    12. If ``myjob.settings.pickle`` is true, the whole job instance gets pickled and saved to the ``[jobname].dill`` file in the job folder.
+
+1.  ``myjob.settings.run`` is soft-updated with |run| keyword arguments.
+2.  If a parallel |JobRunner| was used, a new thread is spawned and all further steps of this list happen in this thread.
+3.  Explicit dependencies from ``myjob.depend`` are resolved. This means waiting for all jobs listed there to finish.
+4.  Job's name gets registered in the job manager and the job folder is created.
+5.  Job's |prerun| method is called.
+6.  ``myjob.settings`` are updated according to contents of ``myjob.default_settings``.
+7.  The hash of a job is calculated and checked (see |RPM|). If the same job was found as previously run, its results are copied (or linked) to the current job's folder and |run| finishes.
+8.  Now the real job execution happens. If your job is a single job, an input file and a runscript are produced and passed to job runner's method :meth:`~scm.plams.core.jobrunner.JobRunner.call`. In case of multijob, |run| method is called for all children jobs.
+9.  After the execution is finished, result files produced by the job are collected and :meth:`~Job.check` is used to test if the execution was successful.
+10. The job folder is cleaned using ``myjob.settings.keep``. See |cleaning| for details.
+11. Job's |postrun| method is called.
+12. If ``myjob.settings.pickle`` is true, the whole job instance gets pickled and saved to the ``[jobname].dill`` file in the job folder.
 
 
 Name conflicts
@@ -115,39 +118,41 @@ Prerun and postrun methods
 ++++++++++++++++++++++++++
 
 |prerun| and |postrun| methods are intended for further customization of your jobs. They can contain arbitrary pieces of code that are executed before and after the actual execution of your job. |prerun| takes place after job's folder is created but before hash checking. Here are some ideas what can be put there:
-    *   adjusting job ``settings``
-    *   copying to job folder some files required for running
-    *   extracting results of some other job, processing them and plugging to job
-    *   generating children jobs in multijobs
+
+*   adjusting job ``settings``
+*   copying to job folder some files required for running
+*   extracting results of some other job, processing them and plugging to job
+*   generating children jobs in multijobs
 
 See also |parallel| for explanation how to use |prerun| to automatically handle dependencies in parallel workflows.
 
 The other method, |postrun|, is called after job execution is finished, the results are collected and the job folder is cleaned. It is supposed to contain any kind of essential results postprocessing that needs to be done before results of this job can be pushed further in the workflow. For that purpose code contained in |postrun| has some special privileges. At the time the method is executed the job is not yet considered done, so all threads requesting its results are waiting. However, the guardian restricting the access to results of unfinished jobs can recognize code coming from |postrun| and allow it to access and modify results. So calling |Results| methods can be safely done there and you can be sure that everything you put in |postrun| is done before other jobs have access to this job's results.
 
 |prerun| and |postrun| methods can be added to your jobs in multiple ways:
-    *   you can create a tiny subclass which redefines the method::
 
-            >>> class MyJobWithPrerun(MyJob):
-            >>>     def prerun(self):
-            >>>         #do stuff
+*   you can create a tiny subclass which redefines the method::
+
+        >>> class MyJobWithPrerun(MyJob):
+        >>>     def prerun(self):
+        >>>         #do stuff
 
 
-        It can be done right inside you script. After the above definition you can create instances of the new class and treat them in exactly the same way you would treat ``MyJob`` instances. The only difference is that they will be equipped with |prerun| method you just defined.
-    *   you can bind the method to an existing class using |add_to_class| decorator::
+    It can be done right inside you script. After the above definition you can create instances of the new class and treat them in exactly the same way you would treat ``MyJob`` instances. The only difference is that they will be equipped with |prerun| method you just defined.
+*   you can bind the method to an existing class using |add_to_class| decorator::
 
-            >>> @add_to_class(MyJob)
-            >>> def prerun(self):
-            >>>     #do stuff
+        >>> @add_to_class(MyJob)
+        >>> def prerun(self):
+        >>>     #do stuff
 
-        That change affects all instances of ``MyJob``, even those created before the above code was executed (obviously it won't affect instances previously run and finished).
-    *   you can bind the method directly to an instance using |add_to_instance| decorator::
+    That change affects all instances of ``MyJob``, even those created before the above code was executed (obviously it won't affect instances previously run and finished).
+*   you can bind the method directly to an instance using |add_to_instance| decorator::
 
-            >>> j = MyJob(...)
-            >>> @add_to_instance(j)
-            >>> def prerun(self):
-            >>>     #do stuff
+        >>> j = MyJob(...)
+        >>> @add_to_instance(j)
+        >>> def prerun(self):
+        >>>     #do stuff
 
-        Only one specified instance (``j``) is affected this way.
+    Only one specified instance (``j``) is affected this way.
 
 All the above works for |postrun| as well.
 
@@ -196,29 +201,30 @@ Your new class has to, of course, be a subclass of |SingleJob| and define method
     :meth:`~SingleJob.get_runscript` method should properly handle output redirection based on the value of ``myjob.settings.runscript.stdout_redirect``. When ``False``, no redirection should occur inside runscript. If ``True``, runscript should be constructed in such a way that all standard output is redirected (using ``>``) to the proper file (its name is "visible" as ``self._filename('out')`` from inside :meth:`~SingleJob.get_runscript` body).
 
 This is sufficient for your new job to work properly with other PLAMS components. However, there are other useful attributes and methods that can be overridden:
-    *   :meth:`~Job.check` -- the default version of this method defined in |Job| always returns ``True`` and hence effectively disables correctness checking. If you wish to enable checking for your new class, you need to define :meth:`~Job.check` method in it, just like :meth:`~SingleJob.get_input` and :meth:`~SingleJob.get_runscript` in the example above. It should take no other arguments than ``self`` and return a boolean value indicating if job execution was successful. This method is privileged to have an early access to |Results| methods in exactly the same way as |postrun|.
-    *   if you wish to create a special |Results| subclass for results of your new job, make sure to let it know about it::
 
-        >>> class MyResults(Results):
-        >>>     def some_method(self, ...):
-        >>>         ...
-        >>>
-        >>> class MyJob(SingleJob):
-        >>>     _result_type = MyResults
-        >>>     def get_input(self):
-        >>>         ...
-        >>>         return 'string with input file'
-        >>>     def get_runscript(self):
-        >>>         ...
-        >>>         return 'string with runscript'
+*   :meth:`~Job.check` -- the default version of this method defined in |Job| always returns ``True`` and hence effectively disables correctness checking. If you wish to enable checking for your new class, you need to define :meth:`~Job.check` method in it, just like :meth:`~SingleJob.get_input` and :meth:`~SingleJob.get_runscript` in the example above. It should take no other arguments than ``self`` and return a boolean value indicating if job execution was successful. This method is privileged to have an early access to |Results| methods in exactly the same way as |postrun|.
+*   if you wish to create a special |Results| subclass for results of your new job, make sure to let it know about it::
 
-    *   :meth:`~Job.hash` -- see |RPM| for details
-    *   if your new job requires some special preparations regarding input or runscript files these preparations can be done for example in |prerun|. However, if you wish to leave |prerun| clean for further subclassing or adjusting in instance-based fashion, you can use another method called :meth:`~SingleJob._get_ready`. This method is responsible for input and runscript creation, so if you decide to override it you **must** call its parent version in your version::
+    >>> class MyResults(Results):
+    >>>     def some_method(self, ...):
+    >>>         ...
+    >>>
+    >>> class MyJob(SingleJob):
+    >>>     _result_type = MyResults
+    >>>     def get_input(self):
+    >>>         ...
+    >>>         return 'string with input file'
+    >>>     def get_runscript(self):
+    >>>         ...
+    >>>         return 'string with runscript'
 
-        >>> def _get_ready(self):
-        >>>     # do some stuff
-        >>>     SingleJob._get_ready()
-        >>>     # do some other stuff
+*   :meth:`~Job.hash_input` and :meth:`~Job.hash_runscript` -- see |RPM| for details
+*   if your new job requires some special preparations regarding input or runscript files these preparations can be done for example in |prerun|. However, if you wish to leave |prerun| clean for further subclassing or adjusting in instance-based fashion, you can use another method called :meth:`~SingleJob._get_ready`. This method is responsible for input and runscript creation, so if you decide to override it you **must** call its parent version in your version::
+
+    >>> def _get_ready(self):
+    >>>     # do some stuff
+    >>>     SingleJob._get_ready()
+    >>>     # do some other stuff
 
 
 .. warning::

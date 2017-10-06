@@ -1,17 +1,11 @@
-from __future__ import unicode_literals
-
 import os
-try:
-    import subprocess32 as subprocess
-except ImportError:
-    import subprocess
+import subprocess
 
 from os.path import join as opj
 
 from ..core.basejob import SingleJob
 from ..core.results import Results
 from ..core.settings import Settings
-from ..core.common import string
 
 __all__ = ['DiracJob', 'DiracResults']
 
@@ -24,19 +18,18 @@ class DiracResults(Results):
 
 
     def collect(self):
-        """After collecting the files produced by job execution with parent method :meth:`Results.collect<scm.plams.results.Results.collect>` append the ``pam`` output to the regular output file.
+        """After collecting the files produced by job execution with parent method :meth:`Results.collect<scm.plams.core.results.Results.collect>` append the ``pam`` output to the regular output file.
         """
         Results.collect(self)
         pamfile = self.job._filename('out')
-        s = subprocess.check_output(['grep', 'output file', pamfile], cwd=self.job.path)
-        s = string(s)
+        s = subprocess.check_output(['grep', 'output file', pamfile], cwd=self.job.path).decode()
         diracfile = s.split(':')[-1].strip()
         if diracfile in self.files:
             pampath = opj(self.job.path, pamfile)
             diracpath = opj(self.job.path, diracfile)
-            with open(pampath, 'rU') as f:
+            with open(pampath, 'r') as f:
                 pamoutput = f.readlines()
-            with open(diracpath, 'rU') as f:
+            with open(diracpath, 'r') as f:
                 diracoutput = f.readlines()
             with open(pampath, 'w') as f:
                 f.writelines(diracoutput)
@@ -65,7 +58,7 @@ class DiracJob(SingleJob):
 
 
     def _get_ready(self):
-        """Before generating runscript and input with parent method :meth:`SingleJob._get_ready<scm.plams.basejob.SingleJob._get_ready>` add proper ``mol`` and ``inp`` entries to ``self.settings.runscript.pam``. If already present there, ``mol`` will not be added.
+        """Before generating runscript and input with parent method :meth:`SingleJob._get_ready<scm.plams.core.basejob.SingleJob._get_ready>` add proper ``mol`` and ``inp`` entries to ``self.settings.runscript.pam``. If already present there, ``mol`` will not be added.
         """
         s = self.settings.runscript.pam
         if 'mol' not in s:

@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import inspect
 
 __all__ = ['Settings']
@@ -8,10 +6,11 @@ class Settings(dict):
     """Automatic multi-level dictionary. Subclass of built-in :class:`dict`.
 
     The shortcut dot notation (``s.basis`` instead of ``s['basis']``) can be used for keys that:
-        *   are strings
-        *   don't contain whitespaces
-        *   begin with a letter or underscore
-        *   don't both begin and end with two or more underscores.
+
+    *   are strings
+    *   don't contain whitespaces
+    *   begin with a letter or underscore
+    *   don't both begin and end with two or more underscores.
 
     .. warning::
 
@@ -116,14 +115,14 @@ class Settings(dict):
     def __reduce__(self):
         """Magic method used when an instance of |Settings| is pickled.
 
-        All stored values that have ``_settings_reduce`` method defined are reduced according to that method. ``_settings_reduce`` should take no arguments (other than ``self``) and return picklable object (preferably a string).
+        All stored values that have ``_reduce`` method defined are reduced according to that method with |Settings| as context. ``_reduce`` should take one argument *context*, and return a picklable object (preferably a string). In this case the argument passed as *context* is ``Settings`` (whole class).
 
-        |Settings| instances are present in many different places of PLAMS environment. Usually values stored in them are simple numbers, strings or booleans. However, in some contexts other type of objects are stored and it sometimes causes problems with pickling. Problematic objects can then define ``_settings_reduce`` method to avoid failure on pickle attempt.
+        |Settings| instances are present in many different places of PLAMS environment. Usually values stored in them are simple numbers, strings or booleans. However, in some contexts other type of objects are stored and it sometimes causes problems with pickling. Problematic objects can then define ``_reduce`` method to avoid failure on pickle attempt.
         """
         a,(b,c,d) = dict.__reduce__(self)
         for key in d:
-            if not isinstance(d[key], Settings) and not inspect.isclass(d[key]) and hasattr(d[key], '_settings_reduce'):
-                d[key] = d[key]._settings_reduce()
+            if not isinstance(d[key], Settings) and not inspect.isclass(d[key]) and hasattr(d[key], '_reduce'):
+                d[key] = d[key]._reduce(self.__class__)
         return a,(b,c,d)
 
 
@@ -131,7 +130,9 @@ class Settings(dict):
     def copy(self):
         """Return a new instance that is a copy of this one. Nested |Settings| instances are copied recursively, not linked.
 
-        In practice this method usually works as a complete deep copy -- all keys and values in returned copy are distinct from originals **unless** one of the original "proper values" (i.e. not nested |Settings|) is of the mutable type. In that case both original and copy will point to the same mutable object. This behavior is illustrated by the following example::
+        In practice this method works as a shallow copy: all "proper values" (leaf nodes) in the returned copy point to the same objects as the original instance (unless they are immutable, like ``int`` or ``tuple``). However, nested |Settings| instances (internal nodes) are copied in a deep-copy fashion. In other words, copying a |Settings| instance creates a brand new "tree skeleton" and populates its leaf nodes with values taken directly from the original instance.
+
+        This behavior is illustrated by the following example::
 
             >>> s = Settings()
             >>> s.a = 'string'
@@ -158,7 +159,7 @@ class Settings(dict):
               y:    22
               z:    set([1, 's', 'e', 't'])
 
-        This method is also used when :func:`python2:copy.copy` is called.
+        This method is also used when :func:`python3:copy.copy` is called.
         """
         ret = Settings()
         for name in self:
@@ -296,7 +297,7 @@ class Settings(dict):
 
     def as_dict(self):
         """
-        Transform a |Settings| object into a dict.
+        Return a copy of this instance with all |Settings| replaced by the regular Python dict.
         """
         d = {}
         for k, v in self.items():

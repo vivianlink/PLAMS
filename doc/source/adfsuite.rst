@@ -1,7 +1,7 @@
 ADF Suite
 -------------------------
 
-.. currentmodule:: scm.plams.interfaces.adfsuite
+.. currentmodule:: scm.plams.interfaces.adfsuite.scmjob
 
 PLAMS offers interfaces to three main binaries of the ADF Suite: ADF, BAND and DFTB as well as some other small utility binaries like DENSF of FCF. All possible input keywords and options are covered, as well as extraction of arbitrary data from binary files (called KF files) produced by these programs.
 
@@ -59,7 +59,7 @@ As you can see, entries present in ``myjob.settings.input.`` are listed in the a
 
     writefock
 
-To produce an empty block simply type::
+If a value of a particualr key is ``False``, that key is omitted. To produce an empty block simply type::
 
     >>> myjob.settings.input.geometry  # this is equivalent to myjob.settings.input.geometry = Settings()
     #
@@ -143,11 +143,12 @@ Special atoms in ADF
 ++++++++++++++++++++
 
 In ADF atomic coordinates in ``atoms`` block can be enriched with some additional information like special names of atoms (for example in case of using different isotopes) or block/fragment membership. Since usually contents of ``atoms`` block are generated automatically based on the |Molecule| associated with a job, this information needs to be supplied inside the given |Molecule| instance. Details about every atom can be adjusted separately, by modifying attributes of a particular |Atom| instance according to the following convention:
-    *   Atomic symbol is generated based on atomic number stored in ``atnum`` attribute of a corresponding |Atom|. Atomic number 0 corresponds to the "dummy atom" for which the symbol is empty.
-    *   If an attribute ``ghost`` of an |Atom| is ``True``, the above atomic symbol is prefixed with ``Gh.``.
-    *   If an |Atom| has an attribute ``name`` its contents are added after the symbol. Hence setting ``atnum`` to 0 and adjusting ``name`` allows to put an arbitrary string as the atomic symbol.
-    *   If an |Atom| has an attribute ``fragment`` its contents are added after atomic coordinates with ``f=`` prefix.
-    *   If an |Atom| has an attribute ``block`` its contents are added after atomic coordinates with ``b=`` prefix.
+
+*   Atomic symbol is generated based on atomic number stored in ``atnum`` attribute of a corresponding |Atom|. Atomic number 0 corresponds to the "dummy atom" for which the symbol is empty.
+*   If an attribute ``ghost`` of an |Atom| is ``True``, the above atomic symbol is prefixed with ``Gh.``.
+*   If an |Atom| has an attribute ``name`` its contents are added after the symbol. Hence setting ``atnum`` to 0 and adjusting ``name`` allows to put an arbitrary string as the atomic symbol.
+*   If an |Atom| has an attribute ``fragment`` its contents are added after atomic coordinates with ``f=`` prefix.
+*   If an |Atom| has an attribute ``block`` its contents are added after atomic coordinates with ``b=`` prefix.
 
 The following example illustrates the usage of this mechanism::
 
@@ -193,7 +194,7 @@ Runscripts for ADF, BAND and DFTB are very simple - they are just single executi
 Results extraction
 ++++++++++++++++++
 
-All three programs print results to the standard output. The output file can be examined with standard text processing tools (:meth:`~scm.plams.results.Results.grep_output` and :meth:`~scm.plams.results.Results.awk_output`). Besides that all calculation details are saved in the binary file in KF format. This file is called ``TAPE21`` for ADF, ``RUNKF`` for BAND and ``dftb.rkf`` for DFTB. PLAMS renames those files to, respectively ``[jobname].t21``, ``[jobname].runkf`` and ``[jobname].rkf``. Data stored in those files can be accessed using additional methods defined in |SCMResults| class.
+All three programs print results to the standard output. The output file can be examined with standard text processing tools (:meth:`~scm.plams.core.results.Results.grep_output` and :meth:`~scm.plams.core.results.Results.awk_output`). Besides that all calculation details are saved in the binary file in KF format. This file is called ``TAPE21`` for ADF, ``RUNKF`` for BAND and ``dftb.rkf`` for DFTB. PLAMS renames those files to, respectively ``[jobname].t21``, ``[jobname].runkf`` and ``[jobname].rkf``. Data stored in those files can be accessed using additional methods defined in |SCMResults| class.
 
 
 API
@@ -217,11 +218,18 @@ The main difference is that usually utility jobs don't need molecular coordinate
 Below you can find the list of dedicated job classes that are currently available. Details about input specification for those jobs can be found in corresponding part of ADF Suite documentation.
 
 
+.. currentmodule:: scm.plams.interfaces.adfsuite.fcf
+
 .. autoclass:: FCFJob(inputjob1=None, inputjob2=None, name='plamsjob', settings=None, depend=None)
     :exclude-members: _result_type
 
+
+.. currentmodule:: scm.plams.interfaces.adfsuite.densf
+
 .. autoclass:: DensfJob(inputjob=None, name='plamsjob', settings=None, depend=None)
     :exclude-members: _result_type
+
+.. _kf_files:
 
 KF files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

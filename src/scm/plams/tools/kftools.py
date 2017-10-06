@@ -1,19 +1,17 @@
-from __future__ import unicode_literals
-
 import os
 import shutil
 import struct
-try:
-    import subprocess32 as subprocess
-except ImportError:
-    import subprocess
+import subprocess
 
 from bisect import bisect
 
 from ..core.errors import FileError
 from ..core.common import log
 
+
 __all__ = ['KFFile', 'KFReader']
+
+
 
 class KFReader(object):
     """A class for efficient Python-native reader of binary files in KF format.
@@ -38,7 +36,7 @@ class KFReader(object):
         if os.path.isfile(path):
             self.path = os.path.abspath(path)
         else:
-            raise FileError('No such file: %s' % path)
+            raise FileError('File {} not present'.format(path))
 
         self._blocksize = blocksize
         self.endian = '<'   # endian: '<' = little, '>' = big
@@ -92,8 +90,10 @@ class KFReader(object):
                 yield section, variable
 
 
-    def _settings_reduce(self):
-        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.settings.Settings.__reduce__>` for details."""
+    def _reduce(self, context):
+        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details.
+
+        Returned value is *context* agnostic and it's always ``self.path``."""
         return self.path
 
 
@@ -220,8 +220,12 @@ class KFReader(object):
                 _, ret, last = lst[i]
 
 
-#===================================================================================================
-#===================================================================================================
+
+#===========================================================================
+#===========================================================================
+#===========================================================================
+
+
 
 class KFFile(object):
     """A class for reading and writing binary files in KF format.
@@ -332,16 +336,17 @@ class KFFile(object):
                 self.reader = KFReader(self.path)
 
 
-
     def __getitem__(self, name):
         """Allow to use ``x = mykf['section%variable']`` or ``x = mykf[('section','variable')]`` instead of ``x = kf.read('section', 'variable')``."""
         section, variable = KFFile._split(name)
         return self.read(section, variable)
 
+
     def __setitem__(self, name, value):
         """Allow to use ``mykf['section%variable'] = value`` or ``mykf[('section','variable')] = value`` instead of ``kf.write('section', 'variable', value)``."""
         section, variable = KFFile._split(name)
         self.write(section, variable, value)
+
 
     def __iter__(self):
         """Iteration yields pairs of section name and variable name."""
@@ -357,17 +362,17 @@ class KFFile(object):
             yield i
 
 
+    def _reduce(self, context):
+        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details.
 
-    def _settings_reduce(self):
-        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.settings.Settings.__reduce__>` for details."""
+        Returned value is *context* agnostic and it's always ``self.path``."""
         return self.path
-
 
 
     @staticmethod
     def _split(name):
         """Ensure that a key used in bracket notation is of the form ``'section%variable'`` or ``('section','variable')``. If so, return a tuple ``('section','variable')``."""
-        if isinstance(name, tuple) and len(name) == 2 and isinstance(name[0], str) and isinstance(name[1], str):
+        if isinstance(name, tuple) and len(name) == 2:
                 return name[0], name[1]
         if isinstance(name, str):
             s = name.split('%')

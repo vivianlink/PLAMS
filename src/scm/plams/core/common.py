@@ -1,19 +1,15 @@
-from __future__ import unicode_literals
-
+import builtins
 import glob
+import hashlib
 import os
 import shutil
+import sys
 import threading
 import time
 import types
 
 from os.path import join as opj
-from six import PY3
-if PY3:
-    import builtins
-else:
-    import __builtin__ as builtins
-
+from os.path import isfile, expandvars, dirname
 
 from .errors import PlamsError
 from .settings import Settings
@@ -21,16 +17,17 @@ from .settings import Settings
 __all__ = ['init', 'finish', 'log', 'load', 'load_all', 'add_to_class', 'add_to_instance']
 
 
-#===================================================================================================
+#===========================================================================
 
 def init(path=None, folder=None):
     """Initialize PLAMS environment. Create global ``config`` and default |JobManager|.
 
-    An empty |Settings| instance is created and added to :mod:`public<__builtin__>` namespace as ``config``. Then it is populated with default settings by executing ``plams_defaults.py``. The following locations are used to search for the defaults file, in order of precedence:
-        *   If ``$PLAMSDEFAULTS`` variable is in your environment and it points to a file, this file is used (executed as Python script).
-        *   If ``$PLAMSHOME`` variable is in your environment and ``$PLAMSHOME/utils/plams_defaults.py`` exists, it is used.
-        *   If ``$ADFHOME`` variable is in your environment and ``$ADFHOME/scripting/plams/utils/plams_defaults.py`` exists, it is used.
-        *   Otherwise, the path ``../../../utils/plams_defaults.py`` relative to the current file (``common.py``) is checked. If defaults file is not found there, an exception is raised.
+    An empty |Settings| instance is created and added to :mod:`public<builtins>` namespace as ``config``. Then it is populated with default settings by executing ``plams_defaults``. The following locations are used to search for the defaults file, in order of precedence:
+
+    *   If ``$PLAMSDEFAULTS`` variable is in your environment and it points to a file, this file is used (executed as Python script).
+    *   If ``$PLAMSHOME`` variable is in your environment and ``$PLAMSHOME/src/scm/plams/plams_defaults`` exists, it is used.
+    *   If ``$ADFHOME`` variable is in your environment and ``$ADFHOME/scripting/plams/src/scm/plams/plams_defaults`` exists, it is used.
+    *   Otherwise, the path ``../../plams_defaults`` relative to the current file (``common.py``) is checked. If defaults file is not found there, an exception is raised.
 
     Next, a |JobManager| instance is created as ``config.jm`` using *path* and *folder* to determine the main working directory. Settings used by this instance are directly linked from ``config.jobmanager``. If *path* is not supplied, the current directory is used. If *folder* is not supplied, the string ``plams.`` followed by PID of the current process is used.
 
@@ -40,7 +37,6 @@ def init(path=None, folder=None):
 
     builtins.config = Settings()
 
-    from os.path import isfile, expandvars, dirname
     if 'PLAMSDEFAULTS' in os.environ and isfile(expandvars('$PLAMSDEFAULTS')):
         defaults = expandvars('$PLAMSDEFAULTS')
     elif 'PLAMSHOME' in os.environ and isfile(opj(expandvars('$PLAMSHOME'), 'src', 'scm', 'plams', 'plams_defaults')):
@@ -53,16 +49,23 @@ def init(path=None, folder=None):
             raise PlamsError('plams_defaults not found, please set PLAMSDEFAULTS or PLAMSHOME in your environment')
     exec(compile(open(defaults).read(), defaults, 'exec'))
 
-
     from .jobmanager import JobManager
     config.jm = JobManager(config.jobmanager, path, folder)
 
-    log('PLAMS running with Python %i' % (3 if PY3 else 2), 5)
+    log('Running PLAMS located in {}'.format(dirname(dirname(__file__))) ,5)
+    log('Using Python {}.{}.{} located in {}'.format(*sys.version_info[:3], sys.executable), 5)
+    log('PLAMS defaults were loaded from {}'.format(defaults) ,5)
+
     log('PLAMS environment initialized', 5)
-    log('PLAMS working folder: %s' % config.jm.workdir, 1)
+    log('PLAMS working folder: {}'.format(config.jm.workdir), 1)
+
+    try:
+        import dill
+    except ImportError:
+        log('WARNING: importing dill failed. Falling back to default pickle module. Expect problems with pickling', 1)
 
 
-#===================================================================================================
+#===========================================================================
 
 def finish(otherJM=None):
     """Wait for all threads to finish and clean the environment.
@@ -79,20 +82,21 @@ def finish(otherJM=None):
     if otherJM:
         for jm in otherJM:
             jm._clean()
-    log('PLAMS environment cleaned up', 5)
+    log('PLAMS environment cleaned up successfully', 5)
+    log('PLAMS run finished. Goodbye', 3)
 
     if config.erase_workdir is True:
         shutil.rmtree(config.jm.workdir)
 
 
-#===================================================================================================
+#===========================================================================
 
 def load(filename):
     """Load previously saved job from ``.dill`` file. This is just a shortcut for |load_job| method of the default |JobManager| ``config.jm``."""
     return config.jm.load_job(filename)
 
 
-#===================================================================================================
+#===========================================================================
 
 def load_all(path, jobmanager=None):
     """Load all jobs from *path*.
@@ -108,11 +112,13 @@ def load_all(path, jobmanager=None):
     jm = jobmanager or config.jm
     loaded_jobs = {}
     for f in glob.glob(opj(path, '*', '*.dill')):
-        loaded_jobs[f] = jm.load_job(f)
+        job = jm.load_job(f)
+        if job:
+            loaded_jobs[f] = jm.load_job(f)
     return loaded_jobs
 
 
-#===================================================================================================
+#===========================================================================
 
 _stdlock = threading.Lock()
 _filelock = threading.Lock()
@@ -141,7 +147,7 @@ def log(message, level=0):
                     f.write(message + '\n')
 
 
-#===================================================================================================
+#===========================================================================
 
 def add_to_class(classname):
     """Add decorated function as a method to the whole class *classname*.
@@ -168,7 +174,7 @@ def add_to_class(classname):
         setattr(classname, func.__name__, func)
     return decorator
 
-#===================================================================================================
+#===========================================================================
 
 def add_to_instance(instance):
     """Add decorated function as a method to one particular *instance*.
@@ -196,12 +202,15 @@ def add_to_instance(instance):
         setattr(instance, func.__func__.__name__, func)
     return decorator
 
+#===========================================================================
 
-#===================================================================================================
+def _hash(string):
+    """A small utility wrapper around :ref:`hashlib.sha256<hash-algorithms>`."""
+    if not isinstance(string, bytes):
+        string = str(string).encode()
+    h = hashlib.sha256()
+    h.update(string)
+    return h.hexdigest()
 
-#remove me and all my calls after moving to Python3!!!
-def string(s):
-    if PY3 and isinstance(s, bytes):
-        return s.decode()
-    return s
+
 

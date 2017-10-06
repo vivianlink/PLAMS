@@ -1,24 +1,19 @@
-from __future__ import unicode_literals
-from six import add_metaclass
-
 import os
 import functools
+import subprocess
 import threading
 import time
-try:
-    import subprocess32 as subprocess
-except ImportError:
-    import subprocess
 
 from os.path import join as opj
 
-from .common import log, string
+from .common import log
 from .errors import PlamsError
 from .settings import Settings
 from .basejob import SingleJob
 
 
 __all__ = ['JobRunner', 'GridRunner']
+
 
 
 def _in_thread(func):
@@ -33,6 +28,7 @@ def _in_thread(func):
             func(self, *args, **kwargs)
     return wrapper
 
+
 def _limit(func):
     """Decorator for an instance method. If ``semaphore`` attribute of given instance is not ``None``, use this attribute to wrap decorated method via :ref:`with<with-locks>` statement."""
     @functools.wraps(func)
@@ -44,21 +40,30 @@ def _limit(func):
             return func(self, *args, **kwargs)
     return wrapper
 
+
 class _MetaRunner(type):
-    """Metaclass for |JobRunner|. Wraps :meth:`~scm.plams.jobrunner.JobRunner.call` with :func:`_limit` decorator."""
+    """Metaclass for |JobRunner|. Wraps :meth:`~scm.plams.core.jobrunner.JobRunner.call` with :func:`_limit` decorator."""
     def __new__(meta, name, bases, dct):
         dct['call'] = _limit(dct['call'])
         return type.__new__(meta, name, bases, dct)
 
-@add_metaclass(_MetaRunner)
-class JobRunner(object):
+
+
+#===========================================================================
+#===========================================================================
+#===========================================================================
+
+
+
+class JobRunner(metaclass=_MetaRunner):
     """Class representing local job runner.
 
     The goal of |JobRunner| is to take care of two important things -- parallelization and runscript execution:
-        *   When the method |run| of any |Job| instance is executed, this method, after some preparations, passes control to a |JobRunner| instance. This |JobRunner| instance decides if a separate thread should be spawned for this job or if the execution should proceed in the main thread. This decision is based on ``parallel`` attribute which can be set on |JobRunner| creation. There are no separate classes for serial and parallel job runner, both cases are covered by |JobRunner| depending on one bool parameter.
-        *   If the executed job is an instance of |SingleJob|, it creates a shell script (called runscript) which contains most of the actual computational work (usually it is just an execution of some external binary). The runscript is then submitted to a |JobRunner| instance using its method :meth:`call`. This method executes the runscript in a separate subprocess and takes care of setting proper working directory, output and error stream handling etc.
 
-    The number of simultaneously running :meth:`call` methods can be limited using *maxjobs* parameter. If *maxjobs* is 0, no limit is enforced. If *parallel* is ``False``, *maxjobs* is ignored. If *parallel* is ``True`` and *maxjobs* is a positive integer, a :func:`BoundedSemaphore<threading.BoundedSemaphore>` of that size is used to limit the number of concurrently running :meth:`call` methods.
+    *   When the method |run| of any |Job| instance is executed, this method, after some preparations, passes control to a |JobRunner| instance. This |JobRunner| instance decides if a separate thread should be spawned for this job or if the execution should proceed in the main thread. This decision is based on ``parallel`` attribute which can be set on |JobRunner| creation. There are no separate classes for serial and parallel job runner, both cases are covered by |JobRunner| depending on one bool parameter.
+    *   If the executed job is an instance of |SingleJob|, it creates a shell script (called runscript) which contains most of the actual computational work (usually it is just an execution of some external binary). The runscript is then submitted to a |JobRunner| instance using its method :meth:`call`. This method executes the runscript in a separate subprocess and takes care of setting proper working directory, output and error stream handling etc.
+
+    The number of simultaneously running :meth:`call` methods can be limited using *maxjobs* parameter. If *maxjobs* is 0, no limit is enforced. If *parallel* is ``False``, *maxjobs* is ignored. If *parallel* is ``True`` and *maxjobs* is a positive integer, a :class:`BoundedSemaphore<threading.BoundedSemaphore>` of that size is used to limit the number of concurrently running :meth:`call` methods.
 
     A |JobRunner| instance can be passed to |run| with a keyword argument ``jobrunner``. If this argument is omitted, the instance stored in ``config.default_jobrunner`` is used.
     """
@@ -99,6 +104,7 @@ class JobRunner(object):
         log('Execution of %s finished with returncode %i' % (runscript, retcode), 5)
         return retcode
 
+
     @_in_thread
     def _run_job(self, job, jobmanager):
         """_run_job(job, jobmanager)
@@ -110,9 +116,12 @@ class JobRunner(object):
             job._execute(self)
             job._finalize()
 
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
+
+
+#===========================================================================
+#===========================================================================
+#===========================================================================
+
 
 
 class GridRunner(JobRunner):
@@ -122,17 +131,18 @@ class GridRunner(JobRunner):
 
     So the behavior of |GridRunner| is determined by the contents of |Settings| instance stored in its ``settings`` attribute. This |Settings| instance can be manually supplied by the user or taken from a collection of predefined behaviors stored as branches of ``config.gridrunner``. The adjustment is done via *grid* parameter that should be either string or |Settings|. If string, it has to be a key occurring in ``config.gridrunner`` (or ``'auto'`` for autodetection). For example, if ``grid='slurm'`` is passed, ``config.gridrunner.slurm`` is linked as ``settings``. If *grid* is ``'auto'``, entries in ``config.gridrunner`` are tested one by one and the first one that works (its submit command is present on your system) is chosen. When a |Settings| instance is passed it gets plugged directly as ``settings``.
 
-    Currently two predefined job schedulers are available (see ``plams_defaults.py``): ``slurm`` for SLURM and ``pbs`` for job schedulers following PBS syntax (PBS, TORQUE, Oracle Grid Engine etc.).
+    Currently two predefined job schedulers are available (see ``plams_defaults``): ``slurm`` for SLURM and ``pbs`` for job schedulers following PBS syntax (PBS, TORQUE, Oracle Grid Engine etc.).
 
     The |Settings| instance used for |GridRunner| should have the following structure:
-        *   ``.output`` -- flag for specifying output file path.
-        *   ``.error`` -- flag for specifying error file path.
-        *   ``.workdir`` -- flag for specifying path to working directory.
-        *   ``.commands.submit`` -- submit command.
-        *   ``.commands.check`` -- queue status check command.
-        *   ``.commands.getid`` -- function extracting submitted job's ID from output of submit command.
-        *   ``.commands.finished`` -- function checking if submitted job is finished. It should take a single string (job's ID) and return boolean.
-        *   ``.commands.special.`` -- branch storing definitions of special |run| keyword arguments.
+
+    *   ``.output`` -- flag for specifying output file path.
+    *   ``.error`` -- flag for specifying error file path.
+    *   ``.workdir`` -- flag for specifying path to working directory.
+    *   ``.commands.submit`` -- submit command.
+    *   ``.commands.check`` -- queue status check command.
+    *   ``.commands.getid`` -- function extracting submitted job's ID from output of submit command.
+    *   ``.commands.finished`` -- function checking if submitted job is finished. It should take a single string (job's ID) and return boolean.
+    *   ``.commands.special.`` -- branch storing definitions of special |run| keyword arguments.
 
     See :meth:`call` for more technical details and examples.
 
@@ -159,7 +169,6 @@ class GridRunner(JobRunner):
             self.settings = grid
         else:
             raise PlamsError("GridRunner: invalid 'grid' argument. 'grid' should be either a Settings instance (see documentations for details) or a string occurring in config.gridrunner or 'auto' for autodetection")
-
 
 
     def call(self, runscript, workdir, out, err, runflags, **kwargs):
@@ -201,9 +210,7 @@ class GridRunner(JobRunner):
 
         The submit command produced in the way explained above is then executed and returned output is used to determine submitted job's ID. Function stored in ``.commands.getid`` is used for that purpose, it should take one string (whole output) and return a string with job's ID.
 
-        Now the method waits for the job to finish. Every ``sleepstep`` seconds it queries the job scheduler using following algorithm:
-            *   if a key ``finished`` exists in ``.commands.`` it is used. It should be a function taking job's ID and returning ``True`` or ``False``.
-            *   otherwise a string stored in ``.commands.check`` is concatenated with job's ID (with no space between) and such command is executed. Nonzero exit status indicates that job is no longer in job scheduler hence it is finished.
+        Now the method waits for the job to finish. Every ``sleepstep`` seconds it queries the job scheduler by executing a function stored in ``.commands.finished``. This function takes a single string argument with job's ID and returns True if that job has finished, or False otherwise.
 
         Since it is difficult (on some systems even impossible) to automatically obtain job's exit code, the returned value is always 0. From |run| perspective it means that a job executed with |GridRunner| is never *crashed*.
 
@@ -223,26 +230,16 @@ class GridRunner(JobRunner):
         cmd += ' ' + opj(workdir,runscript)
 
         log('Submitting %s with command %s' % (runscript, cmd), 5)
-        subout = subprocess.check_output(cmd.split(' '))
-        subout = string(subout)
+        subout = subprocess.check_output(cmd.split(' ')).decode()
         log('Output of submit command: %s' % subout, 5)
         jobid = s.commands.getid(subout)
         log('%s submitted successfully as job %s' % (runscript, jobid), 3)
 
-        if 'finished' in s.commands:
-            while not s.commands.finished(jobid):
-                time.sleep(self.sleepstep)
-        else:
-            checkcmd = (s.commands.check + jobid).split(' ')
-            retcode = 0
-            while retcode == 0:
-                time.sleep(self.sleepstep)
-                with open(os.devnull, 'wb') as null:
-                    retcode = subprocess.call(checkcmd, stdout=null, stderr=null)
+        while not s.commands.finished(jobid):
+            time.sleep(self.sleepstep)
 
         log('Execution of %s finished' % runscript, 5)
         return 0
-
 
 
     def _autodetect(self):

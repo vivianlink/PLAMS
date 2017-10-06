@@ -1,12 +1,9 @@
-from __future__ import unicode_literals
-
 import copy
-import hashlib
 import os
 import stat
 import threading
 import time
-import types
+
 try:
     import dill as pickle
 except ImportError:
@@ -14,7 +11,7 @@ except ImportError:
 
 from os.path import join as opj
 
-from .common import log
+from .common import log, _hash
 from .errors import PlamsError, ResultsError
 from .results import Results
 from .settings import Settings
@@ -30,27 +27,30 @@ class Job(object):
     Methods that are meant to be explicitly called by the user are |run| and occasionally :meth:`~Job.pickle`. In most cases |pickling| is done automatically, but if for some reason you wish to do it manually, you can use :meth:`~Job.pickle` method.
 
     Methods that can be safely overridden in subclasses are:
-        *   :meth:`~Job.check`
-        *   :meth:`~Job.hash` (see |RPM|)
-        *   |prerun| and |postrun| (see :ref:`prerun-postrun`)
+
+    *   :meth:`~Job.check`
+    *   :meth:`~Job.hash` (see |RPM|)
+    *   |prerun| and |postrun| (see :ref:`prerun-postrun`)
 
     Other methods should remain unchanged.
 
     Class attribute ``_result_type`` defines the type of results associated with this job. It should point to a class and it **must** be a |Results| subclass.
 
     Every job instance has the following attributes. Values of these attributes are adjusted automatically and should not be set by the user:
-        *   ``status`` -- current status of the job in human-readable format.
-        *   ``results`` -- reference to a results instance. An empty instance of the type stored in ``_result_type`` is created when the job constructor is called.
-        *   ``path`` -- an absolute path to the job folder.
-        *   ``jobmanager`` -- a job manager associated with this job.
-        *   ``parent`` -- a pointer to the parent job if this job is a child job of some |MultiJob|. ``None`` otherwise.
+
+    *   ``status`` -- current status of the job in human-readable format.
+    *   ``results`` -- reference to a results instance. An empty instance of the type stored in ``_result_type`` is created when the job constructor is called.
+    *   ``path`` -- an absolute path to the job folder.
+    *   ``jobmanager`` -- a job manager associated with this job.
+    *   ``parent`` -- a pointer to the parent job if this job is a child job of some |MultiJob|. ``None`` otherwise.
 
     These attributes can be modified, but only before |run| is called:
-        *   ``name`` -- the name of the job.
-        *   ``settings`` -- settings of the job.
-        *   ``default_settings`` -- see :ref:`default-settings`.
-        *   ``depend`` -- a list of explicit dependencies.
-        *   ``_dont_pickle`` -- additional list of this instance's attributes that will be removed before pickling. See :ref:`pickling` for details.
+
+    *   ``name`` -- the name of the job.
+    *   ``settings`` -- settings of the job.
+    *   ``default_settings`` -- see :ref:`default-settings`.
+    *   ``depend`` -- a list of explicit dependencies.
+    *   ``_dont_pickle`` -- additional list of this instance's attributes that will be removed before pickling. See :ref:`pickling` for details.
 
     """
 
@@ -130,7 +130,7 @@ class Job(object):
 
         This method can be overridden in concrete subclasses for different types of jobs. It should return a boolean value.
 
-        The definition here serves as a default, to prevent crashing if a subclass does not define its own :meth:`~scm.plams.basejob.Job.check`. It always returns ``True``.
+        The definition here serves as a default, to prevent crashing if a subclass does not define its own :meth:`~scm.plams.core.basejob.Job.check`. It always returns ``True``.
         """
         return True
 
@@ -156,7 +156,7 @@ class Job(object):
         """
         pass
 
-    #===============================================================================================
+    #=======================================================================
 
 
     def _prepare(self, jobmanager):
@@ -237,9 +237,10 @@ class Job(object):
                 else:
                     log('%s.check() failed' % self.name, 7)
                     self.status = 'failed'
-            self.results.done.set()
         else:
             self.status = 'preview'
+            self.results.finished.set()
+        self.results.done.set()
 
         if self.parent:
             self.parent._notify()
@@ -248,15 +249,15 @@ class Job(object):
         log("Job %s finished with status '%s' "% (self.name, self.status), 1)
 
 
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
+#===========================================================================
+#===========================================================================
+#===========================================================================
 
 
 class SingleJob(Job):
     """Abstract class representing a job consisting of a single execution of some external binary (or arbitrary shell script in general).
 
-    In addition to constructor arguments and attributes defined by |Job|, the constructor of this class accepts the keyword argument ``molecule`` that should be a |Molecule| instance.
+    In addition to constructor arguments and attributes defined by |Job|, the constructor of this class accepts the keyword argument ``molecule`` that should be a |Molecule| instance. The constructor creates a copy of the supplied |Molecule| and stores it as the ``molecule`` attribute.
 
     Class attribute ``_filenames`` defines default names for input, output, runscript and error files. If you wish to override this attribute it should be a dictionary with string keys ``'inp'``, ``'out'``, ``'run'``, ``'err'``. The value for each key should be a string describing corresponding file's name. Shortcut ``$JN`` can be used for job's name. The default value is defined in the following way::
 
@@ -269,7 +270,7 @@ class SingleJob(Job):
 
     def __init__(self, molecule=None, **kwargs):
         Job.__init__(self, **kwargs)
-        self.molecule = molecule
+        self.molecule = molecule.copy()
 
 
 
@@ -304,19 +305,28 @@ class SingleJob(Job):
         raise PlamsError('Trying to run an abstract method SingleJob._get_runscript()')
 
 
+    def hash_input(self):
+        """Calculate SHA256 hash of the input file."""
+        return _hash(self.get_input())
+
+    def hash_runscript(self):
+        """Calculate SHA256 hash of the runscript."""
+        return _hash(self._full_runscript())
 
     def hash(self):
         """Calculate unique hash of this instance.
 
         The behavior of this method is adjusted by the value of ``hashing`` key in |JobManager| settings. If no |JobManager| is yet associated with this job, default setting from ``config.jobmanager.hashing`` is used.
 
-        Currently supported values for ``hashing`` are:
-            *   ``False`` or ``None`` -- returns ``None`` and disables |RPM|.
-            *   ``input`` -- returns SHA256 hash of the input file.
-            *   ``runscript`` -- returns SHA256 hash of the runscript.
-            *   ``input+runscript`` -- returns SHA256 hash of the concatenation of input and runscript.
-        """
+        Methods :meth:`~SingleJob.hash_input` and :meth:`~SingleJob.hash_runscript` are used to obtain hashes of, respectively, input and runscript.
 
+        Currently supported values for ``hashing`` are:
+
+        *   ``False`` or ``None`` -- returns ``None`` and disables |RPM|.
+        *   ``input`` -- returns hash of the input file.
+        *   ``runscript`` -- returns hash of the runscript.
+        *   ``input+runscript`` -- returns SHA256 hash of the concatenation of **hashes** of input and runscript.
+        """
         if self.jobmanager:
             mode = self.jobmanager.settings.hashing
         else:
@@ -324,17 +334,14 @@ class SingleJob(Job):
 
         if not mode:
             return None
-        h = hashlib.sha256()
         if mode == 'input':
-            h.update(self.get_input().encode())
+            return self.hash_input()
         elif mode == 'runscript':
-            h.update(self._full_runscript().encode())
+            return self.hash_runscript()
         elif mode == 'input+runscript':
-            h.update(self.get_input().encode())
-            h.update(self._full_runscript().encode())
+            return _hash(self.hash_input() + self.hash_runscript())
         else:
             raise PlamsError('Unsupported hashing method: ' + str(mode))
-        return h.hexdigest()
 
 
     def _full_runscript(self):
@@ -370,7 +377,7 @@ class SingleJob(Job):
     def _execute(self, jobrunner):
         """Execute previously created runscript using *jobrunner*.
 
-        The method :meth:`~scm.plams.jobrunner.JobRunner.call` of *jobrunner* is used. Working directory is ``self.path``. ``self.settings.run`` is passed as ``runflags`` argument.
+        The method :meth:`~scm.plams.core.jobrunner.JobRunner.call` of *jobrunner* is used. Working directory is ``self.path``. ``self.settings.run`` is passed as ``runflags`` argument.
 
         If preview mode is on, this method does nothing.
         """
@@ -384,17 +391,18 @@ class SingleJob(Job):
         log('%s._execute() finished' % self.name, 7)
 
 
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
+#===========================================================================
+#===========================================================================
+#===========================================================================
 
 
 class MultiJob(Job):
     """Concrete class representing a job that is a container for other jobs.
 
     In addition to constructor arguments and attributes defined by |Job|, the constructor of this class accepts two keyword arguments:
-        *   ``children`` -- should be a list (or other iterable container) containing children jobs.
-        *   ``childrunner`` -- by default all the children jobs are run using the same |JobRunner| as the parent job. If you wish to use a different |JobRunner| for children, you can pass it using this argument.
+
+    *   ``children`` -- should be a list (or other iterable container) containing children jobs.
+    *   ``childrunner`` -- by default all the children jobs are run using the same |JobRunner| as the parent job. If you wish to use a different |JobRunner| for children, you can pass it using this argument.
 
     Values passed as ``children`` and ``childrunner`` are stored as instance attributes and can be adjusted later, but before the |run| method is called.
 

@@ -23,22 +23,23 @@ Input
 +++++
 
 Input files for DIRAC are organized using blocks and subblocks with three level hierarchy. On the top level there are *blocks* (indicated by keywords starting with ``**``) which can contain *keys* (starting with ``.``) or *subblocks* (starting with ``*``), which in turn can contain more keys. This structure can be easily reflected with tree-like |Settings| objects. In general, the preparation process is quite similar to |SCMJob|, however, there are a few nuances. The details are explained below.
-    *   Each key present on the top level of ``myjob.settings.input`` is translated to a block. Values of those keys should be |Settings| instances. The block ``DIRAC`` is always printed as the first one, all other are ordered lexicographically (this behavior can be changed with ``DiracJob._top`` class attribute).
-    *   In each block various keys and subblocks can be present. Subblocks are indicated by nested |Settings| instances, all other values are interpreted as keys.
-    *   An empty value of a key can be obtained by setting its value to ``True``.
-    *   An empty block or subblock can be obtained with an empty |Settings| instance.
-    *   If the value of a key is a list, each element of this list will be printed in a separate line.
-    *   All keywords are written to the input file with upper case, values remain unchanged.
-    *   Many DIRAC keywords contain spaces (for example ``WAVE FUNCTION`` or ``LINEAR RESPONSE``) and thus cannot be used with convenient dot notation. Usual bracket notation has to be used in those cases (see :ref:`dot-notation`).
-    *   Some subblocks follow the special requirement - they need to be "enabled" by presence of the corresponding keyword in the parent block. For example, in ``**HAMILTONIAN`` block a *subblock* ``*FDE`` can be used to specify frozen density embedding parameters, but this subblock is taken into account only if a *key* ``.FDE`` is present in ``**HAMILTONIAN``. This introduces a problem, since you cannot store two entries with the same name in |Settings|::
 
-        >>> myjob.setting.input.hamiltonian.fde = True   #sets the .FDE key on the top level of HAMILOTNIAN block
-        >>> myjob.setting.input.hamiltonian.fde.frdens = 'value2'   #sets the *FDE subblock in the HAMILTONIAN block, but overwrites the key .FDE defined above
+*   Each key present on the top level of ``myjob.settings.input`` is translated to a block. Values of those keys should be |Settings| instances. The block ``DIRAC`` is always printed as the first one, all other are ordered lexicographically (this behavior can be changed with ``DiracJob._top`` class attribute).
+*   In each block various keys and subblocks can be present. Subblocks are indicated by nested |Settings| instances, all other values are interpreted as keys.
+*   An empty value of a key can be obtained by setting its value to ``True``.
+*   An empty block or subblock can be obtained with an empty |Settings| instance.
+*   If the value of a key is a list, each element of this list will be printed in a separate line.
+*   All keywords are written to the input file with upper case, values remain unchanged.
+*   Many DIRAC keywords contain spaces (for example ``WAVE FUNCTION`` or ``LINEAR RESPONSE``) and thus cannot be used with convenient dot notation. Usual bracket notation has to be used in those cases (see :ref:`dot-notation`).
+*   Some subblocks follow the special requirement - they need to be "enabled" by presence of the corresponding keyword in the parent block. For example, in ``**HAMILTONIAN`` block a *subblock* ``*FDE`` can be used to specify frozen density embedding parameters, but this subblock is taken into account only if a *key* ``.FDE`` is present in ``**HAMILTONIAN``. This introduces a problem, since you cannot store two entries with the same name in |Settings|::
 
-        To solve this problem a special "enabler" key ``_en`` can be used *inside the subblock*. If such a key is present, the parent block of this subblock will be enriched with corresponding key and value::
+    >>> myjob.setting.input.hamiltonian.fde = True   #sets the .FDE key on the top level of HAMILOTNIAN block
+    >>> myjob.setting.input.hamiltonian.fde.frdens = 'value2'   #sets the *FDE subblock in the HAMILTONIAN block, but overwrites the key .FDE defined above
 
-            >>> myjob.setting.input.hamiltonian.fde._en = True   #sets the .FDE key on the top level of HAMILOTNIAN block, its value can be set just like any other key
-            >>> myjob.setting.input.hamiltonian.fde.frdens = 'value2'   #sets the "proper" contents of *FDE subblock.
+    To solve this problem a special "enabler" key ``_en`` can be used *inside the subblock*. If such a key is present, the parent block of this subblock will be enriched with corresponding key and value::
+
+        >>> myjob.setting.input.hamiltonian.fde._en = True   #sets the .FDE key on the top level of HAMILOTNIAN block, its value can be set just like any other key
+        >>> myjob.setting.input.hamiltonian.fde.frdens = 'value2'   #sets the "proper" contents of *FDE subblock.
 
 
 .. _dirac-runscript:

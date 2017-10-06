@@ -18,9 +18,9 @@ Directly after execution of a job is finished (see :ref:`job-life-cycle`), the j
 If you need an absolute path to some file, the bracket notation known from dictionaries is defined for |Results| objects. When supplied with an entry from ``files`` list, it returns the absolute path to that file. This mechanism is read-only::
 
     >>> r = j.run()
-    >>> print r.files
+    >>> print(r.files)
     ['plamsjob.err', 'plamsjob.in', 'plamsjob.out', 'plamsjob.run']
-    >>> print r['plamsjob.out']
+    >>> print(r['plamsjob.out'])
     /home/user/plams.12345/plamsjob/plamsjob.in
     >>> r['newfile.txt'] = '/home/user/abc.txt'
     TypeError: 'Results' object does not support item assignment
@@ -29,12 +29,12 @@ In the bracket notation and in every other context regarding |Results|, whenever
 
     >>> r.rename('$JN.out', 'outputfile')
     >>> r.grep_file('$JN.err', 'NORMAL TERMINATION')
-    >>> print r['$JN.run']
+    >>> print(r['$JN.run'])
     /home/user/plams.12345/plamsjob/plamsjob.run
 
 Some external binaries produce fixed name files during execution (like for example ADF's ``TAPE21``). If one wants to automatically rename those files it can be done with ``_rename_map`` class attribute::
 
-    >>> print ADFResults._rename_map
+    >>> print(ADFResults._rename_map)
     {'TAPE13': '$JN.t13', 'TAPE21': '$JN.t21'}
 
 As presented in the above example, ``_rename_map`` is a dictionary defining which files should be renamed and how. Renaming is done only once, on :meth:`~Results.collect`. In generic |Results| class ``_rename_map`` is an empty dictionary.
@@ -65,7 +65,7 @@ When you run a job using a serial job runner, all steps of |run| (see :ref:`job-
 
     You should **NEVER** access results in any other way than by a **method** of |Results| instance.
 
-The |Results| class is designed in such a way, that each of its methods automatically gets wrapped with the access guardian when |Results| instance is created. That behavior holds for any |Results| subclasses and new methods defined by user, so no need to worry about guardian when extending |Results| functionality. Also |binding_decorators| recognize when you try to use them with |Results| and act accordingly. Methods whose names end with two underscores, as well as :meth:`~Results.refresh`, :meth:`~Results.collect`, :meth:`~Results._clean` are not wrapped with the guardian. The guardian gives special privileges (earlier access) to |postrun| and :meth:`~scm.plams.basejob.Job.check` (see :ref:`prerun-postrun`).
+The |Results| class is designed in such a way, that each of its methods automatically gets wrapped with the access guardian when |Results| instance is created. That behavior holds for any |Results| subclasses and new methods defined by user, so no need to worry about guardian when extending |Results| functionality. Also |binding_decorators| recognize when you try to use them with |Results| and act accordingly. Methods whose names end with two underscores, as well as :meth:`~Results.refresh`, :meth:`~Results.collect`, :meth:`~Results._clean` are not wrapped with the guardian. The guardian gives special privileges (earlier access) to |postrun| and :meth:`~scm.plams.core.basejob.Job.check` (see :ref:`prerun-postrun`).
 
 .. technical::
 
@@ -191,9 +191,10 @@ As seen in the above example, it is extremely important to properly configure jo
 
 
 To sum up all the above considerations, here is the rule of thumb how to write properly working parallel PLAMS scripts:
-    1.  Request results as late as possible, preferably just before using them.
-    2.  If possible, avoid requesting results in the main thread.
-    3.  Place the result request in the thread in which this data is later used.
+
+1.  Request results as late as possible, preferably just before using them.
+2.  If possible, avoid requesting results in the main thread.
+3.  Place the result request in the thread in which this data is later used.
 
 
 
@@ -204,15 +205,16 @@ Cleaning job folder
 
 |Results| instance associated with a job is responsible for cleaning the job folder (removing files that are no longer needed). Cleaning is done automatically, twice for each job, so usually there is no need to manually invoke it.
 
-First cleaning is done during job execution, just after :meth:`~scm.plams.basejob.Job.check` and before |postrun|. The value adjusting first cleaning is taken from ``myjob.settings.keep`` and should be either string or list (see below). This cleaning will usually be used rather rarely. It is intended for purposes when your jobs produce large files that you don't need for further processing. Running many of such jobs could then deplete disk quota and cause the whole script to crash. If you wish to immediately get rid of some files produced by your jobs (without having a chance to do anything with them), use this cleaning.
+First cleaning is done during job execution, just after :meth:`~scm.plams.core.basejob.Job.check` and before |postrun|. The value adjusting first cleaning is taken from ``myjob.settings.keep`` and should be either string or list (see below). This cleaning will usually be used rather rarely. It is intended for purposes when your jobs produce large files that you don't need for further processing. Running many of such jobs could then deplete disk quota and cause the whole script to crash. If you wish to immediately get rid of some files produced by your jobs (without having a chance to do anything with them), use this cleaning.
 
 In the majority of cases it is sufficient to use second cleaning, which is performed at the end of your script, when |finish| method is called. It is adjusted by ``myjob.settings.save``. You can use second cleaning to remove files that you no longer need after you extracted relevant data earlier in your script.
 
 The argument passed to :meth:`~Results._clean` (in other words the value that is supposed to be kept in ``myjob.settings.keep`` and ``myjob.settings.save``) can be one of the following:
-    *   ``'all'`` -- nothing is removed, cleaning is skipped.
-    *   ``'none'`` or ``[]`` or ``None`` -- everything is removed from the job folder.
-    *   list of strings -- list of filenames to be kept. Shortcut ``$JN`` can be used here, as well as \*-wildcards. For example ``['geo.*', '$JN.out', 'logfile']`` will keep ``[jobname].out``, ``logfile`` and all files whose names start with ``geo.`` and remove everything else from the job folder.
-    *   list of strings with the first element ``'-'`` -- reversed behavior to the above, listed files will be removed. For example ``['-', 't21.*', '$JN.err']`` will remove ``[jobname].err`` and all files whose names start with ``t21.``
+
+*   ``'all'`` -- nothing is removed, cleaning is skipped.
+*   ``'none'`` or ``[]`` or ``None`` -- everything is removed from the job folder.
+*   list of strings -- list of filenames to be kept. Shortcut ``$JN`` can be used here, as well as \*-wildcards. For example ``['geo.*', '$JN.out', 'logfile']`` will keep ``[jobname].out``, ``logfile`` and all files whose names start with ``geo.`` and remove everything else from the job folder.
+*   list of strings with the first element ``'-'`` -- reversed behavior to the above, listed files will be removed. For example ``['-', 't21.*', '$JN.err']`` will remove ``[jobname].err`` and all files whose names start with ``t21.``
 
 Cleaning for multijobs
 +++++++++++++++++++++++++

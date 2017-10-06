@@ -74,7 +74,7 @@ In the last line of the above example all intermediate |Settings| instances are 
     >>> s['foo'] = 'bar'
     >>> x = s['fo']
 
-    >>> print s
+    >>> print(s)
     fo:
     foo:    bar
 
@@ -125,16 +125,16 @@ The dot shortcut does not work for keys which begin and end with two (or more) u
 Global settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Global settings (variables adjusting general behavior of PLAMS as well as default settings for various objects) are stored in a public |Settings| instance named ``config``. This instance is created during initialization of PLAMS environment (see |init|) and populated by executing ``plams_defaults.py``. It is publicly visible from everywhere without a need of import so every time you wish to adjust some settings you can simply type in your script, for example::
+Global settings (variables adjusting general behavior of PLAMS as well as default settings for various objects) are stored in a public |Settings| instance named ``config``. This instance is created during initialization of PLAMS environment (see |init|) and populated by executing ``plams_defaults``. It is publicly visible from everywhere without a need of import so every time you wish to adjust some settings you can simply type in your script, for example::
 
     config.job.pickle = False
     config.sleepstep = 10
 
-These changes are going to affect only the script they are called from. If you wish to permanently change some setting for all PLAMS executions, you can do it by editing ``plams_defaults.py``. This file is located in ``utils`` subfolder and contains definitions of all ``config`` entries together with short explanations of their roles.
+These changes are going to affect only the script they are called from. If you wish to permanently change some setting for all PLAMS executions, you can do it by editing ``plams_defaults``. This file is located in ``utils`` subfolder and contains definitions of all ``config`` entries together with short explanations of their roles.
 
 .. technical::
 
-     ``config`` is made visible from everywhere by being added to built-ins namespace in :mod:`__builtin__` module.
+     ``config`` is made visible from everywhere by being added to built-ins namespace in :mod:`builtins` module.
 
 
 

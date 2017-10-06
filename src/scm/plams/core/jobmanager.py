@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import glob
 import os
 import shutil
@@ -12,29 +10,34 @@ except ImportError:
 from os.path import join as opj
 
 from .common import log
-from .errors import PlamsError
+from .errors import PlamsError, FileError
 from .basejob import MultiJob
 
 __all__ = ['JobManager']
+
+
 
 class JobManager(object):
     """Class responsible for jobs and files management.
 
     Every instance has the following attributes:
-        *   ``folder`` -- the working folder name.
-        *   ``path`` -- the absolute path to the directory with the working folder.
-        *   ``workdir`` -- the absolute path to the working folder (``path/folder``).
-        *   ``settings`` -- a |Settings| instance for this job manager (see below).
-        *   ``jobs`` -- a list of all jobs managed with this instance (in order of |run| calls).
-        *   ``names`` -- a dictionary with names of jobs. For each name an integer value is stored indicating how many jobs with that name have already been run.
-        *   ``hashes`` -- a dictionary working as a hash-table for jobs.
+
+    *   ``folder`` -- the working folder name.
+    *   ``path`` -- the absolute path to the directory with the working folder.
+    *   ``workdir`` -- the absolute path to the working folder (``path/folder``).
+    *   ``settings`` -- a |Settings| instance for this job manager (see below).
+    *   ``jobs`` -- a list of all jobs managed with this instance (in order of |run| calls).
+    *   ``names`` -- a dictionary with names of jobs. For each name an integer value is stored indicating how many jobs with that name have already been run.
+    *   ``hashes`` -- a dictionary working as a hash-table for jobs.
 
     ``path`` and ``folder`` can be adjusted with constructor arguments *path* and *folder*. If not supplied, Python current working directory and string ``plams.`` appended with PID of the current process are used.
 
     ``settings`` attribute is directly set to the value of *settings* argument (unlike in other classes where they are copied) and it should be a |Settings| instance with the following keys:
-        *   ``hashing`` -- chosen hashing method (see |RPM|).
-        *   ``counter_len`` -- length of number appended to the job name in case of name conflict.
-        *   ``remove_empty_directories`` -- if ``True``, all empty subdirectories of the working folder are removed on |finish|.
+
+    *   ``hashing`` -- chosen hashing method (see |RPM|).
+    *   ``counter_len`` -- length of number appended to the job name in case of name conflict.
+    *   ``remove_empty_directories`` -- if ``True``, all empty subdirectories of the working folder are removed on |finish|.
+
     """
 
     def __init__(self, settings, path=None, folder=None):
@@ -49,7 +52,7 @@ class JobManager(object):
         elif os.path.isdir(path):
             self.path = os.path.abspath(path)
         else:
-            raise PlamsError('Invalid path: %s'%path)
+            raise PlamsError('Invalid path: {}'.format(path))
 
         if folder is None:
             basename = 'plams.' + str(os.getpid())
@@ -67,7 +70,7 @@ class JobManager(object):
         if not os.path.exists(self.workdir):
             os.mkdir(self.workdir)
         else:
-            log('WARNING: Folder %s already exists. It is strongly advised to use a fresh folder for every run. If you experience problems check config.jobmanager.jobfolder_exists setting in plams_defaults.py' % self.workdir, 1)
+            log('WARNING: Folder {} already exists. It is strongly advised to use a fresh folder for every run. If you experience problems check config.jobmanager.jobfolder_exists setting in plams_defaults'.format(self.workdir), 1)
 
 
     def _register_name(self, job):
@@ -79,7 +82,7 @@ class JobManager(object):
         if job.name in self.names:
             self.names[job.name] += 1
             newname = job.name +'.'+ str(self.names[job.name]).zfill(self.settings.counter_len)
-            log('Renaming job %s to %s' % (job.name,newname), 3)
+            log('Renaming job {} to {}'.format(job.name, newname), 3)
             job.name = newname
         else:
             self.names[job.name] = 1
@@ -88,7 +91,7 @@ class JobManager(object):
     def _register(self, job):
         """Register the *job*. Register job's name (rename if needed) and create the job folder."""
 
-        log('Registering job %s' % job.name, 7)
+        log('Registering job {}'.format(job.name), 7)
         job.jobmanager = self
 
         self._register_name(job)
@@ -107,14 +110,14 @@ class JobManager(object):
                     i += 1
                 newname = job.path + '.old' + str(i)
                 os.rename(job.path, newname)
-                log('Folder %s already present. Renaming it to %s'%(job.path, newname), 1)
+                log('Folder {} already present. Renaming it to {}'.format(job.path, newname), 1)
             else:
-                raise PlamsError('Folder %s already present in the filesystem. Consider using a fresh working folder or adjusting config.jobmanager.jobfolder_exists'%job.path)
+                raise PlamsError('Folder {} already present in the filesystem. Consider using a fresh working folder or adjusting config.jobmanager.jobfolder_exists'.format(job.path))
         os.mkdir(job.path)
 
         self.jobs.append(job)
         job.status = 'registered'
-        log('Job %s registered' % job.name, 7)
+        log('Job {} registered'.format(job.name), 7)
 
 
     def _check_hash(self, job):
@@ -123,7 +126,7 @@ class JobManager(object):
         if h is not None:
             if h in self.hashes:
                 prev = self.hashes[h]
-                log('Job %s previously run as %s, using old results' % (job.name, prev.name), 1)
+                log('Job {} previously run as {}, using old results'.format(job.name, prev.name), 1)
                 return prev
             else:
                 self.hashes[h] = job
@@ -153,14 +156,21 @@ class JobManager(object):
             for key in job._dont_pickle:
                 job.__dict__[key] = None
 
-        filename = os.path.abspath(filename)
+        if os.path.isfile(filename):
+            filename = os.path.abspath(filename)
+        else:
+            raise FileError('File {} not present'.format(filename))
         path = os.path.dirname(filename)
         with open(filename, 'rb') as f:
-            job = pickle.load(f)
+            try:
+                job = pickle.load(f)
+            except Exception:
+                log("Unpickling of {} failed".format(filename), 1)
+                return None
 
         setstate(job, path)
-
         return job
+
 
     def remove_job(self, job):
         """Remove *job* from job manager. Forget its hash."""

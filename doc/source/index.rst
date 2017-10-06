@@ -13,4 +13,4 @@ Python Library for Automating Molecular Simulations
     intro
     started
     components
-    cookbook
+    interfaces

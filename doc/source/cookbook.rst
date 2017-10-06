@@ -57,10 +57,10 @@ A simple example using the MultiJob::
    # Calculate the average absolute error for each basis set:
 
    for bas in basis:
-      if bas == reference_basis: 
+      if bas == reference_basis:
          continue
       errs = [abs(ref - en)/n for ref, en, n in zip(bond_energies[reference_basis], bond_energies[bas], total_bond_order)]
       avg_error = sum(errs)/len(errs)
-      print 'Basis set:', bas, "Average Absolute Error per bond [kcal/mol]:", Units.convert(avg_error, 'au', 'kcal/mol')
+      print('Basis set:', bas, "Average Absolute Error per bond [kcal/mol]:") Units.convert(avg_error, 'au', 'kcal/mol')
 
    finish()

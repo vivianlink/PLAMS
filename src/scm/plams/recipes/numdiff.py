@@ -1,15 +1,17 @@
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 
 from ..core.results import Results
 from ..core.basejob import MultiJob
 from ..core.settings import Settings
 from ..core.basemol import Atom
-from ..interfaces.adfsuite import ADFJob, BANDJob, DFTBJob
+from ..interfaces.adfsuite.adf import ADFJob
+from ..interfaces.adfsuite.band import BANDJob
+from ..interfaces.adfsuite.dftb import DFTBJob
 
 
 __all__ = ['ADFNumGradJob' ,'BANDNumGradJob', 'DFTBNumGradJob']
+
+
 
 class NumGradResults(Results):
 
@@ -21,6 +23,7 @@ class NumGradResults(Results):
         energies = [extract(self.job.children[(atom,coord,i)].results) for i in s.steps]
         coeffs, denom = self.job._coeffs[s.npoints]
         return sum([c*e for c,e in zip(coeffs, energies)])/(denom * s.step)
+
 
 
 class NumGradJob(MultiJob):
@@ -70,7 +73,8 @@ class NumGradJob(MultiJob):
                     newname = self.name + str(at) + axis + str(i)
                     self.children[(at,axis,i)] = s.jobtype(name=newname, molecule=newmol, settings=self.settings.child)
 
-#===================================================================================================
+
+#===========================================================================
 
 
 def _bond_energy(results):
@@ -82,7 +86,9 @@ class ADFNumGradJob(NumGradJob):
         self.settings.numgrad.jobtype = ADFJob
         self.settings.numgrad.get_energy = _bond_energy
 
-#===================================================================================================
+
+#===========================================================================
+
 
 def _BAND_totalenergy(results):
     return results.readkf('Bond energies', 'final bond energy')
@@ -93,7 +99,9 @@ class BANDNumGradJob(NumGradJob):
         self.settings.numgrad.jobtype = BANDJob
         self.settings.numgrad.get_energy = _BAND_totalenergy
 
-#===================================================================================================
+
+#===========================================================================
+
 
 def _DFTB_totalenergy(results):
     return float(results.grep_output('Total Energy (hartree)')[0].split()[-1])

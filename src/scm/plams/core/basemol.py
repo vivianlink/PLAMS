@@ -1,26 +1,18 @@
-from __future__ import unicode_literals
-
 import copy
 import heapq
 import math
 import numpy
 import os
-import types
-import uuid
 
 from .common import log
 from .errors import MoleculeError, PTError, FileError
 from .settings import Settings
+from ..tools.geometry import rotation_matrix
 from ..tools.pdbtools import PDBHandler, PDBRecord
-from ..tools.utils import Units, PT
+from ..tools.periodic_table import PT
+from ..tools.units import Units
 
 __all__ = ['Atom', 'Bond', 'Molecule']
-
-
-
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
 
 
 
@@ -28,26 +20,28 @@ class Atom(object):
     """A class representing a single atom in three dimensional space.
 
     An instance of this class has the following attributes:
-        *   ``atnum`` -- atomic number (zero for "dummy atoms")
-        *   ``coords`` -- tuple of length 3 storing spatial coordinates
-        *   ``bonds`` -- list of bonds (see |Bond|) this atom is a part of
-        *   ``mol`` -- a |Molecule| this atom belongs to
-        *   ``properties`` -- a |Settings| instance storing all other information about this atom (initially it is populated with *\*\*other* keyword arguments passed to the constructor)
+
+    *   ``atnum`` -- atomic number (zero for "dummy atoms")
+    *   ``coords`` -- tuple of length 3 storing spatial coordinates
+    *   ``bonds`` -- list of bonds (see |Bond|) this atom is a part of
+    *   ``mol`` -- a |Molecule| this atom belongs to
+    *   ``properties`` -- a |Settings| instance storing all other information about this atom (initially it is populated with *\*\*other* keyword arguments passed to the constructor)
 
     All the above attributes can be accessed either directly or using one of the following properties:
-        *   ``x``, ``y``, ``z`` -- allow to read or modify each coordinate separately
-        *   ``symbol`` -- allows to read or write atomic symbol directly. Atomic symbol is not stored as an attribute, instead of that atomic number (``atnum``) indicates the type of atom. In fact, ``symbol`` this is just a wrapper around ``atnum`` that uses |PeriodicTable| as a translator::
 
-                >>> a = Atom(atnum=8)
-                >>> print a.symbol
-                O
-                >>> a.symbol = 'Ca'
-                >>> print a.atnum
-                20
+    *   ``x``, ``y``, ``z`` -- allow to read or modify each coordinate separately
+    *   ``symbol`` -- allows to read or write atomic symbol directly. Atomic symbol is not stored as an attribute, instead of that atomic number (``atnum``) indicates the type of atom. In fact, ``symbol`` this is just a wrapper around ``atnum`` that uses |PeriodicTable| as a translator::
 
-        *   ``mass`` -- atomic mass, obtained from |PeriodicTable|, read only
-        *   ``radius`` -- atomic radius, obtained from |PeriodicTable|, read only
-        *   ``connectors`` -- number of connectors, obtained from |PeriodicTable|, read only
+            >>> a = Atom(atnum=8)
+            >>> print(a.symbol)
+            O
+            >>> a.symbol = 'Ca'
+            >>> print(a.atnum)
+            20
+
+    *   ``mass`` -- atomic mass, obtained from |PeriodicTable|, read only
+    *   ``radius`` -- atomic radius, obtained from |PeriodicTable|, read only
+    *   ``connectors`` -- number of connectors, obtained from |PeriodicTable|, read only
 
     .. note::
 
@@ -57,10 +51,10 @@ class Atom(object):
     Values stored in ``coords`` tuple do not necessarily have to be numeric, you can also store any string there. This might come handy for programs that allow parametrization of coordinates in the input file (to enforce some geometry constraints for example)::
 
             >>> a = Atom(symbol='C', coords=(1,2,3))
-            >>> print a
+            >>> print(a)
                      C       1.00000       2.00000       3.00000
             >>> a.y = 'param1'
-            >>> print a
+            >>> print(a)
                      C       1.00000        param1       3.00000
 
     However, non-numerical coordinates cannot be used together with some methods (for example :meth:`distance_to` or :meth:`translate`). Trying to do this will raise an exception.
@@ -90,30 +84,30 @@ class Atom(object):
             raise TypeError('Atom: Invalid coordinates passed')
 
 
-    def str(self, symbol=True, suffix='', unit='angstrom', space=14, decimal=6):
+    def str(self, symbol=True, suffix='', suffix_dict={}, unit='angstrom', space=14, decimal=6):
         """Return a string representation of this atom.
 
         Returned string is a single line (no newline characters) that always contains atomic coordinates (and maybe more). Each atomic coordinate is printed using *space* characters, with *decimal* characters reserved for decimal digits. Coordinates values are expressed in *unit*.
 
         If *symbol* is ``True``, atomic symbol is added at the beginning of the line. If *symbol* is a string, this exact string is printed there.
 
-        *suffix* is an arbitrary string that is appended at the end of returned line. It can contain identifiers in curly brackets (like for example ``f={fragment}``) that will be replaced by values of corresponding attributes (in this case ``self.fragment``). It is done via new string formatting and entire ``self.__dict__`` is passed to formating method. See :ref:`new-string-formatting` for details.
+        *suffix* is an arbitrary string that is appended at the end of returned line. It can contain identifiers in curly brackets (like for example ``f={fragment}``) that will be replaced by values of corresponding keys from *suffix_dict* dictionary. See :ref:`formatstrings` for details.
 
         Example:
 
             >>> a = Atom(atnum=6, coords=(1,1.5,2))
-            >>> print a.str()
+            >>> print(a.str())
                      C      1.000000      1.500000      2.000000
-            >>> print a.str(unit='bohr')
+            >>> print(a.str(unit='bohr'))
                      C      1.889726      2.834589      3.779452
-            >>> print a.str(symbol=False)
+            >>> print(a.str(symbol=False))
                   1.000000      1.500000      2.000000
-            >>> print a.str(symbol='C2.13')
+            >>> print(a.str(symbol='C2.13'))
                  C2.13      1.000000      1.500000      2.000000
-            >>> print a.str(suffix='protein1')
+            >>> print(a.str(suffix='protein1'))
                      C      1.000000      1.500000      2.000000 protein1
-            >>> a.info = 'membrane'
-            >>> print a.str(suffix='subsystem={info}')
+            >>> a.properties.info = 'membrane'
+            >>> print(a.str(suffix='subsystem={info}', suffix_dict=a.properties))
                      C      1.000000      1.500000      2.000000 subsystem=membrane
 
         """
@@ -121,18 +115,21 @@ class Atom(object):
         numformat = '{:>%i.%if}'%(space,decimal)
         f = lambda x: numformat.format(Units.convert(x, 'angstrom', unit)) if isinstance(x, (int,float)) else strformat.format(str(x))
         if symbol is False:
-            return ('{0}{1}{2} '+suffix).format(*map(f,self.coords), **self.__dict__)
+            return ('{0}{1}{2} '+suffix).format(*map(f,self.coords), **suffix_dict)
         if symbol is True:
             symbol = self.symbol
-        return ('{0:>10s}{1}{2}{3} '+suffix).format(symbol, *map(f,self.coords), **self.__dict__)
+        return ('{0:>10s}{1}{2}{3} '+suffix).format(symbol, *map(f,self.coords), **suffix_dict)
+
 
     def __str__(self):
         """Return a string representation of this atom. Simplified version of :meth:`str` to work as a magic method."""
         return self.str()
 
+
     def __iter__(self):
         """Iteration through atom yields coordinates. Thanks to that instances of |Atom| can be passed to any method requiring point or vector as an argument."""
         return iter(self.coords)
+
 
     def _setx(self, value): self.coords = (value, self.coords[1], self.coords[2])
     def _sety(self, value): self.coords = (self.coords[0], value, self.coords[2])
@@ -143,6 +140,7 @@ class Atom(object):
     x = property(_getx, _setx)
     y = property(_gety, _sety)
     z = property(_getz, _setz)
+
 
     def _getsymbol(self):
         return PT.get_symbol(self.atnum)
@@ -161,6 +159,7 @@ class Atom(object):
     def _getconnectors(self):
         return PT.get_connectors(self.atnum)
     connectors = property(_getconnectors)
+
 
     def translate(self, vector, unit='angstrom'):
         """Move this atom in space by *vector*, expressed in *unit*.
@@ -221,6 +220,7 @@ class Atom(object):
         den = self.distance_to(point1, point1unit) * self.distance_to(point2, point2unit)
         return Units.convert(math.acos(num/den), 'radian', result_unit)
 
+
     def rotate(self, matrix):
         """Rotate this atom according to rotation *matrix*.
 
@@ -235,9 +235,9 @@ class Atom(object):
 
 
 
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
+#===========================================================================
+#===========================================================================
+#===========================================================================
 
 
 
@@ -245,10 +245,11 @@ class Bond (object):
     """A class representing a bond between two atoms.
 
     An instance of this class has the following attributes:
-        *   ``atom1`` and ``atom2`` -- two instances of |Atom| that form this bond
-        *   ``order`` -- order of the bond. It is either an integer number or the floating point value stored in ``Bond.AR``, indicating aromatic bond
-        *   ``mol`` -- a |Molecule| this bond belongs to
-        *   ``properties`` -- a |Settings| instance storing all other  information about this bond (initially it is populated with *\*\*other* keyword arguments passed to the constructor)
+
+    *   ``atom1`` and ``atom2`` -- two instances of |Atom| that form this bond
+    *   ``order`` -- order of the bond. It is either an integer number or the floating point value stored in ``Bond.AR``, indicating aromatic bond
+    *   ``mol`` -- a |Molecule| this bond belongs to
+    *   ``properties`` -- a |Settings| instance storing all other  information about this bond (initially it is populated with *\*\*other* keyword arguments passed to the constructor)
 
     .. note::
 
@@ -256,7 +257,7 @@ class Bond (object):
 
     """
     AR = 1.5
-    def __init__(self, atom1, atom2, order=1, mol=None, **other):
+    def __init__(self, atom1=None, atom2=None, order=1, mol=None, **other):
         self.atom1 = atom1
         self.atom2 = atom2
         self.order = order
@@ -309,9 +310,9 @@ class Bond (object):
 
 
 
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
+#===========================================================================
+#===========================================================================
+#===========================================================================
 
 
 
@@ -319,10 +320,11 @@ class Molecule (object):
     """A class representing basic molecule object.
 
     An instance of this class has the following attributes:
-        *   ``atoms`` -- a list of |Atom| objects that belong to this molecule
-        *   ``bonds`` -- a list of |Bond| objects between atoms listed in ``atoms``
-        *   ``lattice`` -- a list of lattice vectors, in case of periodic structures
-        *   ``properties`` -- a |Settings| instance storing all other information about this molecule
+
+    *   ``atoms`` -- a list of |Atom| objects that belong to this molecule
+    *   ``bonds`` -- a list of |Bond| objects between atoms listed in ``atoms``
+    *   ``lattice`` -- a list of lattice vectors, in case of periodic structures
+    *   ``properties`` -- a |Settings| instance storing all other information about this molecule
 
     .. note::
 
@@ -361,13 +363,12 @@ class Molecule (object):
 
         >>> mol.lattice = []
 
-    |hspace|
 
-    Below the detailed description of available methods is presented. Many of these methods require passing atoms belonging to the molecule as arguments. It can by done by using a reference to an |Atom| object present it ``atoms`` list, but not by passing a number of an atom (its position within ``atoms`` list). Unlike some other tools, PLAMS does not use integer numbers as primary identifiers of atoms. It is done to prevent problems when atoms within a molecule are reordered or some atoms are deleted. References to |Atom| or |Bond| objects can be obtained directly from ``atoms`` or ``bonds`` lists, or with dictionary-like bracket notation::
+    The detailed description of available methods is presented below. Many of these methods require passing atoms belonging to the molecule as arguments. It can by done by using a reference to an |Atom| object present it ``atoms`` list, but not by passing a number of an atom (its position within ``atoms`` list). Unlike some other tools, PLAMS does not use integer numbers as primary identifiers of atoms. It is done to prevent problems when atoms within a molecule are reordered or some atoms are deleted. References to |Atom| or |Bond| objects can be obtained directly from ``atoms`` or ``bonds`` lists, or with dictionary-like bracket notation::
 
         >>> mol = Molecule('xyz/Ammonia.xyz')
         >>> mol.guess_bonds()
-        >>> print mol
+        >>> print(mol)
           Atoms:
             1         H      0.942179      0.000000     -0.017370
             2         H     -0.471089      0.815951     -0.017370
@@ -378,13 +379,13 @@ class Molecule (object):
            (2)--1.0--(3)
            (3)--1.0--(4)
         >>> at = mol[1]
-        >>> print at
+        >>> print(at)
                  H      0.942179      0.000000     -0.017370
         >>> b = mol[(1,3)]
-        >>> print b
+        >>> print(b)
         (         H      0.942179      0.000000     -0.017370 )--1.0--(         N      0.000000      0.000000      0.383210 )
         >>> b = mol[(1,4)]
-        >>> print b
+        >>> print(b)
         None
 
     .. note::
@@ -408,9 +409,9 @@ class Molecule (object):
             self.properties.name = os.path.splitext(os.path.basename(filename))[0]
 
 
-#===================================================================================================
-#==== Atoms/bonds manipulation =====================================================================
-#===================================================================================================
+#===========================================================================
+#==== Atoms/bonds manipulation =============================================
+#===========================================================================
 
 
     def copy(self, atoms=None):
@@ -418,20 +419,29 @@ class Molecule (object):
 
         By default the entire molecule is copied. It is also possible to copy only some part of the molecule, indicated by *atoms* argument. It should be a list of atoms that **belong to this molecule**. Only these atoms, together with any bonds between them, are copied and included in the returned molecule.
         """
+
         if atoms is None:
-            return copy.deepcopy(self)
-        for at in self.atoms:
-            at._stay = False
+            atoms = self.atoms
+
+        ret = _safe_copy(self, without=['atoms','bonds'])
+
         for at in atoms:
-            at._stay = True
-        ret = copy.deepcopy(self)
-        for at in reversed(ret.atoms):
-            if at._stay is False:
-                ret.delete_atom(at)
-            del at._stay
-        for at in self.atoms:
-            del at._stay
+            at_copy = _safe_copy(at, without=['mol','bonds'])
+            ret.add_atom(at_copy)
+            at._bro = at_copy
+
+        for bo in self.bonds:
+            if hasattr(bo.atom1, '_bro') and hasattr(bo.atom2, '_bro'):
+                bo_copy = _safe_copy(bo, without=['atom1', 'atom2', 'mol'])
+                bo_copy.atom1 = bo.atom1._bro
+                bo_copy.atom2 = bo.atom2._bro
+                ret.add_bond(bo_copy)
+
+        for at in atoms:
+            del at._bro
+
         return ret
+
 
 
     def add_atom(self, atom, adjacent=None):
@@ -783,9 +793,9 @@ class Molecule (object):
 
 
 
-#===================================================================================================
-#==== Geometry operations ==========================================================================
-#===================================================================================================
+#===========================================================================
+#==== Geometry operations ==================================================
+#===========================================================================
 
 
 
@@ -798,8 +808,20 @@ class Molecule (object):
             at.translate(vector, unit)
 
 
-    def rotate(self, matrix):
-        """Rotate this molecule according to rotation *matrix*.
+    def rotate_lattice(self, matrix):
+        """Rotate **only** lattice vectors of this molecule with given rotation *matrix*.
+
+        *matrix* should be a container with 9 numerical values. It can be a list (tuple, numpy array etc.) listing matrix elements row-wise, either flat (``[1,2,3,4,5,6,7,8,9]``) or in two-level fashion (``[[1,2,3],[4,5,6],[7,8,9]]``).
+
+        .. note::
+
+            This method does not check if supplied matrix is a proper rotation matrix.
+        """
+        self.lattice = [tuple(numpy.dot(matrix,i)) for i in self.lattice]
+
+
+    def rotate(self, matrix, lattice=False):
+        """Rotate this molecule with given rotation *matrix*. If *lattice* is ``True``, rotate also the lattice vectors.
 
         *matrix* should be a container with 9 numerical values. It can be a list (tuple, numpy array etc.) listing matrix elements row-wise, either flat (``[1,2,3,4,5,6,7,8,9]``) or in two-level fashion (``[[1,2,3],[4,5,6],[7,8,9]]``).
 
@@ -809,6 +831,56 @@ class Molecule (object):
         """
         for at in self.atoms:
             at.rotate(matrix)
+        if lattice:
+            self.rotate_lattice(matrix)
+
+
+    def align_lattice(self, convention='x', zero=1e-10):
+        """Rotate this molecule in such a way that lattice vectors are aligned with coordinate system.
+
+        This method is meant to be used with periodic systems only. Using it on a |Molecule| instance with empty ``lattice`` attribute has no effect.
+
+        Possible values of *convention* argument are:
+
+        *   ``x`` (default) -- first lattice vector aligned with X axis. Second vector (if present) aligned with XY plane.
+        *   ``z`` (convention used by `ReaxFF <https://www.scm.com/product/reaxff>`_) -- second lattice vector (if present) aligned with YZ plane. Third vector (if present) aligned with Z axis.
+
+        *zero* argument can be used to specify the numerical tolerance for zero (used to determine if some vector is already aligned with a particular axis or plane).
+
+        The returned value is ``True`` if any rotation happened, ``False`` otherwise.
+        """
+        dim = len(self.lattice)
+
+        if dim == 0:
+            log('NOTE: align_lattice called on a Molecule without any lattice', 5)
+            return False
+
+        rotated = False
+        if convention == 'x':
+            if abs(self.lattice[0][1]) > zero or abs(self.lattice[0][2]) > zero:
+                mat = rotation_matrix(self.lattice[0], [1.0, 0.0, 0.0])
+                self.rotate(mat, lattice=True)
+                rotated = True
+
+            if dim >= 2 and abs(self.lattice[1][2]) > zero:
+                mat = rotation_matrix([0.0, self.lattice[1][1], self.lattice[1][2]], [0.0, 1.0, 0.0])
+                self.rotate(mat, lattice=True)
+                rotated = True
+
+        elif convention == 'z':
+            if dim == 3 and (abs(self.lattice[2][0]) > zero or abs(self.lattice[2][1]) > zero):
+                mat = rotation_matrix(self.lattice[2], [0.0, 0.0, 1.0])
+                self.rotate(mat, lattice=True)
+                rotated = True
+
+            if dim >= 2 and abs(self.lattice[1][0]) > zero:
+                mat = rotation_matrix([self.lattice[1][0], self.lattice[1][1], 0.0], [0.0, 1.0, 0.0])
+                self.rotate(mat, lattice=True)
+                rotated = True
+
+        else:
+            raise MoleculeError("align_lattice: unknown convention: {}. Possible values are 'x' or 'z'".format(convention))
+        return rotated
 
 
     def rotate_bond(self, bond, atom, angle, unit='radian'):
@@ -905,12 +977,13 @@ class Molecule (object):
         Transform the molecule wrapping its x-axis around z-axis. This method is useful for building nanotubes or molecular wedding rings.
 
         Atomic coordinates are transformed in the following way:
-            *   zzzzz coordinates remain untouched
-            *   x axis gets wrapped around the circle centered in the origin of new coordinate system. Each segment of x axis of length *length* ends up as an arc of a circle subtended by an angle *angle*. The radius of this circle is R = *length*/*angle*.
-            *   part of the plane between the x axis and the line y=R is transformed into the interior of the circle, with line y=R being squashed into a single point - the center of the circle.
-            *   part of the plane above line y=R is dropped
-            *   part of the plane below x axis is transformed into outside of the circle
-            *   transformation is done in such a way that distances along y axis are preserved
+
+        *   z coordinates remain untouched
+        *   x axis gets wrapped around the circle centered in the origin of new coordinate system. Each segment of x axis of length *length* ends up as an arc of a circle subtended by an angle *angle*. The radius of this circle is R = *length*/*angle*.
+        *   part of the plane between the x axis and the line y=R is transformed into the interior of the circle, with line y=R being squashed into a single point - the center of the circle.
+        *   part of the plane above line y=R is dropped
+        *   part of the plane below x axis is transformed into outside of the circle
+        *   transformation is done in such a way that distances along y axis are preserved
 
         Before:
 
@@ -970,10 +1043,39 @@ class Molecule (object):
         return formula
 
 
+    def apply_strain(self, strain):
+        """Apply a strain deformation to a periodic system.
 
-#===================================================================================================
-#==== Magic methods ================================================================================
-#===================================================================================================
+        This method can be used only for periodic systems (the ones with non-empty ``lattice`` attribute). *strain* should be a container with n*n numerical values, where n is the size of the ``lattice``. It can be a list (tuple, numpy array etc.) listing matrix elements row-wise, either flat (``[1,2,3,4,5,6,7,8,9]``) or in two-level fashion (``[[1,2,3],[4,5,6],[7,8,9]]``).
+        """
+
+        n = len(self.lattice)
+
+        if n == 0:
+            raise MoleculeError('apply_strain: strain can only be applied to periodic systems')
+
+        try:
+            strain = numpy.array(strain).reshape(n,n)
+        except:
+            raise MoleculeError('apply_strain: could not convert the strain to a (%i,%i) numpy array'%(n,n))
+
+        lattice_np = numpy.array(self.lattice)
+        frac_coords_transf = numpy.linalg.inv(lattice_np.T)
+        deformed_lattice = numpy.dot(lattice_np, numpy.eye(n) + numpy.array(strain))
+
+        for atom in self.atoms:
+            coord_np = numpy.array(atom.coords)
+            fractional_coords = numpy.matmul(frac_coords_transf, coord_np.T)
+            atom.coords = tuple(numpy.matmul(fractional_coords,deformed_lattice))
+
+        self.lattice = [tuple(vec) for vec in deformed_lattice.tolist()]
+
+
+
+
+#===========================================================================
+#==== Magic methods ========================================================
+#===========================================================================
 
 
 
@@ -1010,7 +1112,7 @@ class Molecule (object):
         if self.lattice:
             s += '  Lattice:\n'
             for vec in self.lattice:
-               s += '    %10.6f %10.6f %10.6f\n'%vec
+                s += '    {:16.10f} {:16.10f} {:16.10f}\n'.format(*vec)
         return s
 
 
@@ -1043,7 +1145,7 @@ class Molecule (object):
 
         >>> newmol = mol1 + mol2
 
-        The new molecule has atoms, bonds and all other elements distinct from both components. ``properties`` of ``newmol`` are ``properties`` of ``mol1`` :meth:`soft_updated<scm.plams.settings.Settings.soft_update>` with ``properties`` of ``mol2``.
+        The new molecule has atoms, bonds and all other elements distinct from both components. ``properties`` of ``newmol`` are ``properties`` of ``mol1`` :meth:`soft_updated<scm.plams.core.settings.Settings.soft_update>` with ``properties`` of ``mol2``.
         """
         m = self.copy()
         m += other
@@ -1055,7 +1157,7 @@ class Molecule (object):
 
         >>> protein += water
 
-        All atoms and bonds present in *other* are copied and copies are added to this molecule. ``properties`` of this molecule are :meth:`soft_updated<scm.plams.settings.Settings.soft_update>` with ``properties`` of *other*.
+        All atoms and bonds present in *other* are copied and copies are added to this molecule. ``properties`` of this molecule are :meth:`soft_updated<scm.plams.core.settings.Settings.soft_update>` with ``properties`` of *other*.
         """
         othercopy = other.copy()
         self.atoms += othercopy.atoms
@@ -1073,9 +1175,9 @@ class Molecule (object):
 
 
 
-#===================================================================================================
-#==== File/format IO ===============================================================================
-#===================================================================================================
+#===========================================================================
+#==== File/format IO =======================================================
+#===========================================================================
 
 
 
@@ -1158,28 +1260,43 @@ class Molecule (object):
             line = f.readline().rstrip()
             if line:
                 spl = line.split()
-                if spl[len(spl)-1] == 'V2000':
-                    natom = int(spl[0])
-                    nbond = int(spl[1])
+                if spl[-1] == 'V2000':
+                    if len(line) == 39:
+                        natom = int(line[0:3])
+                        nbond = int(line[3:6])
+                    else:
+                        natom = int(spl[0])
+                        nbond = int(spl[1])
                     for j in range(natom):
-                        atomline = f.readline().split()
-                        crd = tuple(map(float, atomline[0:3]))
-                        symb = atomline[3]
+                        atomline = f.readline().rstrip()
+                        if len(atomline) == 69:
+                            crd = (float(atomline[:10]),float(atomline[10:20]),float(atomline[20:30]))
+                            symb = atomline[31:34].strip()
+                        else:
+                            tmp = atomline.split()
+                            crd = tuple(map(float, tmp[0:3]))
+                            symb = tmp[3]
                         try:
                             num = PT.get_atomic_number(symb)
                         except PTError:
                             num = 0
                         self.add_atom(Atom(atnum=num, coords=crd))
                     for j in range(nbond):
-                        bondline = f.readline().split()
-                        at1 = self.atoms[int(bondline[0]) - 1]
-                        at2 = self.atoms[int(bondline[1]) - 1]
-                        ordr = int(bondline[2])
+                        bondline = f.readline().rstrip()
+                        if len(bondline) == 21:
+                            at1 = int(bondline[0:3])
+                            at2 = int(bondline[3:6])
+                            ordr = int(bondline[6:9])
+                        else:
+                            tmp = bondline.split()
+                            at1 = int(tmp[0])
+                            at2 = int(tmp[1])
+                            ordr = int(tmp[2])
                         if ordr == 4:
                             ordr = Bond.AR
-                        self.add_bond(Bond(atom1=at1, atom2=at2, order=ordr))
+                        self.add_bond(Bond(atom1=self[at1], atom2=self[at2], order=ordr))
                     break
-                elif spl[len(spl)-1] == 'V3000':
+                elif spl[-1] == 'V3000':
                     raise FileError('readmol: Molfile V3000 not supported. Please convert')
                 else:
                     comment.append(line)
@@ -1203,14 +1320,14 @@ class Molecule (object):
 
         self.set_atoms_id()
 
-        f.write('%3i%3i  0  0  0  0  0  0  0  0999 V2000\n' % (len(self.atoms),len(self.bonds)))
+        f.write('%3i %2i  0  0  0  0  0  0  0  0999 V2000\n' % (len(self.atoms),len(self.bonds)))
         for at in self.atoms:
-            f.write('%10.4f%10.4f%10.4f %-3s 0  0  0  0  0  0\n' % (at.x,at.y,at.z,at.symbol))
+            f.write('%10.4f %9.4f %9.4f %-3s 0  0  0  0  0  0  0  0  0  0  0  0\n' % (at.x,at.y,at.z,at.symbol))
         for bo in self.bonds:
             order = bo.order
             if order == Bond.AR:
                 order = 4
-            f.write('%3i%3i%3i  0  0  0\n' % (bo.atom1.id,bo.atom2.id,order))
+            f.write('%3i %2i %2i  0  0  0  0\n' % (bo.atom1.id,bo.atom2.id,order))
         self.unset_atoms_id()
         f.write('M  END\n')
 
@@ -1286,7 +1403,6 @@ class Molecule (object):
 
 
     def writemol2(self, f):
-        bondorders = ['1','2','3','ar']
 
         def write_prop(name, obj, separator, space=0, replacement=None):
             form_str = '%-' + str(space) + 's'
@@ -1318,7 +1434,7 @@ class Molecule (object):
 
         f.write('\n@<TRIPOS>BOND\n')
         for i,bo in enumerate(self.bonds):
-            f.write('%5i %5i %5i %4s' % (i+1, bo.atom1.id, bo.atom2.id, bondorders[bo.order]))
+            f.write('%5i %5i %5i %4s' % (i+1, bo.atom1.id, bo.atom2.id, 'ar' if bo.is_aromatic() else bo.order))
             write_prop('flags', bo, '\n')
 
         self.unset_atoms_id()
@@ -1378,7 +1494,7 @@ class Molecule (object):
             else:
                 inputformat = 'xyz'
         if inputformat in self.__class__._readformat:
-            with open(filename, 'rU') as f:
+            with open(filename, 'r') as f:
                 ret = self._readformat[inputformat](self, f, frame)
             return ret
         else:
@@ -1406,128 +1522,70 @@ class Molecule (object):
     _readformat = {'xyz':readxyz, 'mol':readmol, 'mol2':readmol2, 'pdb':readpdb}
     _writeformat = {'xyz':writexyz, 'mol':writemol, 'mol2':writemol2, 'pdb': writepdb}
 
-#===================================================================================================
-#==== JSON IO ======================================================================================
-#===================================================================================================
 
 
     def as_dict(self):
         """
-        The Molecule information is stored in a dict based on the mol
-        `file format <http://onlinelibrarystatic.wiley.com/marvin/help/FF/19693841.html>`
-        :returns: JSON object
+        Store all the information about this |Molecule| in a dictionary.
+
+        Returned dictionary is, in principle, identical to ``self.__dict__`` of the current instance, apart from the fact that all |Atom| and |Bond| instances in ``atoms`` and ``bonds`` lists are replaced with dictionaries storing corresponing information.
+
+        This method is a counterpart of :meth:`~scm.plams.core.basemol.Molecule.from_dict`.
 
         """
-        # def create_atom_ids(mol):
-        #     """
-        #     Generate unique identifier for each atom
-        #     :parameter mol: Molecule object containing the atoms
-        #     :type      mol: |Molecule|
-        #     """
-        #     ds = []
-        #     for i,self.assertTrue() in enumerate(mol.atoms):
-        #         idx  = "atom_" + str(i)
-        #         ds.append(idx)
-        #     return ds
+        mol_dict = copy.copy(self.__dict__)
+        atom_indices = {id(a): i for i, a in enumerate(mol_dict['atoms'])}
+        bond_indices = {id(b): i for i, b in enumerate(mol_dict['bonds'])}
+        atom_dicts = [copy.copy(a.__dict__) for a in mol_dict['atoms']]
+        bond_dicts = [copy.copy(b.__dict__) for b in mol_dict['bonds']]
+        for a_dict in atom_dicts:
+            a_dict['bonds'] = [bond_indices[id(b)] for b in a_dict['bonds']]
+            del(a_dict['mol'])
+        for b_dict in bond_dicts:
+            b_dict['atom1'] = atom_indices[id(b_dict['atom1'])]
+            b_dict['atom2'] = atom_indices[id(b_dict['atom2'])]
+            del(b_dict['mol'])
+        mol_dict['atoms'] = atom_dicts
+        mol_dict['bonds'] = bond_dicts
+        return mol_dict
 
-        def create_atom_block(mol):
-            """
-            In this block are stored the atomic number, coordinates,
-            atomic symbols and others properties that are passed as a *Setting* object.
-            :parameter mol: Molecule object containing the atoms
-            :type      mol: |Molecule|
-            :parameter ids: List of unique identifier
-            :type      ids: [Int]
-            """
-            return [{'coords': at.coords, 'symbol': at.symbol,
-                     'atnum': at.atnum, 'properties': at.properties.as_dict()} for at in mol.atoms]
 
-        def create_bond_block(mol):
-            """
-            :parameter mol: Molecule object containing the atoms
-            :type      mol: |Molecule|
-            :parameter ids: List of unique identifier
-            :type      ids: [Int]
-
-            The data list on table bellow is used to store
-            information related to the bonds.
-
-            =================   =====================
-            Meaning             Value
-            ==================  =====================
-            First atom number   Int
-            Second atom number  Int
-            Bond type           Int (float for aromatic)
-                                #. Single
-                                #. Double
-                                #. Triple
-                                #. Aromatic
-            Properties          Settings
-            ==================  =====================
-            """
-            def get_bond_order(bond):
-                if bond.order:
-                    return bond.order
-                elif bond.AR:
-                    return bond.AR
-                else:
-                    msg = "bond does not contain order attribute"
-                    raise AttributeError(msg)
-
-            # Represent the atoms involved in the bond like references
-            # to the unique identifiers stored in the ``atomBlock``
-            # dict_atom2id = {at: idx for (at, idx) in zip(mol.atoms, ids)}
-            bonds_list = []
-            for i, b in enumerate(mol.bonds):
-                atom1 = mol.atoms.index(b.atom1)
-                atom2 = mol.atoms.index(b.atom2)
-                order = get_bond_order(b)
-                bond  = {'atom1': atom1, 'atom2': atom2,
-                         'order': order, 'properties': b.properties.as_dict()}
-                bonds_list.append(bond)
-
-            return bonds_list
-
-        d              = dict()
-        d["atomBlock"] = create_atom_block(self)
-        d["bondBlock"] = create_bond_block(self)
-        d["properties"] = self.properties
-
-        return d
 
     @classmethod
-    def from_dict(cls, atomBlock, bondBlock, properties):
+    def from_dict(cls, dictionary):
         """
-        Generate a new Molecule instance using the data stored
-        in the dictionary representing the JSON serialized data
-        :parameter ds: Dict containing the JSON serialized molecule
-        :type      ds: Dict
-        :returns: |Molecule|
+        Generate a new |Molecule| instance based on the information stored in *dictionary*.
+
+        This method is a counterpart of :meth:`~scm.plams.core.basemol.Molecule.as_dict`.
         """
-        # New Molecule instance
-        mol     = cls()
-        # dict from unique atom identifiers to numeration
-        # inside the molecule
-
-        # Reconstruct the Atom instances using the Json data
-        for at in atomBlock:
-            atnum     = at["atnum"]
-            coords    = at["coords"]
-            symbol    = at["symbol"]
-            props     = at["properties"]
-            mol.add_atom(Atom(atnum=atnum, coords=coords, symbol=symbol,
-                              **props))
-        # Reconstruct the bonds using the internal numeration of the molecule
-        # build in  the previous step.
-        for b in bondBlock:
-            id_atom1 = b["atom1"]
-            id_atom2 = b["atom2"]
-            atom1    = mol.atoms[id_atom1]
-            atom2    = mol.atoms[id_atom2]
-            bond = Bond(atom1=atom1, atom2=atom2, order=b["order"],
-                        **b["properties"])
-            mol.add_bond(bond)
-
-        mol.properties = properties
-
+        mol = cls()
+        mol.__dict__ = copy.copy(dictionary)
+        atom_dicts = mol.atoms
+        bond_dicts = mol.bonds
+        mol.atoms=[]
+        mol.bonds=[]
+        for a_dict in atom_dicts:
+            a = Atom()
+            a.__dict__ = a_dict
+            a.mol = mol
+            a.bonds=[]
+            mol.add_atom(a)
+        for b_dict in bond_dicts:
+            b = Bond(None, None)
+            b_dict['atom1'] = mol.atoms[b_dict['atom1']]
+            b_dict['atom2'] = mol.atoms[b_dict['atom2']]
+            b.__dict__ = b_dict
+            b.mol = mol
+            mol.add_bond(b)
         return mol
+
+
+
+def _safe_copy(obj, without=[]):
+    ret = obj.__class__()
+    ret.properties = obj.properties.copy()
+    for k in obj.__dict__:
+        if k not in (without + ['properties']):
+            ret.__dict__[k] = copy.deepcopy(obj.__dict__[k])
+    return ret
+
