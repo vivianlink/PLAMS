@@ -1,7 +1,7 @@
 import copy
 import heapq
 import math
-import numpy
+import numpy as np
 import os
 
 from .common import log
@@ -216,7 +216,7 @@ class Atom(object):
 
         This method requires all coordinates to be numerical values, :exc:`~exceptions.TypeError` is raised otherwise.
         """
-        num = numpy.dot(self.vector_to(point1, point1unit), self.vector_to(point2, point2unit))
+        num = np.dot(self.vector_to(point1, point1unit), self.vector_to(point2, point2unit))
         den = self.distance_to(point1, point1unit) * self.distance_to(point2, point2unit)
         return Units.convert(math.acos(num/den), 'radian', result_unit)
 
@@ -230,8 +230,8 @@ class Atom(object):
 
             This method does not check if supplied matrix is a proper rotation matrix.
         """
-        matrix = numpy.array(matrix).reshape(3,3)
-        self.coords = tuple(numpy.dot(matrix, numpy.array(self.coords)))
+        matrix = np.array(matrix).reshape(3,3)
+        self.coords = tuple(np.dot(matrix, np.array(self.coords)))
 
 
 
@@ -817,7 +817,7 @@ class Molecule (object):
 
             This method does not check if supplied matrix is a proper rotation matrix.
         """
-        self.lattice = [tuple(numpy.dot(matrix,i)) for i in self.lattice]
+        self.lattice = [tuple(np.dot(matrix,i)) for i in self.lattice]
 
 
     def rotate(self, matrix, lattice=False):
@@ -907,10 +907,10 @@ class Molecule (object):
             raise MoleculeError('rotate_bond: chosen bond does not divide molecule')
 
         other_end = bond.other_end(atom)
-        v = numpy.array(other_end.vector_to(atom))
-        v /= numpy.linalg.norm(v)
+        v = np.array(other_end.vector_to(atom))
+        v /= np.linalg.norm(v)
 
-        W = numpy.array([[0, -v[2], v[1]],
+        W = np.array([[0, -v[2], v[1]],
                          [v[2], 0, -v[0]],
                          [-v[1], v[0], 0]])
 
@@ -918,9 +918,9 @@ class Molecule (object):
         a1 = math.sin(angle)
         a2 = 2 * math.pow(math.sin(0.5 * angle), 2)
 
-        rotmat = numpy.identity(3) + a1 * W + a2 * numpy.dot(W,W)
+        rotmat = np.identity(3) + a1 * W + a2 * np.dot(W,W)
 
-        trans = numpy.array(other_end.vector_to((0,0,0)))
+        trans = np.array(other_end.vector_to((0,0,0)))
         for at in atoms_to_rotate:
             at.translate(trans)
             at.rotate(rotmat)
@@ -1055,18 +1055,18 @@ class Molecule (object):
             raise MoleculeError('apply_strain: strain can only be applied to periodic systems')
 
         try:
-            strain = numpy.array(strain).reshape(n,n)
+            strain = np.array(strain).reshape(n,n)
         except:
             raise MoleculeError('apply_strain: could not convert the strain to a (%i,%i) numpy array'%(n,n))
 
-        lattice_np = numpy.array(self.lattice)
-        frac_coords_transf = numpy.linalg.inv(lattice_np.T)
-        deformed_lattice = numpy.dot(lattice_np, numpy.eye(n) + numpy.array(strain))
+        lattice_np = np.array(self.lattice)
+        frac_coords_transf = np.linalg.inv(lattice_np.T)
+        deformed_lattice = np.dot(lattice_np, np.eye(n) + np.array(strain))
 
         for atom in self.atoms:
-            coord_np = numpy.array(atom.coords)
-            fractional_coords = numpy.matmul(frac_coords_transf, coord_np.T)
-            atom.coords = tuple(numpy.matmul(fractional_coords,deformed_lattice))
+            coord_np = np.array(atom.coords)
+            fractional_coords = np.matmul(frac_coords_transf, coord_np.T)
+            atom.coords = tuple(np.matmul(fractional_coords,deformed_lattice))
 
         self.lattice = [tuple(vec) for vec in deformed_lattice.tolist()]
 
