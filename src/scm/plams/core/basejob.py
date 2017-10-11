@@ -192,7 +192,7 @@ class Job(object):
                 self.pickle()
             self.results.finished.set()
             self.results.done.set()
-            if self.parent:
+            if self.parent and self in self.parent:
                 self.parent._notify()
         else:
             self.status = 'running'
@@ -243,7 +243,7 @@ class Job(object):
             self.results.finished.set()
         self.results.done.set()
 
-        if self.parent:
+        if self.parent and self in self.parent:
             self.parent._notify()
 
         log('%s._finalize() finished' % self.name, 7)
