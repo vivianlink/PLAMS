@@ -204,7 +204,7 @@ def add_to_instance(instance):
 
 #===========================================================================
 
-def _hash(string):
+def _sha256(string):
     """A small utility wrapper around :ref:`hashlib.sha256<hash-algorithms>`."""
     if not isinstance(string, bytes):
         string = str(string).encode()

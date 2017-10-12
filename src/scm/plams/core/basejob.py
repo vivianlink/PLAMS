@@ -12,7 +12,7 @@ except ImportError:
 from os.path import join as opj
 
 from .basemol import Molecule
-from .common import log, _hash
+from .common import log, _sha256
 from .errors import JobError, PlamsError, ResultsError
 from .results import Results
 from .settings import Settings
@@ -308,11 +308,11 @@ class SingleJob(Job):
 
     def hash_input(self):
         """Calculate SHA256 hash of the input file."""
-        return _hash(self.get_input())
+        return _sha256(self.get_input())
 
     def hash_runscript(self):
         """Calculate SHA256 hash of the runscript."""
-        return _hash(self._full_runscript())
+        return _sha256(self._full_runscript())
 
     def hash(self):
         """Calculate unique hash of this instance.
@@ -340,7 +340,7 @@ class SingleJob(Job):
         elif mode == 'runscript':
             return self.hash_runscript()
         elif mode == 'input+runscript':
-            return _hash(self.hash_input() + self.hash_runscript())
+            return _sha256(self.hash_input() + self.hash_runscript())
         else:
             raise PlamsError('Unsupported hashing method: ' + str(mode))
 

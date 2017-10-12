@@ -4,7 +4,7 @@ from os.path import join as opj
 
 from ...core.basemol import Molecule, Atom
 from ...core.basejob import SingleJob
-from ...core.common import log, _hash
+from ...core.common import log, _sha256
 from ...core.errors import PlamsError, ResultsError
 from ...core.results import Results
 from ...core.settings import Settings
@@ -287,7 +287,7 @@ class SCMJob(SingleJob):
         """
         spec = (SCMJob, SCMResults)
         f = lambda x: x.hash_input() if isinstance(x, SCMJob) else x.job.hash_input()
-        return _hash(self._serialize_input(spec, f))
+        return _sha256(self._serialize_input(spec, f))
 
 
     def _serialize_mol(self):
