@@ -73,6 +73,19 @@ class SCMResults(Results):
         else:
             raise FileError('File {} not present in {}'.format(filename, self.job.path))
 
+    def get_properties(self):
+        """get_properties()
+        Return a dictionary with all the entries from ``Properties`` section in the main KF file.
+        """
+        n = self.readkf('Properties', 'nEntries')
+        ret = {}
+        for i in range(1, n+1):
+            tp = self.readkf('Properties', 'Type({})'.format(i)).strip()
+            stp = self.readkf('Properties', 'Subtype({})'.format(i)).strip()
+            val = self.readkf('Properties', 'Value({})'.format(i))
+            key = stp if stp.endswith(tp) else ('{} {}'.format(stp, tp) if stp else tp)
+            ret[key] = val
+        return ret
 
     def get_molecule(self, section, variable, unit='bohr', internal=False, n=1):
         """get_molecule(section, variable, unit='bohr', internal=False, n=1)
