@@ -114,7 +114,7 @@ def load_all(path, jobmanager=None):
     for f in glob.glob(opj(path, '*', '*.dill')):
         job = jm.load_job(f)
         if job:
-            loaded_jobs[f] = jm.load_job(f)
+            loaded_jobs[f] = job
     return loaded_jobs
 
 
