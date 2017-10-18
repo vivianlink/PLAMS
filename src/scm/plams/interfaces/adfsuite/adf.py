@@ -74,6 +74,18 @@ class ADFResults(SCMResults):
         ret['XC'] = self._get_single_value('Energy', 'XC Energy', unit)
         return ret
 
+    def get_timings(self):
+        """get_timings()
+
+        Return a dictionary with timing statistics of the job execution. Returned dictionary contains keys ``cpu``, ``system`` and ``elapsed``. The values are corresponding timings, expressed in seconds.
+        """
+        last = self.grep_output(' Total Used : ')[-1].split()
+        ret = {}
+        ret['elapsed'] = float(last[-1])
+        ret['system'] = float(last[-3])
+        ret['cpu'] = float(last[-5])
+        return ret
+
 
     def _atomic_numbers_input_order(self):
         """_atomic_numbers_input_order()
