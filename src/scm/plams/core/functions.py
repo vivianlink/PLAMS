@@ -8,7 +8,7 @@ import time
 import types
 
 from os.path import join as opj
-from os.path import isfile, expandvars, dirname
+from os.path import isfile, isdir, expandvars, dirname
 
 from .errors import PlamsError
 from .settings import Settings
@@ -104,7 +104,9 @@ def load(filename):
 def load_all(path, jobmanager=None):
     """Load all jobs from *path*.
 
-    This function works as a multiple execution of |load_job|. It searches for ``.dill`` files inside the directory given by *path*, yet not directly in it, but one level deeper. In other words, all files matching ``path/*/*.dill`` are used. That way a path to the main working folder of previously run script can be used to import all jobs run by that script.
+    This function works as a multiple execution of |load_job|. It searches for ``.dill`` files inside the directory given by *path*, yet not directly in it, but one level deeper. In other words, all files matching ``path/*/*.dill`` are used. That way a path to the main working folder of a previously run script can be used to import all the jobs run by that script.
+
+    In case of partially failed |MultiJob| instances (some children jobs finished successfully, but not all) the function will search for ``.dill`` files in children folders. That means, if ``path/[foldername]/`` contains some subfolders (for children jobs) but does not contail a ``.dill`` file (the |MultiJob| was not fully successful), it will look into these subfolders. This behavior is recursive up to arbitrary folder tree depth.
 
     The purpose of this function is to provide quick and easy way of restarting a script that previously failed. Loading all successful jobs from the previous run prevents double work and allows the script to proceed directly to the place where it failed.
 
@@ -114,10 +116,15 @@ def load_all(path, jobmanager=None):
     """
     jm = jobmanager or config.jm
     loaded_jobs = {}
-    for f in glob.glob(opj(path, '*', '*.dill')):
-        job = jm.load_job(f)
-        if job:
-            loaded_jobs[f] = job
+    for foldername in filter(lambda x: isdir(opj(path,x)), os.listdir(path)):
+        maybedill = opj(path,foldername,foldername+'.dill')
+        if isfile(maybedill):
+            print(maybedill)
+            job = jm.load_job(maybedill)
+            if job:
+                loaded_jobs[os.path.abspath(maybedill)] = job
+        else:
+            loaded_jobs.update(load_all(path=opj(path,foldername), jobmanager=jm))
     return loaded_jobs
 
 
