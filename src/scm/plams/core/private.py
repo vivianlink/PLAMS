@@ -1,5 +1,5 @@
 import copy
-
+import hashlib
 
 __all__ = []
 
@@ -16,3 +16,14 @@ def smart_copy(obj, owncopy=[], without=[]):
             ret.__dict__[k] = copy.deepcopy(obj.__dict__[k])
     return ret
 
+
+#===========================================================================
+
+
+def sha256(string):
+    """A small utility wrapper around :ref:`hashlib.sha256<hash-algorithms>`."""
+    if not isinstance(string, bytes):
+        string = str(string).encode()
+    h = hashlib.sha256()
+    h.update(string)
+    return h.hexdigest()

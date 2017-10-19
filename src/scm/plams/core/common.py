@@ -1,6 +1,5 @@
 import builtins
 import glob
-import hashlib
 import os
 import shutil
 import sys
@@ -201,16 +200,4 @@ def add_to_instance(instance):
         func = types.MethodType(func, instance)
         setattr(instance, func.__func__.__name__, func)
     return decorator
-
-#===========================================================================
-
-def _sha256(string):
-    """A small utility wrapper around :ref:`hashlib.sha256<hash-algorithms>`."""
-    if not isinstance(string, bytes):
-        string = str(string).encode()
-    h = hashlib.sha256()
-    h.update(string)
-    return h.hexdigest()
-
-
 

@@ -11,7 +11,6 @@ This chapter gathers information about publicly visible functions that can be us
 .. autofunction:: finish
 .. autofunction:: load
 .. autofunction:: load_all
-.. autofunction:: _sha256
 
 
 .. _logging:
