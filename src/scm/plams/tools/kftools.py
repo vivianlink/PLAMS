@@ -6,7 +6,7 @@ import subprocess
 from bisect import bisect
 
 from ..core.errors import FileError
-from ..core.common import log
+from ..core.functions import log
 
 
 __all__ = ['KFFile', 'KFReader']

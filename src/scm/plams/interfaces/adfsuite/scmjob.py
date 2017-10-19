@@ -4,8 +4,8 @@ from os.path import join as opj
 
 from ...core.basemol import Molecule, Atom
 from ...core.basejob import SingleJob
-from ...core.common import log
 from ...core.errors import PlamsError, ResultsError
+from ...core.functions import log
 from ...core.private import sha256
 from ...core.results import Results
 from ...core.settings import Settings
@@ -15,7 +15,7 @@ from ...tools.units import Units
 
 
 class SCMResults(Results):
-    """Abstract class gathering common mechanisms for results of ADFSuite programs."""
+    """Abstract class gathering common mechanisms for results of ADF Suite programs."""
     _kfext = ''
 
 

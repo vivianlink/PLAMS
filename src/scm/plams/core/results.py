@@ -11,8 +11,8 @@ import time
 
 from os.path import join as opj
 
-from .common import log
 from .errors import ResultsError, FileError
+from .functions import log
 
 
 __all__ = ['Results']

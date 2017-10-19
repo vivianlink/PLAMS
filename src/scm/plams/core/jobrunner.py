@@ -6,10 +6,10 @@ import time
 
 from os.path import join as opj
 
-from .common import log
-from .errors import PlamsError
-from .settings import Settings
 from .basejob import SingleJob
+from .errors import PlamsError
+from .functions import log
+from .settings import Settings
 
 
 __all__ = ['JobRunner', 'GridRunner']

@@ -1,6 +1,6 @@
 from .scmjob import SCMJob, SCMResults
-from ...core.common import log
 from ...core.errors import ResultsError
+from ...core.functions import log
 from ...tools.units import Units
 
 __all__ = ['BANDJob', 'BANDResults']

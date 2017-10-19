@@ -1,5 +1,5 @@
 from ..interfaces.adfsuite.adf import ADFJob
-from ..core.common import log
+from ..core.functions import log
 
 __all__ = ['ADFNBOJob']
 

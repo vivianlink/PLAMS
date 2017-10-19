@@ -5,8 +5,8 @@ import shutil
 from os.path import join as opj
 
 from ...core.basejob import SingleJob
-from ...core.common import log
 from ...core.errors import FileError
+from ...core.functions import log
 from ...core.settings import Settings
 from ...tools.units import Units
 from .scmjob import SCMResults

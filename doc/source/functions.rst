@@ -3,7 +3,7 @@
 Public functions
 -------------------------
 
-.. currentmodule:: scm.plams.core.common
+.. currentmodule:: scm.plams.core.functions
 
 This chapter gathers information about publicly visible functions that can be used in PLAMS scripts.
 

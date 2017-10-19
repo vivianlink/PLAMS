@@ -4,8 +4,8 @@ import math
 import numpy as np
 import os
 
-from .common import log
 from .errors import MoleculeError, PTError, FileError
+from .functions import log
 from .private import smart_copy
 from .settings import Settings
 from ..tools.geometry import rotation_matrix

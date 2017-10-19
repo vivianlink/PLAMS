@@ -12,8 +12,8 @@ except ImportError:
 from os.path import join as opj
 
 from .basemol import Molecule
-from .common import log
 from .errors import JobError, PlamsError, ResultsError
+from .functions import log
 from .private import sha256
 from .results import Results
 from .settings import Settings
