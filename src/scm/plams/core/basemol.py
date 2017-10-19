@@ -6,6 +6,7 @@ import os
 
 from .common import log
 from .errors import MoleculeError, PTError, FileError
+from .private import smart_copy
 from .settings import Settings
 from ..tools.geometry import rotation_matrix
 from ..tools.pdbtools import PDBHandler, PDBRecord
@@ -423,16 +424,16 @@ class Molecule (object):
         if atoms is None:
             atoms = self.atoms
 
-        ret = _safe_copy(self, without=['atoms','bonds'])
+        ret = smart_copy(self, owncopy=['properties'], without=['atoms','bonds'])
 
         for at in atoms:
-            at_copy = _safe_copy(at, without=['mol','bonds'])
+            at_copy = smart_copy(at, owncopy=['properties'], without=['mol','bonds'])
             ret.add_atom(at_copy)
             at._bro = at_copy
 
         for bo in self.bonds:
             if hasattr(bo.atom1, '_bro') and hasattr(bo.atom2, '_bro'):
-                bo_copy = _safe_copy(bo, without=['atom1', 'atom2', 'mol'])
+                bo_copy = smart_copy(bo, owncopy=['properties'], without=['atom1', 'atom2', 'mol'])
                 bo_copy.atom1 = bo.atom1._bro
                 bo_copy.atom2 = bo.atom2._bro
                 ret.add_bond(bo_copy)
@@ -1578,14 +1579,4 @@ class Molecule (object):
             b.mol = mol
             mol.add_bond(b)
         return mol
-
-
-
-def _safe_copy(obj, without=[]):
-    ret = obj.__class__()
-    ret.properties = obj.properties.copy()
-    for k in obj.__dict__:
-        if k not in (without + ['properties']):
-            ret.__dict__[k] = copy.deepcopy(obj.__dict__[k])
-    return ret
 
