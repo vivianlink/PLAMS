@@ -1,14 +1,15 @@
 import os
 import functools
-import subprocess
 import threading
 import time
 
 from os.path import join as opj
+from subprocess import DEVNULL
 
 from .basejob import SingleJob
 from .errors import PlamsError
 from .functions import log
+from .private import saferun
 from .settings import Settings
 
 
@@ -159,12 +160,10 @@ class GridRunner(JobRunner):
             self.settings = self._autodetect()
         elif grid in config.gridrunner:
             self.settings = config.gridrunner[grid]
-            with open(os.devnull, 'wb') as null:
-                try:
-                    subprocess.call([self.settings.commands.submit, '--version'], stdout=null, stderr=null)
-                except OSError:
-                    raise PlamsError('GridRunner: %s command not found' %
-                    self.settings.commands.submit)
+            try:
+                saferun([self.settings.commands.submit, '--version'], stdout=DEVNULL, stderr=DEVNULL)
+            except OSError:
+                raise PlamsError('GridRunner: {} command not found'.format(self.settings.commands.submit))
         elif isinstance(grid, Settings):
             self.settings = grid
         else:
@@ -250,11 +249,10 @@ class GridRunner(JobRunner):
         Returned value is one of ``config.gridrunner`` branches. If autodetection was not successful, an exception is raised.
         """
         for grid in config.gridrunner:
-            with open(os.devnull, 'wb') as null:
-                try:
-                    retcode = subprocess.call([config.gridrunner[grid].commands.submit, '--version'], stdout=null, stderr=null)
-                except OSError: continue
-                if retcode == 0:
-                    log('Grid type autodetected as ' + grid, 5)
-                    return config.gridrunner[grid]
+            try:
+                process = saferun([config.gridrunner[grid].commands.submit, '--version'], stdout=DEVNULL, stderr=DEVNULL)
+            except OSError: continue
+            if process.retcode == 0:
+                log('Grid type autodetected as ' + grid, 5)
+                return config.gridrunner[grid]
         raise PlamsError('GridRunner: Failed to autodetect grid type')

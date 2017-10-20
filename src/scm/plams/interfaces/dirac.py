@@ -1,9 +1,9 @@
 import os
-import subprocess
 
 from os.path import join as opj
 
 from ..core.basejob import SingleJob
+from ..core.private import saferun
 from ..core.results import Results
 from ..core.settings import Settings
 
@@ -22,8 +22,9 @@ class DiracResults(Results):
         """
         Results.collect(self)
         pamfile = self.job._filename('out')
-        s = subprocess.check_output(['grep', 'output file', pamfile], cwd=self.job.path).decode()
-        diracfile = s.split(':')[-1].strip()
+        process = saferun(['grep', 'output file', pamfile], cwd=self.job.path)
+        output = process.stdout.decode()
+        diracfile = output.split(':')[-1].strip()
         if diracfile in self.files:
             pampath = opj(self.job.path, pamfile)
             diracpath = opj(self.job.path, diracfile)

@@ -5,12 +5,12 @@ import inspect
 import operator
 import os
 import shutil
-import subprocess
 import threading
 import time
 
 from os.path import join as opj
 
+from .private import saferun
 from .errors import ResultsError, FileError
 from .functions import log
 
@@ -394,11 +394,10 @@ class Results(metaclass=_MetaResults):
         """
         filename = filename.replace('$JN', self.job.name)
         if filename in self.files:
-            try:
-                output = subprocess.check_output(command + [filename], cwd=self.job.path).decode()
-            except subprocess.CalledProcessError:
+            process = saferun(command + [filename], cwd=self.job.path)
+            if process.returncode != 0:
                 return []
-            ret = output.split('\n')
+            ret = process.stdout.decode().split('\n')
             if ret[-1] == '':
                 ret = ret[:-1]
             return ret
