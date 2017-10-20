@@ -1,12 +1,18 @@
 import copy
 import hashlib
+import subprocess
+import time
+
+
+from .functions import log
+
 
 __all__ = []
 
 
 
 def smart_copy(obj, owncopy=[], without=[]):
-    """Return a copy of *obj*. Attributes of *obj* listed in *without* are ignored. Attributes listed in *owncopy* are copied by calling their own ``copy()`` methods. All other attributes are copied using :func:`python3:copy.deepcopy`."""
+    """Return a copy of *obj*. Attributes of *obj* listed in *without* are ignored. Attributes listed in *owncopy* are copied by calling their own ``copy()`` methods. All other attributes are copied using :func:`copy.deepcopy`."""
 
     ret = obj.__class__()
     for k in owncopy:
@@ -27,3 +33,22 @@ def sha256(string):
     h = hashlib.sha256()
     h.update(string)
     return h.hexdigest()
+
+
+#===========================================================================
+
+
+def saferun(*args, **kwargs):
+    """A wrapper around :func:`subprocess.run` repeating the call ``config.saferun.repeat`` times with ``config.saferun.delay`` interval in case of :exc:`BlockingIOError` being raised (any other exception is not caught and directly passed above). All arguments (*args* and *kwargs*) are passed directly to :func:`~subprocess.run`. If all attempts fail, the last raised :exc:`BlockingIOError` is reraised."""
+    attempt = 0
+    while attempt <= config.saferun.repeat:
+        try:
+            return subprocess.run(*args, **kwargs)
+        except BlockingIOError as e:
+            attempt += 1
+            log('subprocess.run({}) attempt {} failed with {}'.format(args[0], attempt, e), 0) ##CHANGE ME AFTER TESTING TO 5 or 7!!!!!
+            last_error = e
+            time.sleep(config.saferun.delay)
+    raise last_error
+
+

@@ -82,6 +82,12 @@ config.log.time = True
 config.log.date = False
 
 
+#==== Subprocess retry =====================================================
+
+#All the subprocess.run() calls in PLAMS are wrapped with the saferun() function which will retry the run() call if OSError was raised. This is done mainly to deal with BlockingIOError no 11 (resource temporarily unavailable) in case of large number of run() calls in a short period of time (for example, when a large MultiJob submits its long list of children to a job scheduler). The parameters below define the number of attempts to be made for each run() call and the delay between them.
+
+config.saferun.repeat = 10
+config.saferun.delay = 1
 
 #==== Default JobRunner ====================================================
 
