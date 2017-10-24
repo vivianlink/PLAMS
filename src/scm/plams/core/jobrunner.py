@@ -90,20 +90,15 @@ class JobRunner(metaclass=_MetaRunner):
             This method is used automatically during |run| and should never be explicitly called in your script.
         """
         log('Executing %s' % runscript, 5)
-        with open(opj(workdir, err), 'w') as e:
-            kwargs = {'cwd':workdir, 'stderr':e}
-            if os.name == 'posix':
-                command = './'+runscript
-                kwargs['close_fds'] = True
-            else:
-                command = ['sh', runscript]
-            if out is not None:
-                kwargs['stdout'] = open(opj(workdir, out), 'w')
-            retcode = subprocess.call(command, **kwargs)
-            if out is not None:
-                kwargs['stdout'].close()
-        log('Execution of %s finished with returncode %i' % (runscript, retcode), 5)
-        return retcode
+        command = ['./'+runscript] if os.name == 'posix' else ['sh', runscript]
+        if out is not None:
+            with open(opj(workdir, err), 'w') as e, open(opj(workdir, out), 'w') as o:
+                process = saferun(command, cwd=workdir, stderr=e, stdout=o)
+        else:
+            with open(opj(workdir, err), 'w') as e:
+                process = saferun(command, cwd=workdir, stderr=e)
+        log('Execution of %s finished with returncode %i' % (runscript, process.returncode), 5)
+        return process.returncode
 
 
     @_in_thread
