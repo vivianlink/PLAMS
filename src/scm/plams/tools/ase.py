@@ -1,8 +1,14 @@
-from ase import Atom as aseAtom
-from ase import Atoms as aseAtoms
 from ..core.basemol import Molecule,Atom
 
 __all__ = ['toASE','fromASE']
+
+try:
+    from ase import Atom as aseAtom
+    from ase import Atoms as aseAtoms
+except ModuleNotFoundError:
+    __all__ = []
+
+
 
 def toASE(molecule):
     """
@@ -34,7 +40,7 @@ def toASE(molecule):
 
         pbc[i] = True
         lattice.append(vec)
-    
+
     #save lattice info to aseMol
     if any(pbc):
         aseMol.set_pbc(pbc)
