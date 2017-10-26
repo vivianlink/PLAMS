@@ -9,6 +9,7 @@ import threading
 import time
 
 from os.path import join as opj
+from subprocess import PIPE
 
 from .private import saferun
 from .errors import ResultsError, FileError
@@ -394,7 +395,7 @@ class Results(metaclass=_MetaResults):
         """
         filename = filename.replace('$JN', self.job.name)
         if filename in self.files:
-            process = saferun(command + [filename], cwd=self.job.path)
+            process = saferun(command + [filename], cwd=self.job.path, stdout=PIPE)
             if process.returncode != 0:
                 return []
             ret = process.stdout.decode().split('\n')
