@@ -119,7 +119,6 @@ def load_all(path, jobmanager=None):
     for foldername in filter(lambda x: isdir(opj(path,x)), os.listdir(path)):
         maybedill = opj(path,foldername,foldername+'.dill')
         if isfile(maybedill):
-            print(maybedill)
             job = jm.load_job(maybedill)
             if job:
                 loaded_jobs[os.path.abspath(maybedill)] = job
