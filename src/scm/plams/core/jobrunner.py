@@ -4,7 +4,7 @@ import threading
 import time
 
 from os.path import join as opj
-from subprocess import DEVNULL
+from subprocess import DEVNULL, PIPE
 
 from .basejob import SingleJob
 from .errors import PlamsError
@@ -89,7 +89,7 @@ class JobRunner(metaclass=_MetaRunner):
         .. note::
             This method is used automatically during |run| and should never be explicitly called in your script.
         """
-        log('Executing %s' % runscript, 5)
+        log('Executing {}'.format(runscript), 5)
         command = ['./'+runscript] if os.name == 'posix' else ['sh', runscript]
         if out is not None:
             with open(opj(workdir, err), 'w') as e, open(opj(workdir, out), 'w') as o:
@@ -97,7 +97,7 @@ class JobRunner(metaclass=_MetaRunner):
         else:
             with open(opj(workdir, err), 'w') as e:
                 process = saferun(command, cwd=workdir, stderr=e)
-        log('Execution of %s finished with returncode %i' % (runscript, process.returncode), 5)
+        log('Execution of {} finished with returncode {}'.format(runscript, process.returncode), 5)
         return process.returncode
 
 
@@ -121,7 +121,11 @@ class JobRunner(metaclass=_MetaRunner):
 
 
 class GridRunner(JobRunner):
-    """Subclass of |JobRunner| that submits the runscript to a job scheduler instead of executing it locally. Besides two new keyword arguments (*grid* and *sleepstep*) and different :meth:`call` method it behaves and is meant to be used just like regular |JobRunner|.
+    """Subclass of |JobRunner| that submits the runscript to a job scheduler instead of executing it locally. Besides two new keyword arguments (*grid* and *sleepstep*) and different :meth:`call` method it behaves and is meant to be used just like a regular |JobRunner|.
+
+    .. note::
+
+        The default value of ``parallel`` constructor argument is ``True``, contrary to the regular |JobRunner|.
 
     There are many different job schedulers that are popular and widely used nowadays (for example TORQUE, SLURM, OGE). Usually they use different commands for submitting jobs or checking queue status. This class tries to build a common and flexible interface for all those tools. The idea is that commands used to communicate with job scheduler are not rigidly hard-coded but dynamically taken from a |Settings| instance instead. Thanks to that user has almost full control over the behavior of |GridRunner|.
 
@@ -136,20 +140,23 @@ class GridRunner(JobRunner):
     *   ``.workdir`` -- flag for specifying path to working directory.
     *   ``.commands.submit`` -- submit command.
     *   ``.commands.check`` -- queue status check command.
-    *   ``.commands.getid`` -- function extracting submitted job's ID from output of submit command.
-    *   ``.commands.finished`` -- function checking if submitted job is finished. It should take a single string (job's ID) and return boolean.
+    *   ``.commands.getid`` -- function extracting submitted job's ID from the output of the submit command.
+    *   ``.commands.running`` -- function extracting a list of all running jobs from the output of queue check command
     *   ``.commands.special.`` -- branch storing definitions of special |run| keyword arguments.
 
     See :meth:`call` for more technical details and examples.
 
-    The *sleepstep* parameter defines how often the job is checked for being finished. It should be an integer value telling how many seconds should the interval between two checks last. If ``None``, the global default from ``config.sleepstep`` is copied.
+    The *sleepstep* parameter defines how often the queue check is performed. It should be a numerical value telling how many seconds should the interval between two consecutive checks last. If ``None`` is used, the global default from ``config.sleepstep`` is copied.
 
     .. note::
-        Usually job schedulers are configured in such a way that output of your job is captured somewhere else and copied to the location indicated by output flag when the job is finished. Because of that it is not possible to have a peek at your output while your job is running (for example to see if your calculation is going well). This limitation can be worked around with ``[Job].settings.runscript.stdout_redirect``. If set to ``True``, the output redirection will not be handled by a job scheduler, but built in the runscript using shell redirection ``>``. That forces the output file to be created directly in *workdir* and updated live as the job proceeds.
+        Usually job schedulers are configured in such a way that output of your job is captured somewhere else and copied to the location indicated by output flag when the job is finished. Because of that it is not possible to have a peek at your output while your job is running (for example to see if your calculation is going well). This limitation can be worked around with ``[Job].settings.runscript.stdout_redirect``. If set to ``True``, the output redirection will not be handled by a job scheduler, but built in the runscript using the shell redirection ``>``. That forces the output file to be created directly in *workdir* and updated live as the job proceeds.
     """
-    def __init__(self, grid='auto', sleepstep=None, **kwargs):
-        JobRunner.__init__(self, **kwargs)
+    def __init__(self, grid='auto', sleepstep=None, parallel=True, maxjobs=0):
+        JobRunner.__init__(self, parallel=parallel, maxjobs=maxjobs)
         self.sleepstep = sleepstep or config.sleepstep
+        self._active_jobs = {}
+        self._active_lock = threading.Lock()
+        self._mainlock = threading.Lock()
 
         if grid == 'auto':
             self.settings = self._autodetect()
@@ -184,7 +191,7 @@ class GridRunner(JobRunner):
             .special.walltime = '-t '
             .special.queue    = '-p '
             .commands.submit  = 'sbatch'
-            .commands.check   = 'squeue -j '
+            .commands.check   = 'squeue'
 
         The submit command produced in such case::
 
@@ -195,23 +202,22 @@ class GridRunner(JobRunner):
 
             sbatch -D {workdir} -e {err} -o {out} -p short -N 2 -J something -O  {runscript}
 
-        In some job schedulers some flags don't have a short form with semantics ``-key value``. For example, in SLURM the flag ``--nodefile=value`` have a short form ``-F value``, but the flag ``--export=value`` does not. One can still use such a flag using special keys mechanism::
+        In some job schedulers some flags don't have a short form with semantics ``-key value``. For example, in SLURM the flag ``--nodefile=value`` have a short form ``-F value``, but the flag ``--export=value`` does not. One can still use such a flag using the "special" keys mechanism::
 
             >>> gr = GridRunner(parallel=True, maxjobs=4, grid='slurm')
             >>> gr.settings.special.export = '--export='
             >>> j.run(jobrunner=gr, queue='short', export='value')
             sbatch -D {workdir} -e {err} -o {out} -p short --export=value {runscript}
 
-        The submit command produced in the way explained above is then executed and returned output is used to determine submitted job's ID. Function stored in ``.commands.getid`` is used for that purpose, it should take one string (whole output) and return a string with job's ID.
+        The submit command produced in the way explained above is then executed and returned output is used to determine submitted job's ID. The function stored in ``.commands.getid`` is used for that purpose, it should take a single string (the whole output of the submit command) and return a string with job's ID.
 
-        Now the method waits for the job to finish. Every ``sleepstep`` seconds it queries the job scheduler by executing a function stored in ``.commands.finished``. This function takes a single string argument with job's ID and returns True if that job has finished, or False otherwise.
+        The submitted job's ID is then added to ``_active_jobs`` dictionary, with the key being job's ID and the value being an instance of :class:`threading.Lock`. This lock is used to singal the fact that the job is finished and the thread handling it can continue. :meth:`_check_queue` method is then used to start the thread querying the queue and unlocking finished jobs.
 
-        Since it is difficult (on some systems even impossible) to automatically obtain job's exit code, the returned value is always 0. From |run| perspective it means that a job executed with |GridRunner| is never *crashed*.
+        Since it is difficult (on some systems even impossible) to automatically obtain job's exit code, the returned value is 0 (unless the submit command failed, in that case 1 is returned). From |run| perspective it means that a job executed with |GridRunner| is *crashed* only if it never entered the queue (usually due to wrong submit command).
 
         .. note::
             This method is used automatically during |run| and should never be explicitly called in your script.
         """
-
         s = self.settings
         cmd = ' '.join([s.commands.submit, s.workdir, workdir, s.error, err])
         if out is not None:
@@ -223,17 +229,45 @@ class GridRunner(JobRunner):
                 cmd += ' -'+k+' '+str(v)
         cmd += ' ' + opj(workdir,runscript)
 
-        log('Submitting %s with command %s' % (runscript, cmd), 5)
-        subout = subprocess.check_output(cmd.split(' ')).decode()
-        log('Output of submit command: %s' % subout, 5)
+        log('Submitting {} with command {}'.format(runscript, cmd), 5)
+        process = saferun(cmd.split(' '), stdout=PIPE, stderr=PIPE)
+        subout = process.stdout.decode()
+        log('Output of {} submit command: {}'.format(runscript, subout), 5)
+
         jobid = s.commands.getid(subout)
-        log('%s submitted successfully as job %s' % (runscript, jobid), 3)
+        if jobid is None:
+            log('Submitting of {} failed. Stderr of submit command:\n{}'.format(runscript, process.stderr.decode()), 1)
+            return 1
+        log('{} submitted successfully as job {}'.format(runscript, jobid), 3)
 
-        while not s.commands.finished(jobid):
-            time.sleep(self.sleepstep)
+        event = threading.Event()
+        with self._active_lock:
+            self._active_jobs[jobid] = event
+        self._check_queue()
+        event.wait()
 
-        log('Execution of %s finished' % runscript, 5)
+        log('Execution of {} finished'.format(runscript), 5)
         return 0
+
+
+    @_in_thread
+    def _check_queue(self):
+        """Query the job scheduler to obtain a list of currently running jobs. Check for active jobs that are not any more in the queue and release their locks. Repeat this procedure every ``sleepstep`` seconds until there are no more active jobs. The ``_mainlock`` lock ensures that there is at most one thread executing the main loop of this method at the same time."""
+        if self._mainlock.acquire(blocking=False):
+            try:
+                while True:
+                    process = saferun([self.settings.commands.check], stdout=PIPE)
+                    output = process.stdout.decode()
+                    running_jobs = set(self.settings.commands.running(output))
+                    with self._active_lock:
+                        for jobid in set(self._active_jobs.keys()) - running_jobs:
+                            self._active_jobs[jobid].set()
+                            del self._active_jobs[jobid]
+                        if len(self._active_jobs) == 0:
+                            return
+                    time.sleep(self.sleepstep)
+            finally:
+                self._mainlock.release()
 
 
     def _autodetect(self):
@@ -247,7 +281,7 @@ class GridRunner(JobRunner):
             try:
                 process = saferun([config.gridrunner[grid].commands.submit, '--version'], stdout=DEVNULL, stderr=DEVNULL)
             except OSError: continue
-            if process.retcode == 0:
-                log('Grid type autodetected as ' + grid, 5)
+            if process.returncode == 0:
+                log("Grid type autodetected as '{}'".format(grid), 5)
                 return config.gridrunner[grid]
         raise PlamsError('GridRunner: Failed to autodetect grid type')
