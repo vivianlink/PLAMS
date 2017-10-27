@@ -195,7 +195,7 @@ class SCMJob(SingleJob):
             if isinstance(value, Settings):
                 ret += ' '*indent + key
                 if '_h' in value:
-                    ret += ' ' + value['_h']
+                    ret += ' ' + (special_func(value['_h']) if isinstance(value['_h'], special) else value['_h'])
                 ret += '\n'
 
                 i = 1
