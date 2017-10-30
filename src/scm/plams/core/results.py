@@ -60,12 +60,12 @@ def _restrict(func):
     @functools.wraps(func)
     def guardian(self, *args, **kwargs):
         if not self.job:
-            raise ResultsError('Using Results not associated with any job')
+            raise ResultsError('Using Results not associated with any Job')
 
         if self.job.status in ['successful', 'copied']:
             return func(self, *args, **kwargs)
 
-        elif self.job.status in ['created', 'preview']:
+        elif self.job.status in ['preview']:
             if config.ignore_failure:
                 log("WARNING: Trying to obtain results of job %s with status '%s'. Returned value is None" % (self.job.name, self.job.status), 3)
                 return None
@@ -89,7 +89,7 @@ def _restrict(func):
             else:
                 raise ResultsError('Using Results associated with crashed or failed job')
 
-        elif self.job.status in ['started', 'registered', 'running']:
+        elif self.job.status in ['created', 'started', 'registered', 'running']:
             log('Waiting for job %s to finish' % self.job.name, 3)
             if _privileged_access():
                 self.finished.wait()
