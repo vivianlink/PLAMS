@@ -256,11 +256,15 @@ class GridRunner(JobRunner):
         if self._mainlock.acquire(blocking=False):
             try:
                 while True:
+                    with self._active_lock:
+                        active_jobs = set(self._active_jobs.keys())
+
                     process = saferun([self.settings.commands.check], stdout=PIPE)
                     output = process.stdout.decode()
                     running_jobs = set(self.settings.commands.running(output))
+
                     with self._active_lock:
-                        for jobid in set(self._active_jobs.keys()) - running_jobs:
+                        for jobid in active_jobs - running_jobs:
                             self._active_jobs[jobid].set()
                             del self._active_jobs[jobid]
                         if len(self._active_jobs) == 0:
