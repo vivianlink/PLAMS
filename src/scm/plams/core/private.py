@@ -1,3 +1,4 @@
+import builtins
 import copy
 import hashlib
 import subprocess
@@ -41,14 +42,15 @@ def sha256(string):
 def saferun(*args, **kwargs):
     """A wrapper around :func:`subprocess.run` repeating the call ``config.saferun.repeat`` times with ``config.saferun.delay`` interval in case of :exc:`BlockingIOError` being raised (any other exception is not caught and directly passed above). All arguments (*args* and *kwargs*) are passed directly to :func:`~subprocess.run`. If all attempts fail, the last raised :exc:`BlockingIOError` is reraised."""
     attempt = 0
-    while attempt <= config.saferun.repeat:
+    (repeat, delay) = (config.saferun.repeat, config.saferun.delay) if 'config' in vars(builtins) else (5,1)
+    while attempt <= repeat:
         try:
             return subprocess.run(*args, **kwargs)
         except BlockingIOError as e:
             attempt += 1
-            log('subprocess.run({}) attempt {} failed with {}'.format(args[0], attempt, e), 0) ##CHANGE ME AFTER TESTING TO 5 or 7!!!!!
+            log('subprocess.run({}) attempt {} failed with {}'.format(args[0], attempt, e), 5)
             last_error = e
-            time.sleep(config.saferun.delay)
+            time.sleep(delay)
     raise last_error
 
 
