@@ -5,14 +5,15 @@ import inspect
 import operator
 import os
 import shutil
-import subprocess
 import threading
 import time
 
 from os.path import join as opj
+from subprocess import PIPE
 
-from .common import log
+from .private import saferun
 from .errors import ResultsError, FileError
+from .functions import log
 
 
 __all__ = ['Results']
@@ -59,12 +60,12 @@ def _restrict(func):
     @functools.wraps(func)
     def guardian(self, *args, **kwargs):
         if not self.job:
-            raise ResultsError('Using Results not associated with any job')
+            raise ResultsError('Using Results not associated with any Job')
 
         if self.job.status in ['successful', 'copied']:
             return func(self, *args, **kwargs)
 
-        elif self.job.status in ['created', 'preview']:
+        elif self.job.status in ['preview']:
             if config.ignore_failure:
                 log("WARNING: Trying to obtain results of job %s with status '%s'. Returned value is None" % (self.job.name, self.job.status), 3)
                 return None
@@ -88,7 +89,7 @@ def _restrict(func):
             else:
                 raise ResultsError('Using Results associated with crashed or failed job')
 
-        elif self.job.status in ['started', 'registered', 'running']:
+        elif self.job.status in ['created', 'started', 'registered', 'running']:
             log('Waiting for job %s to finish' % self.job.name, 3)
             if _privileged_access():
                 self.finished.wait()
@@ -394,11 +395,10 @@ class Results(metaclass=_MetaResults):
         """
         filename = filename.replace('$JN', self.job.name)
         if filename in self.files:
-            try:
-                output = subprocess.check_output(command + [filename], cwd=self.job.path).decode()
-            except subprocess.CalledProcessError:
+            process = saferun(command + [filename], cwd=self.job.path, stdout=PIPE)
+            if process.returncode != 0:
                 return []
-            ret = output.split('\n')
+            ret = process.stdout.decode().split('\n')
             if ret[-1] == '':
                 ret = ret[:-1]
             return ret

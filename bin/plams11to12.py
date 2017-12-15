@@ -10,7 +10,7 @@ import os, sys
 rename = {
 'plams.basejob'     :'plams.core.basejob',
 'plams.basemol'     :'plams.core.basemol',
-'plams.common'      :'plams.core.common',
+'plams.common'      :'plams.core.functions',
 'plams.errors'      :'plams.core.errors',
 'plams.jobrunner'   :'plams.core.jobrunner',
 'plams.jobmanager'  :'plams.core.jobmanager',
@@ -20,7 +20,7 @@ rename = {
 'plams.numdiff'     :'plams.tools.numdiff',
 'plams.pdbtools'    :'plams.tools.pdbtools',
 'plams.utils'       :'plams.tools.utils',
-'plams.scmjob'      :'plams.interfaces.adfsuite',
+'plams.scmjob'      :'plams.interfaces.adfsuite.scmjob',
 'plams.cp2kjob'     :'plams.interfaces.cp2k',
 'plams.diracjob'    :'plams.interfaces.dirac',
 'plams.gamessjob'   :'plams.interfaces.gamess',

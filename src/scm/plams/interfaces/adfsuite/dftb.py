@@ -1,6 +1,6 @@
 from .scmjob import SCMJob, SCMResults
-from ...core.common import log
 from ...core.errors import ResultsError
+from ...core.functions import log
 from ...tools.units import Units
 
 __all__ = ['DFTBJob', 'DFTBResults']
@@ -10,21 +10,6 @@ __all__ = ['DFTBJob', 'DFTBResults']
 class DFTBResults(SCMResults):
     _kfext = '.rkf'
     _rename_map = {'dftb.rkf':'$JN'+_kfext}
-
-
-    def get_properties(self):
-        """get_properties()
-        Return a dictionary with all the entries from ``Properties`` section in the main KF file (``$JN.rkf``).
-        """
-        n = self.readkf('Properties', 'nEntries')
-        ret = {}
-        for i in range(1, n+1):
-            tp = self.readkf('Properties', 'Type({})'.format(i)).strip()
-            stp = self.readkf('Properties', 'Subtype({})'.format(i)).strip()
-            val = self.readkf('Properties', 'Value({})'.format(i))
-            key = stp if stp.endswith('Energy') else '{} {}'.format(stp, tp)
-            ret[key] = val
-        return ret
 
 
     def get_main_molecule(self):

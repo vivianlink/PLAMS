@@ -1,6 +1,6 @@
 import collections
 import math
-import numpy
+import numpy as np
 
 from ..core.errors import UnitsError
 
@@ -142,11 +142,11 @@ class Units(object):
             return value
         if isinstance(value, collections.Iterable):
             t = type(value)
-            if t == numpy.ndarray:
-                t = numpy.array
+            if t == np.ndarray:
+                t = np.array
             v = [cls.convert(i, inp, out) for i in value]
             return t(v)
-        if isinstance(value, (int, float, numpy.generic)):
+        if isinstance(value, (int, float, np.generic)):
             return value * cls.conversion_ratio(inp,out)
         return value
 

@@ -1,12 +1,13 @@
 import os
 import shutil
 import struct
-import subprocess
 
 from bisect import bisect
+from subprocess import DEVNULL
 
+from ..core.private import saferun
 from ..core.errors import FileError
-from ..core.common import log
+from ..core.functions import log
 
 
 __all__ = ['KFFile', 'KFReader']
@@ -310,13 +311,9 @@ class KFFile(object):
             self.tmpdata = {}
 
             tmpfile = self.path+'.tmp' if self.reader else self.path
-            with open(os.devnull, 'wb') as null:
-                popen = subprocess.Popen(['udmpkf', tmpfile], stdin=subprocess.PIPE, stdout=null, stderr=null)
-                popen.communicate(txt.encode())
-
+            saferun(['udmpkf', tmpfile], input=txt.encode(), stdout=DEVNULL, stderr=DEVNULL)
             if self.reader:
-                with open(os.devnull, 'wb') as null:
-                    subprocess.call(['cpkf', tmpfile, self.path] + newvars, stdout=null, stderr=null)
+                saferun(['cpkf', tmpfile, self.path] + newvars, stdout=DEVNULL, stderr=DEVNULL)
                 os.remove(tmpfile)
             self.reader = KFReader(self.path)
 
@@ -329,9 +326,8 @@ class KFFile(object):
             if not self.reader._sections:
                 self.reader._create_index()
             if section in self.reader._sections:
-                tmpfile = self.path+'tmp'
-                with open(os.devnull, 'wb') as null:
-                    subprocess.call(['cpkf', self.path, tmpfile, '-rm', section], stdout=null, stderr=null)
+                tmpfile = self.path+'.tmp'
+                saferun(['cpkf', self.path, tmpfile, '-rm', section], stdout=DEVNULL, stderr=DEVNULL)
                 shutil.move(tmpfile, self.path)
                 self.reader = KFReader(self.path)
 
