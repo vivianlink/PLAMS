@@ -1,3 +1,5 @@
+__all__ = ['PlamsError', 'FileError', 'ResultsError', 'JobError', 'PTError', 'UnitsError', 'MoleculeError']
+
 class PlamsError(Exception):
     """General PLAMS error."""
     pass

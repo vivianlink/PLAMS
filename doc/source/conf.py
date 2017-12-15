@@ -204,13 +204,13 @@ autodoc_default_flags = ['members', 'private-members', 'special-members']
 autodoc_member_order = 'bysource'
 
 rst_epilog = """
-.. |init| replace:: :func:`~scm.plams.core.common.init`
-.. |log| replace:: :func:`~scm.plams.core.common.log`
-.. |load| replace:: :func:`~scm.plams.core.common.load`
-.. |load_all| replace:: :func:`~scm.plams.core.common.load_all`
-.. |finish| replace:: :func:`~scm.plams.core.common.finish`
-.. |add_to_class| replace:: :func:`~scm.plams.core.common.add_to_class`
-.. |add_to_instance| replace:: :func:`~scm.plams.core.common.add_to_instance`
+.. |init| replace:: :func:`~scm.plams.core.functions.init`
+.. |log| replace:: :func:`~scm.plams.core.functions.log`
+.. |load| replace:: :func:`~scm.plams.core.functions.load`
+.. |load_all| replace:: :func:`~scm.plams.core.functions.load_all`
+.. |finish| replace:: :func:`~scm.plams.core.functions.finish`
+.. |add_to_class| replace:: :func:`~scm.plams.core.functions.add_to_class`
+.. |add_to_instance| replace:: :func:`~scm.plams.core.functions.add_to_instance`
 
 .. |PlamsError| replace:: :exc:`~scm.plams.core.errors.PlamsError`
 .. |FileError| replace:: :exc:`~scm.plams.core.errors.FileError`
@@ -258,6 +258,9 @@ rst_epilog = """
 
 .. |MOPACJob| replace:: :class:`~scm.plams.interfaces.mopac.MOPACJob`
 .. |MOPACResults| replace:: :class:`~scm.plams.interfaces.mopac.MOPACResults`
+
+.. |DFTBPlusJob| replace:: :class:`~scm.plams.interfaces.dftbplus.DFTBPlusJob`
+.. |DFTBPlusResults| replace:: :class:`~scm.plams.interfaces.dftbplus.DFTBPlusResults`
 
 .. |RPM| replace:: :ref:`rerun-prevention`
 .. |cleaning| replace:: :ref:`cleaning`

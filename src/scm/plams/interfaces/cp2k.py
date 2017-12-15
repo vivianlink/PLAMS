@@ -1,4 +1,3 @@
-import os
 import subprocess
 
 from ..core.basejob  import SingleJob
@@ -82,8 +81,7 @@ class Cp2kJob(SingleJob):
         """
         # try to cp2k using srun
         try:
-            with open(os.devnull, 'wb') as null:
-                subprocess.run(["srun", "--help"], stdout=null)
+            subprocess.run(["srun", "--help"], stdout=subprocess.DEVNULL)
             ret = 'srun cp2k.popt'
         except OSError:
             ret = 'cp2k.popt'

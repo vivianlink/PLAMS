@@ -3,7 +3,7 @@
 Public functions
 -------------------------
 
-.. currentmodule:: scm.plams.core.common
+.. currentmodule:: scm.plams.core.functions
 
 This chapter gathers information about publicly visible functions that can be used in PLAMS scripts.
 
@@ -11,8 +11,7 @@ This chapter gathers information about publicly visible functions that can be us
 .. autofunction:: finish
 .. autofunction:: load
 .. autofunction:: load_all
-.. autofunction:: _hash
-
+.. autofunction:: scm.plams.core.basemol.read_molecules
 
 .. _logging:
 

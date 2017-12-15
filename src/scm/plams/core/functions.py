@@ -1,6 +1,5 @@
 import builtins
 import glob
-import hashlib
 import os
 import shutil
 import sys
@@ -9,7 +8,7 @@ import time
 import types
 
 from os.path import join as opj
-from os.path import isfile, expandvars, dirname
+from os.path import isfile, isdir, expandvars, dirname
 
 from .errors import PlamsError
 from .settings import Settings
@@ -19,6 +18,7 @@ __all__ = ['init', 'finish', 'log', 'load', 'load_all', 'add_to_class', 'add_to_
 
 #===========================================================================
 
+
 def init(path=None, folder=None):
     """Initialize PLAMS environment. Create global ``config`` and default |JobManager|.
 
@@ -27,7 +27,7 @@ def init(path=None, folder=None):
     *   If ``$PLAMSDEFAULTS`` variable is in your environment and it points to a file, this file is used (executed as Python script).
     *   If ``$PLAMSHOME`` variable is in your environment and ``$PLAMSHOME/src/scm/plams/plams_defaults`` exists, it is used.
     *   If ``$ADFHOME`` variable is in your environment and ``$ADFHOME/scripting/plams/src/scm/plams/plams_defaults`` exists, it is used.
-    *   Otherwise, the path ``../../plams_defaults`` relative to the current file (``common.py``) is checked. If defaults file is not found there, an exception is raised.
+    *   Otherwise, the path ``../../plams_defaults`` relative to the current file (``functions.py``) is checked. If defaults file is not found there, an exception is raised.
 
     Next, a |JobManager| instance is created as ``config.jm`` using *path* and *folder* to determine the main working directory. Settings used by this instance are directly linked from ``config.jobmanager``. If *path* is not supplied, the current directory is used. If *folder* is not supplied, the string ``plams.`` followed by PID of the current process is used.
 
@@ -67,6 +67,7 @@ def init(path=None, folder=None):
 
 #===========================================================================
 
+
 def finish(otherJM=None):
     """Wait for all threads to finish and clean the environment.
 
@@ -91,6 +92,7 @@ def finish(otherJM=None):
 
 #===========================================================================
 
+
 def load(filename):
     """Load previously saved job from ``.dill`` file. This is just a shortcut for |load_job| method of the default |JobManager| ``config.jm``."""
     return config.jm.load_job(filename)
@@ -98,10 +100,13 @@ def load(filename):
 
 #===========================================================================
 
+
 def load_all(path, jobmanager=None):
     """Load all jobs from *path*.
 
-    This function works as a multiple execution of |load_job|. It searches for ``.dill`` files inside the directory given by *path*, yet not directly in it, but one level deeper. In other words, all files matching ``path/*/*.dill`` are used. That way a path to the main working folder of previously run script can be used to import all jobs run by that script.
+    This function works as a multiple execution of |load_job|. It searches for ``.dill`` files inside the directory given by *path*, yet not directly in it, but one level deeper. In other words, all files matching ``path/*/*.dill`` are used. That way a path to the main working folder of a previously run script can be used to import all the jobs run by that script.
+
+    In case of partially failed |MultiJob| instances (some children jobs finished successfully, but not all) the function will search for ``.dill`` files in children folders. That means, if ``path/[foldername]/`` contains some subfolders (for children jobs) but does not contail a ``.dill`` file (the |MultiJob| was not fully successful), it will look into these subfolders. This behavior is recursive up to arbitrary folder tree depth.
 
     The purpose of this function is to provide quick and easy way of restarting a script that previously failed. Loading all successful jobs from the previous run prevents double work and allows the script to proceed directly to the place where it failed.
 
@@ -111,14 +116,19 @@ def load_all(path, jobmanager=None):
     """
     jm = jobmanager or config.jm
     loaded_jobs = {}
-    for f in glob.glob(opj(path, '*', '*.dill')):
-        job = jm.load_job(f)
-        if job:
-            loaded_jobs[f] = jm.load_job(f)
+    for foldername in filter(lambda x: isdir(opj(path,x)), os.listdir(path)):
+        maybedill = opj(path,foldername,foldername+'.dill')
+        if isfile(maybedill):
+            job = jm.load_job(maybedill)
+            if job:
+                loaded_jobs[os.path.abspath(maybedill)] = job
+        else:
+            loaded_jobs.update(load_all(path=opj(path,foldername), jobmanager=jm))
     return loaded_jobs
 
 
 #===========================================================================
+
 
 _stdlock = threading.Lock()
 _filelock = threading.Lock()
@@ -149,6 +159,7 @@ def log(message, level=0):
 
 #===========================================================================
 
+
 def add_to_class(classname):
     """Add decorated function as a method to the whole class *classname*.
 
@@ -174,7 +185,9 @@ def add_to_class(classname):
         setattr(classname, func.__name__, func)
     return decorator
 
+
 #===========================================================================
+
 
 def add_to_instance(instance):
     """Add decorated function as a method to one particular *instance*.
@@ -201,16 +214,4 @@ def add_to_instance(instance):
         func = types.MethodType(func, instance)
         setattr(instance, func.__func__.__name__, func)
     return decorator
-
-#===========================================================================
-
-def _hash(string):
-    """A small utility wrapper around :ref:`hashlib.sha256<hash-algorithms>`."""
-    if not isinstance(string, bytes):
-        string = str(string).encode()
-    h = hashlib.sha256()
-    h.update(string)
-    return h.hexdigest()
-
-
 

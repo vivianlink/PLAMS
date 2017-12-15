@@ -1,12 +1,12 @@
-import numpy
+import numpy as np
 import os
 import shutil
 
 from os.path import join as opj
 
 from ...core.basejob import SingleJob
-from ...core.common import log
 from ...core.errors import FileError
+from ...core.functions import log
 from ...core.settings import Settings
 from ...tools.units import Units
 from .scmjob import SCMResults
@@ -181,11 +181,11 @@ class ReaxFFJob(SingleJob):
     def _convert_lattice(lattice):
         """Convert a *lattice* expressed as three 3-dimensional vectors to (*a*, *b*, *c*, *alpha*, *beta*, *gamma*) format. Lengths of lattice vectors are expressed as *a*, *b* and *c*, angles between them as *alpha*, *beta*, *gamma*.
         """
-        a, b, c = map(numpy.linalg.norm, lattice)
-        al = numpy.dot(lattice[1], lattice[2])/(b*c)
-        be = numpy.dot(lattice[0], lattice[2])/(a*c)
-        ga = numpy.dot(lattice[0], lattice[1])/(a*b)
-        al,be,ga = map(lambda x: Units.convert(numpy.arccos(x),'rad','deg'), [al,be,ga])
+        a, b, c = map(np.linalg.norm, lattice)
+        al = np.dot(lattice[1], lattice[2])/(b*c)
+        be = np.dot(lattice[0], lattice[2])/(a*c)
+        ga = np.dot(lattice[0], lattice[1])/(a*b)
+        al,be,ga = map(lambda x: Units.convert(np.arccos(x),'rad','deg'), [al,be,ga])
         return a, b, c, al, be, ga
 
 

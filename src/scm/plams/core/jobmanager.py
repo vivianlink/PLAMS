@@ -9,9 +9,9 @@ except ImportError:
 
 from os.path import join as opj
 
-from .common import log
-from .errors import PlamsError, FileError
 from .basejob import MultiJob
+from .errors import PlamsError, FileError
+from .functions import log
 
 __all__ = ['JobManager']
 
@@ -164,8 +164,8 @@ class JobManager(object):
         with open(filename, 'rb') as f:
             try:
                 job = pickle.load(f)
-            except Exception:
-                log("Unpickling of {} failed".format(filename), 1)
+            except Exception as e:
+                log("Unpickling of {} failed. Caught the following Exception:\n{}".format(filename, e), 1)
                 return None
 
         setstate(job, path)

@@ -4,8 +4,9 @@ from os.path import join as opj
 
 from ...core.basemol import Molecule, Atom
 from ...core.basejob import SingleJob
-from ...core.common import log, _hash
 from ...core.errors import PlamsError, ResultsError
+from ...core.functions import log
+from ...core.private import sha256
 from ...core.results import Results
 from ...core.settings import Settings
 from ...tools.kftools import KFFile
@@ -14,7 +15,7 @@ from ...tools.units import Units
 
 
 class SCMResults(Results):
-    """Abstract class gathering common mechanisms for results of ADFSuite programs."""
+    """Abstract class gathering common mechanisms for results of ADF Suite programs."""
     _kfext = ''
 
 
@@ -73,6 +74,19 @@ class SCMResults(Results):
         else:
             raise FileError('File {} not present in {}'.format(filename, self.job.path))
 
+    def get_properties(self):
+        """get_properties()
+        Return a dictionary with all the entries from ``Properties`` section in the main KF file.
+        """
+        n = self.readkf('Properties', 'nEntries')
+        ret = {}
+        for i in range(1, n+1):
+            tp = self.readkf('Properties', 'Type({})'.format(i)).strip()
+            stp = self.readkf('Properties', 'Subtype({})'.format(i)).strip()
+            val = self.readkf('Properties', 'Value({})'.format(i))
+            key = stp if stp.endswith(tp) else ('{} {}'.format(stp, tp) if stp else tp)
+            ret[key] = val
+        return ret
 
     def get_molecule(self, section, variable, unit='bohr', internal=False, n=1):
         """get_molecule(section, variable, unit='bohr', internal=False, n=1)
@@ -181,7 +195,7 @@ class SCMJob(SingleJob):
             if isinstance(value, Settings):
                 ret += ' '*indent + key
                 if '_h' in value:
-                    ret += ' ' + value['_h']
+                    ret += ' ' + (special_func(value['_h']) if isinstance(value['_h'], special) else value['_h'])
                 ret += '\n'
 
                 i = 1
@@ -274,7 +288,7 @@ class SCMJob(SingleJob):
         """
         spec = (SCMJob, SCMResults)
         f = lambda x: x.hash_input() if isinstance(x, SCMJob) else x.job.hash_input()
-        return _hash(self._serialize_input(spec, f))
+        return sha256(self._serialize_input(spec, f))
 
 
     def _serialize_mol(self):

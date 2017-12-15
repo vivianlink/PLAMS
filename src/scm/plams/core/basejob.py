@@ -12,8 +12,9 @@ except ImportError:
 from os.path import join as opj
 
 from .basemol import Molecule
-from .common import log, _hash
-from .errors import PlamsError, ResultsError
+from .errors import JobError, PlamsError, ResultsError
+from .functions import log
+from .private import sha256
 from .results import Results
 from .settings import Settings
 
@@ -100,7 +101,7 @@ class Job(object):
             This method does not do too much by itself. After simple initial preparation it passes control to job runner, which decides if a new thread should be started for this job. The role of the job runner is to execute three methods that make the full job life cycle: :meth:`~Job._prepare`, :meth:`~Job._execute` and :meth:`~Job._finalize`. During :meth:`~Job._execute` the job runner is called once again to execute the runscript (only in case of |SingleJob|).
         """
         if self.status != 'created':
-            raise PlamsError('Trying to run previously started job %s' % self.name)
+            raise JobError('Trying to run previously started job %s' % self.name)
 
         self.status = 'started'
         log('Job %s started' % self.name, 1)
@@ -192,7 +193,7 @@ class Job(object):
                 self.pickle()
             self.results.finished.set()
             self.results.done.set()
-            if self.parent:
+            if self.parent and self in self.parent:
                 self.parent._notify()
         else:
             self.status = 'running'
@@ -243,7 +244,7 @@ class Job(object):
             self.results.finished.set()
         self.results.done.set()
 
-        if self.parent:
+        if self.parent and self in self.parent:
             self.parent._notify()
 
         log('%s._finalize() finished' % self.name, 7)
@@ -308,11 +309,11 @@ class SingleJob(Job):
 
     def hash_input(self):
         """Calculate SHA256 hash of the input file."""
-        return _hash(self.get_input())
+        return sha256(self.get_input())
 
     def hash_runscript(self):
         """Calculate SHA256 hash of the runscript."""
-        return _hash(self._full_runscript())
+        return sha256(self._full_runscript())
 
     def hash(self):
         """Calculate unique hash of this instance.
@@ -340,7 +341,7 @@ class SingleJob(Job):
         elif mode == 'runscript':
             return self.hash_runscript()
         elif mode == 'input+runscript':
-            return _hash(self.hash_input() + self.hash_runscript())
+            return sha256(self.hash_input() + self.hash_runscript())
         else:
             raise PlamsError('Unsupported hashing method: ' + str(mode))
 
@@ -430,12 +431,12 @@ class MultiJob(Job):
 
         This method is useful when some of children jobs are not known beforehand and need to be generated based on other children jobs, like for example in any kind of self-consistent procedure.
 
-        The goal of this method is to produce new portion of children jobs. Newly created jobs **have to** be manually added to ``self.children`` and, besides that, returned as a list by this method. No adjustment of newly created jobs' ``parent`` attribute is needed. This method **cannot** modify ``_active_children`` attribute.
+        The goal of this method is to produce a new portion of children jobs. Newly created jobs should be returned in a container compatible with ``self.children`` (e.g. list for list, dict for dict). No adjustment of newly created jobs' ``parent`` attribute is needed. This method **cannot** modify ``_active_children`` attribute.
 
-        The method defined here is a default template, returning an empty list, which means no new children jobs are generated and the entire execution of the parent job consists only of running jobs initially found in ``self.children``. To modify this behavior you can override this method in |MultiJob| subclass or use one of |binding_decorators|, just like with :ref:`prerun-postrun`.
+        The method defined here is a default template, returning ``None``, which means no new children jobs are generated and the entire execution of the parent job consists only of running jobs initially found in ``self.children``. To modify this behavior you can override this method in |MultiJob| subclass or use one of |binding_decorators|, just like with :ref:`prerun-postrun`.
         """
 
-        return []
+        return None
 
 
     def hash(self):
@@ -476,16 +477,30 @@ class MultiJob(Job):
         """Run all children from ``children``. Then use :meth:`~MultiJob.new_children` and run all jobs produced by it. Repeat this procedure until :meth:`~MultiJob.new_children` returns an empty list. Wait for all started jobs to finish."""
         log('Starting %s._execute()' % self.name, 7)
         jr = self.childrunner or jobrunner
+
         for child in self:
             child.run(jobrunner=jr, jobmanager=self.jobmanager, **self.settings.run)
+
         new = self.new_children()
         while new:
             with self._lock:
                 self._active_children += len(new)
-            for child in new:
+
+            if isinstance(new, dict) and isinstance(self.children, dict):
+                self.children.update(new)
+                it = new.values()
+            elif isinstance(new, list) and isinstance(self.children, list):
+                self.children += new
+                it = new
+            else:
+                raise JobError("ERROR in job {}: 'new_children' returned a value incompatible with 'children'".format(self.name))
+
+            for child in it:
                 child.parent = self
                 child.run(jobrunner=jr, jobmanager=self.jobmanager, **self.settings.run)
+
             new = self.new_children()
+
         while self._active_children > 0:
             time.sleep(config.sleepstep)
         log('%s._execute() finished' % self.name, 7)
