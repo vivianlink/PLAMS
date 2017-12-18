@@ -51,7 +51,7 @@ class SCMResults(Results):
         Read data from *section*/*variable* of the main KF file.
 
         The type of the returned value depends on the type of *variable* defined inside KF file. It can be: single int, list of ints, single float, list of floats, single boolean, list of booleans or string. """
-        if self._kf:
+        if self._kfpresent():
             return self._kf.read(section, variable)
         raise FileError('File {} not present in {}'.format(self.job.name+self.__class__._kfext, self.job.path))
 
@@ -116,7 +116,7 @@ class SCMResults(Results):
 
         A small method template for all the single number "get_something()" methods extracting data from main KF file. Returned value is converted from *native_unit* to *output_unit*.
         """
-        if (section, variable) in self._kf:
+        if self._kfpresent() and (section, variable) in self._kf:
             return Units.convert(self.readkf(section, variable), native_unit, output_unit)
         raise ResultsError("'{}%{}' not present in {}".format(section, variable, self._kfpath()))
 
@@ -133,6 +133,13 @@ class SCMResults(Results):
         Return the absolute path to the main KF file.
         """
         return opj(self.job.path, self.job.name + self.__class__._kfext)
+
+
+    def _kfpresent(self):
+        """_kfpresent()
+        Check if this instance has a valid ``_kf`` attribute.
+        """
+        return hasattr(self, '_kf') and isinstance(self._kf, KFFile)
 
 
     def _reduce(self, context):
