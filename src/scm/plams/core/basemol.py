@@ -500,6 +500,7 @@ class Molecule (object):
             self.atoms.remove(atom)
         except:
             raise MoleculeError('delete_atom: invalid argument passed as atom')
+        atom.mol = None
         for b in reversed(atom.bonds):
             self.delete_bond(b)
 
