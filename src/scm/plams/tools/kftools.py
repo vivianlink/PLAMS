@@ -91,13 +91,6 @@ class KFReader(object):
                 yield section, variable
 
 
-    def _reduce(self, context):
-        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details.
-
-        Returned value is *context* agnostic and it's always ``self.path``."""
-        return self.path
-
-
     def _autodetect(self):
         """Try to automatically detect the format (int size and endian) of this KF file."""
         with open(self.path, 'rb') as f:
@@ -356,13 +349,6 @@ class KFFile(object):
         ret.sort(key=lambda x: x[0]+x[1])
         for i in ret:
             yield i
-
-
-    def _reduce(self, context):
-        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details.
-
-        Returned value is *context* agnostic and it's always ``self.path``."""
-        return self.path
 
 
     @staticmethod
