@@ -59,12 +59,12 @@ class KFReader(object):
         try:
             tmp = self._sections[section]
         except KeyError:
-            log('KFReader.read: Section %s not present in %s. Returning None as value' % (section, self.path), 1)
+            log('WARNING: Section %s not present in %s. Returning None as value' % (section, self.path), 1)
             return None
         try:
             vtype, vlb, vstart, vlen = tmp[variable]
         except KeyError:
-            log('KFReader.read: Variable %s not present in section %s of %s. Returning None as value' % (variable, section, self.path))
+            log('WARNING: Variable %s not present in section %s of %s. Returning None as value' % (variable, section, self.path))
             return None
 
         ret = []
@@ -104,7 +104,7 @@ class KFReader(object):
             self.word = 'q'
             one = b[96:104]
         else:
-            log('KFFile._autodetect: Unable to detect integer size and endian of %s. Using defaults (4 bytes and little endian)' % self.path, 3)
+            log('WARNING: Unable to autodetect integer size and endian of %s. Using defaults (4 bytes and little endian)' % self.path, 3)
             return
 
         for e in ['<', '>']:
@@ -325,6 +325,18 @@ class KFFile(object):
                 self.reader = KFReader(self.path)
 
 
+    def sections(self):
+        """Return a list with all section names, ordered alphabetically."""
+        ret = set(self.tmpdata)
+        if self.reader:
+            if self.reader._sections is None:
+                self.reader._create_index()
+            ret |= set(self.reader._sections)
+        ret = list(ret)
+        ret.sort()
+        return ret
+
+
     def __getitem__(self, name):
         """Allow to use ``x = mykf['section%variable']`` or ``x = mykf[('section','variable')]`` instead of ``x = kf.read('section', 'variable')``."""
         section, variable = KFFile._split(name)
@@ -339,13 +351,14 @@ class KFFile(object):
 
     def __iter__(self):
         """Iteration yields pairs of section name and variable name."""
-        ret = []
+        ret = set()
         if self.reader:
             for sec,var in self.reader:
-                ret.append((sec,var))
+                ret.add((sec,var))
         for sec in self.tmpdata:
             for var in self.tmpdata[sec]:
-                ret.append((sec,var))
+                ret.add((sec,var))
+        ret = list(ret)
         ret.sort(key=lambda x: x[0]+x[1])
         for i in ret:
             yield i
