@@ -59,12 +59,12 @@ class KFReader(object):
         try:
             tmp = self._sections[section]
         except KeyError:
-            log('WARNING: Section %s not present in %s. Returning None as value' % (section, self.path), 1)
+            log('WARNING: Section {} not present in {}. Returning None as value'.format(section, self.path), 1)
             return None
         try:
             vtype, vlb, vstart, vlen = tmp[variable]
         except KeyError:
-            log('WARNING: Variable %s not present in section %s of %s. Returning None as value' % (variable, section, self.path))
+            log('WARNING: Variable {} not present in section {} of {}. Returning None as value'.format(variable, section, self.path), 1)
             return None
 
         ret = []
@@ -104,7 +104,7 @@ class KFReader(object):
             self.word = 'q'
             one = b[96:104]
         else:
-            log('WARNING: Unable to autodetect integer size and endian of %s. Using defaults (4 bytes and little endian)' % self.path, 3)
+            log('WARNING: Unable to autodetect integer size and endian of {}. Using defaults (4 bytes and little endian)'.format(self.path), 3)
             return
 
         for e in ['<', '>']:
@@ -299,7 +299,7 @@ class KFFile(object):
             for section in self.tmpdata:
                 for variable in self.tmpdata[section]:
                     val = self.tmpdata[section][variable]
-                    txt += '%s\n%s\n%s\n' % (section, variable, KFFile._str(val))
+                    txt += '{}\n{}\n{}\n'.format(section, variable, KFFile._str(val))
                     newvars.append(section+'%'+variable)
             self.tmpdata = {}
 
@@ -334,6 +334,23 @@ class KFFile(object):
             ret |= set(self.reader._sections)
         ret = list(ret)
         ret.sort()
+        return ret
+
+
+    def read_section(self, section):
+        """Return a dictionary with all variables from a given *section*.
+
+        .. note::
+
+            Some sections can contain very large amount of data. Turning them into dictionaries can cause memory shortage or performance issues. Use this method carefully.
+
+        """
+        ret = {}
+        for sec, var in self:
+            if sec == section:
+                ret[var] = self.read(sec, var)
+        if len(ret) == 0:
+            log('WARNING: Section {} not present in {}. Returning empty dictionary'.format(section, self.path), 1)
         return ret
 
 
