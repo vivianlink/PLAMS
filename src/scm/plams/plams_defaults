@@ -114,12 +114,12 @@ def __get_jobid(string):
 
 
 def __slurm_running(output):
-    lines = output.split('\n')[1:-1]
+    lines = output.splitlines()[1:]
     return [line.split()[0] for line in lines]
 
 
 def __pbs_running(output):
-    lines = output.split('\n')[2:-1]
+    lines = output.splitlines()[2:]
     return [line.split()[0].split('.')[0] for line in lines]
 
 

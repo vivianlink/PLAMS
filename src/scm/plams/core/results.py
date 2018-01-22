@@ -398,9 +398,7 @@ class Results(metaclass=_MetaResults):
             process = saferun(command + [filename], cwd=self.job.path, stdout=PIPE)
             if process.returncode != 0:
                 return []
-            ret = process.stdout.decode().split('\n')
-            if ret[-1] == '':
-                ret = ret[:-1]
+            ret = process.stdout.decode().splitlines()
             return ret
         else:
             raise FileError('File %s not present in %s' % (filename, self.job.path))
