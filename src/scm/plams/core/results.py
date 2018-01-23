@@ -67,10 +67,10 @@ def _restrict(func):
 
         elif self.job.status in ['preview']:
             if config.ignore_failure:
-                log("WARNING: Trying to obtain results of job %s with status '%s'. Returned value is None" % (self.job.name, self.job.status), 3)
+                log("WARNING: Trying to obtain results of job %s run in a preview mode. Returned value is None" % (self.job.name, self.job.status), 3)
                 return None
             else:
-                raise ResultsError('Using Results associated with unfinished job')
+                raise ResultsError('Using Results associated with job run in a preview mode')
 
         elif self.job.status in ['crashed', 'failed']:
             if func.__name__ == 'wait': #waiting for crashed of failed job should not trigger any warnings/exceptions
