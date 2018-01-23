@@ -59,13 +59,11 @@ class KFReader(object):
         try:
             tmp = self._sections[section]
         except KeyError:
-            log('WARNING: Section {} not present in {}. Returning None as value'.format(section, self.path), 1)
-            return None
+            raise FileError('Section {} not present in {}'.format(section, self.path))
         try:
             vtype, vlb, vstart, vlen = tmp[variable]
         except KeyError:
-            log('WARNING: Variable {} not present in section {} of {}. Returning None as value'.format(variable, section, self.path), 1)
-            return None
+            raise FileError('Variable {} not present in section {} of {}'.format(variable, section, self.path))
 
         ret = []
         first = True
@@ -350,7 +348,7 @@ class KFFile(object):
             if sec == section:
                 ret[var] = self.read(sec, var)
         if len(ret) == 0:
-            log('WARNING: Section {} not present in {}. Returning empty dictionary'.format(section, self.path), 1)
+            log("WARNING: Section '{}' not present in {} or present, but empty. Returning empty dictionary".format(section, self.path), 1)
         return ret
 
 
