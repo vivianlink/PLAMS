@@ -1,6 +1,7 @@
 """
 Run DFTB+ with plams
-v0.1 by Patrick Melix
+contributed by Patrick Melix
+based on code from Michal Handzlik
 
 see documentation for an example
 """
@@ -142,4 +143,3 @@ class DFTBPlusJob(SingleJob):
         """Returns true if 'ERROR!' is not found in the output."""
         s = self.results.grep_output('ERROR!')
         return len(s) == 0
-
