@@ -6,7 +6,7 @@ from ..core.basejob  import SingleJob
 from ..core.results import Results
 from ..core.basemol  import Molecule
 from ..core.settings import Settings
-from ..core.common import log
+from ..core.functions import log
 
 __all__ = ['CrystalResults','CrystalJob','mol2CrystalConf']
 
@@ -20,62 +20,6 @@ class CrystalJob(SingleJob):
     """
     A class representing a single computational job with `CRYSTAL <https://www.crystal.unito.it/>`
     Use Crystal version >= 14, lower versions have an even stricter and more complicated input.
-
-    Settings must contain at least (case insensitive):
-    - one geometry key ('CRYSTAL','SLAB','POLYMER','HELIX','MOLECULE','EXTERNAL','DLVINPUT') (use `mol2CrystalConf()`).
-    - one basis key ('BASISSET')
-    - one option_key ('options' and anything else)
-
-    The ordering inside the geometry-, basis- and option-block can be controlled:
-
-    >>> settings.input.crystal._h = 'top line'
-    >>> settings.input.crystal._1 = 'first line'
-    >>> settings.input.crystal._2 = 'second line'
-
-    and so on. Note that you can also pass lists with to the ordered version. Every item will end up
-    in one line.
-
-    To make input nicer, the 'options' key will never be printed, since the input does not allow an
-    opening statement for this block. This way you can use
-
-    >>> settings.input.options.bla = 'bla'
-    >>> settings.input.options.test = ''
-    >>> settings.input.options._h = 'FIRST'
-
-    without the 'options' beeing printed, but the section will still be closed with an 'END'.
-
-    The command `crystal` should point to the crystal binary or a runscript, that the input can be piped to.
-    Modify `self._command` if necessary. PLAMS will not clean up the mess of files that crystal produces,
-    if you want that your runscript should do it for you. Standard output is written to `$JN.out`.
-
-    Example script:
-    >>> common = Settings()
-    >>> geom = ['0 0 0',
-    >>> '194',
-    >>> '2.456 6.696',
-    >>> '2',
-    >>> '6 0.0     0.0     0.25',
-    >>> '6 0.333333  0.666667  0.75',
-    >>> 'SLAB',
-    >>> '0 0 1',
-    >>> '1 1',
-    >>> 'OPTGEOM',
-    >>> 'FULLOPTG',
-    >>> 'ENDGEOM']
-    >>> common.input.crystal = geom
-    >>> common.input.basisset = 'STO-3G'
-    >>> common.input.options.shrink = '9 18'
-    >>> common.input.options.scfdir = ''
-    >>> common.input.options._h = 'RHF'
-    >>> common.input.options.dft.exchange = 'PBE'
-    >>> common.input.options.dft.correlat = 'PBE'
-    >>> common.input.options.maxcycle = 250
-    >>> common.input.options.fmixing = 90
-    >>> #common.input.options.test = True
-    >>>
-    >>> job = CrystalJob(name='crystaltest', settings=common)
-    >>> jobres = job.run()
-
     """
     _result_type = CrystalResults
     _command = 'crystal'
@@ -256,33 +200,20 @@ class CrystalJob(SingleJob):
 
 def mol2CrystalConf(molecule):
     """
-    Returns a given Molecule object as a list of strings that can be used to create a
-    Settings instance for Crystal.
-
-        >>> print(crystalMol2Conf(mol))
-        ['GEOMKEY','0 0 0', '1', 'lattice', 'nAtoms', 'ElementNumber1 X1 Y1 Z1','ElementNumber2 X2 Y2 Z2', ...]
-
-    - IFLAG,IFHR and IFSO are returned as 0,0,0 by default with Symmetry group P1 (number 1).
-    This should allow most calculations to run. The user needs to change them if he wants to take
-    advantage of symmetry.
-
-    - The geometry key is guessed from the number of lattice vectors. For special stuff change it by hand.
-
-    - The number of lattice vectors in the given molecule should correspond to the dimensionality of the system.
-    Do not fill them with zeros or unit vectors, this will result in a 3D-Periodic system with wrong fractional coordinates.
-    So stick with the standard PLAMS way of doing things.
+    Returns a given Molecule object as a geomkey and a list of strings that can be used to create a
+    Settings instance for Crystal. See Documentation of the Crystal interface.
     """
     geomList =  []
 
     #add lattice keyword
     if len(molecule.lattice) == 0:
-        geomList.append('MOLECULE')
+         geomKey = 'MOLECULE'
     elif len(molecule.lattice) == 1:
-        geomList.append('POLYMER')
+         geomKey = 'POLYMER'
     elif len(molecule.lattice) == 2:
-        geomList.append('SLAB')
+         geomKey = 'SLAB'
     elif len(molecule.lattice) == 3:
-        geomList.append('CRYSTAL')
+         geomKey = 'CRYSTAL'
 
     #add line for IFLAG,IFHR,IFSO: 0 0 0 always works with P1
     geomList.append('0 0 0')
@@ -341,4 +272,4 @@ def mol2CrystalConf(molecule):
         for atom in molecule:
             geomList.append('{:<2}  {:}'.format(atom.atnum,atom.str(symbol=False)))
 
-    return geomList
+    return  geomKey, geomList
