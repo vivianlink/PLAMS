@@ -13,6 +13,7 @@ from ..core.results import Results
 from ..tools.units import Units
 from ..core.basemol import Molecule
 from ..core.errors import PlamsError
+from ..tools.ase import fromASE
 
 __all__ = ['DFTBPlusJob', 'DFTBPlusResults']
 
@@ -20,10 +21,17 @@ class DFTBPlusResults(Results):
     """A Class for handling DFTB+ Results."""
     _outfile = 'detailed.out'
     _xyzout = 'geo_end.xyz'
+    _genout = 'geo_end.gen'
 
     def get_molecule(self):
-        """Returns the molecule from the 'geo_end.xyz' file.""" 
+        """Returns the molecule from the 'geo_end.gen' file. If there is no ASE, try to read the 'geo_end.xyz' file."""
         try:
+            #The .gen file contains the cell, ASE can read it
+            from ase import Atoms as aseAtoms
+            from ase import io as aseIO
+            mol = fromASE(aseIO.read(self[self._genout]))
+        except ModuleNotFoundError:
+            #Fallback if no ASE found
             mol = Molecule(filename=self[self._xyzout])
         except:
             mol = Molecule()
