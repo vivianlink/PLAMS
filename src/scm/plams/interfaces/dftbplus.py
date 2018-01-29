@@ -116,13 +116,31 @@ class DFTBPlusJob(SingleJob):
                 atom_types[atom.symbol] = n
                 n += 1
 
+        #check PBC
+        lattice = []
+        geomType = 'C'
+        for vec in self.molecule.lattice:
+            if not all(isinstance(x, (int,float)) for x in vec):
+                raise ValueError("Non-Number in Lattice Vectors, not compatible with DFTBPlus")
+
+            lattice.append(vec)
+            geomType = 'S'
+
         self.settings.input.geometry._h = 'GenFormat'
-        self.settings.input.geometry._1 = '%i C'%len(self.molecule)
+        self.settings.input.geometry._1 = '%i %s'%(len(self.molecule),geomType)
         self.settings.input.geometry._2 = atoms_line
         self.settings.input.geometry._3 = ''
 
         for i,atom in enumerate(self.molecule):
             self.settings.input.geometry['_'+str(i+4)] = ('%5i'%(i+1)) + atom.str(symbol=str(atom_types[atom.symbol]))
+
+        if len(vec) > 0:
+            j = i + 1
+            #origin
+            self.settings.input.geometry['_'+str(j+4)] = '0.0 0.0 0.0'
+            j += 1
+            for i, vec in enumerate(lattice):
+                self.settings.input.geometry['_'+str(i+j+4)] = '%f %f %f'%(vec)
 
 
     def _removemol(self):
