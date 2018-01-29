@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 from ..core.basejob import SingleJob
 from ..core.settings import Settings
 from ..core.results import Results
-from ..tools.utils import Units
+from ..tools.units import Units
 from ..core.basemol import Molecule
 from ..core.errors import PlamsError
 
