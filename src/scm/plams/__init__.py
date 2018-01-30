@@ -9,6 +9,7 @@ What follows is a somewhat hacky way to set up an automatic plug'n'play import m
         ...
         from .interfaces.adfsuite import *
         from .interfaces.cp2k import *
+        from .interfaces.crystal import *
         from .interfaces.dftbplus import *
 """
 
