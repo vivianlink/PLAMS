@@ -188,7 +188,7 @@ class CrystalJob(SingleJob):
             mol = toASE(self.molecule)
             filename = opj(self.path, 'fort.34')
             crysIO.write_crystal(filename, mol)
-            self.settings.input.external = []
+            self.settings.input.external = True
         except ImportError:
             raise PlamsError('Crystal Interface has no builtin Molecule support, install ASE or use function crystalMol2Conf() and set self.settings.ignore_molecule. See Doc for details.')
         except:
