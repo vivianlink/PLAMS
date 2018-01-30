@@ -59,13 +59,11 @@ class KFReader(object):
         try:
             tmp = self._sections[section]
         except KeyError:
-            log('KFReader.read: Section %s not present in %s. Returning None as value' % (section, self.path), 1)
-            return None
+            raise FileError('Section {} not present in {}'.format(section, self.path))
         try:
             vtype, vlb, vstart, vlen = tmp[variable]
         except KeyError:
-            log('KFReader.read: Variable %s not present in section %s of %s. Returning None as value' % (variable, section, self.path))
-            return None
+            raise FileError('Variable {} not present in section {} of {}'.format(variable, section, self.path))
 
         ret = []
         first = True
@@ -91,13 +89,6 @@ class KFReader(object):
                 yield section, variable
 
 
-    def _reduce(self, context):
-        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details.
-
-        Returned value is *context* agnostic and it's always ``self.path``."""
-        return self.path
-
-
     def _autodetect(self):
         """Try to automatically detect the format (int size and endian) of this KF file."""
         with open(self.path, 'rb') as f:
@@ -111,7 +102,7 @@ class KFReader(object):
             self.word = 'q'
             one = b[96:104]
         else:
-            log('KFFile._autodetect: Unable to detect integer size and endian of %s. Using defaults (4 bytes and little endian)' % self.path, 3)
+            log('WARNING: Unable to autodetect integer size and endian of {}. Using defaults (4 bytes and little endian)'.format(self.path), 3)
             return
 
         for e in ['<', '>']:
@@ -306,7 +297,7 @@ class KFFile(object):
             for section in self.tmpdata:
                 for variable in self.tmpdata[section]:
                     val = self.tmpdata[section][variable]
-                    txt += '%s\n%s\n%s\n' % (section, variable, KFFile._str(val))
+                    txt += '{}\n{}\n{}\n'.format(section, variable, KFFile._str(val))
                     newvars.append(section+'%'+variable)
             self.tmpdata = {}
 
@@ -332,6 +323,35 @@ class KFFile(object):
                 self.reader = KFReader(self.path)
 
 
+    def sections(self):
+        """Return a list with all section names, ordered alphabetically."""
+        ret = set(self.tmpdata)
+        if self.reader:
+            if self.reader._sections is None:
+                self.reader._create_index()
+            ret |= set(self.reader._sections)
+        ret = list(ret)
+        ret.sort()
+        return ret
+
+
+    def read_section(self, section):
+        """Return a dictionary with all variables from a given *section*.
+
+        .. note::
+
+            Some sections can contain very large amount of data. Turning them into dictionaries can cause memory shortage or performance issues. Use this method carefully.
+
+        """
+        ret = {}
+        for sec, var in self:
+            if sec == section:
+                ret[var] = self.read(sec, var)
+        if len(ret) == 0:
+            log("WARNING: Section '{}' not present in {} or present, but empty. Returning empty dictionary".format(section, self.path), 1)
+        return ret
+
+
     def __getitem__(self, name):
         """Allow to use ``x = mykf['section%variable']`` or ``x = mykf[('section','variable')]`` instead of ``x = kf.read('section', 'variable')``."""
         section, variable = KFFile._split(name)
@@ -346,23 +366,17 @@ class KFFile(object):
 
     def __iter__(self):
         """Iteration yields pairs of section name and variable name."""
-        ret = []
+        ret = set()
         if self.reader:
             for sec,var in self.reader:
-                ret.append((sec,var))
+                ret.add((sec,var))
         for sec in self.tmpdata:
             for var in self.tmpdata[sec]:
-                ret.append((sec,var))
+                ret.add((sec,var))
+        ret = list(ret)
         ret.sort(key=lambda x: x[0]+x[1])
         for i in ret:
             yield i
-
-
-    def _reduce(self, context):
-        """When this object is present as a value in some |Settings| instance and string representation is needed, use the absolute path. See :meth:`Settings.__reduce__<scm.plams.core.settings.Settings.__reduce__>` for details.
-
-        Returned value is *context* agnostic and it's always ``self.path``."""
-        return self.path
 
 
     @staticmethod
