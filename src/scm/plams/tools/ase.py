@@ -5,7 +5,7 @@ __all__ = ['toASE','fromASE']
 try:
     from ase import Atom as aseAtom
     from ase import Atoms as aseAtoms
-except ModuleNotFoundError:
+except:
     __all__ = []
 
 
