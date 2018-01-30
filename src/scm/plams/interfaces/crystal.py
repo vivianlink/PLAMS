@@ -7,6 +7,7 @@ from ..core.results import Results
 from ..core.basemol  import Molecule
 from ..core.settings import Settings
 from ..core.functions import log
+from ..core.errors import PlamsError
 
 __all__ = ['CrystalResults','CrystalJob','mol2CrystalConf']
 
@@ -135,8 +136,10 @@ class CrystalJob(SingleJob):
 
             return ret
 
-        if isinstance(self.molecule,Molecule):
-          raise PlamsError('Crystal Interface has no Molecule support, use function crystalMol2Conf() and add it to your settings object')
+        inp = ''
+        use_molecule = ('ignore_molecule' not in self.settings) or (self.settings.ignore_molecule == False)
+        if use_molecule:
+            self._parsemol()
 
         #we need a certain ordering, so make a copy of the settings instance
         #and convert all first-level keys to uppercase
@@ -151,7 +154,6 @@ class CrystalJob(SingleJob):
         if not any([ x in _basis_keys for x in tmp ]):
             raise PlamsError('BasisSet block is necessary for a Crystal Job')
 
-        inp = ''
 
         #first title
         inp += '{}\n'.format(self.name)
@@ -176,6 +178,21 @@ class CrystalJob(SingleJob):
 
         inp += 'END'
         return inp
+
+    def _parsemol(self):
+        try:
+            #ASE has a new write function for Crystal coordinate files, use that if possible
+            from ..tools.ase import toASE
+            from ase.io import crystal as crysIO
+            from os.path import join as opj
+            mol = toASE(self.molecule)
+            filename = opj(self.path, 'fort.34')
+            crysIO.write_crystal(filename, mol)
+            self.settings.input.external = []
+        except ImportError:
+            raise PlamsError('Crystal Interface has no builtin Molecule support, install ASE or use function crystalMol2Conf() and set self.settings.ignore_molecule. See Doc for details.')
+        except:
+            raise PlamsError('Unkown Error in plams.interfaces.crystal.CrystalJob.get_input._parsemol')
 
 
     def get_runscript(self):
