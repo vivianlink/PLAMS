@@ -14,8 +14,8 @@ PLAMS offers a simple CRYSTAL interface which does not offer access to all possi
 Preparing a calculation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Preparing an instance of |CRYSTALJob| follows the general principles for |SingleJob|. Information adjusting the input file is stored in the ``myjob.settings.input`` branch. The geometry of your system can *NOT* be supplied via the class |Molecule|. It needs to be supplied to the ``myjob.settings.input`` branch. You can use the function |mol2CrystalConf| to create a CRYSTAL-type input of your structure.
-See `the manual <http://http://www.crystal.unito.it/documentation.php>`_ for further information on the different input options.
+Preparing an instance of |CRYSTALJob| follows the general principles for |SingleJob|. Information adjusting the input file is stored in the ``myjob.settings.input`` branch. The geometry of your system can be supplied via the class |Molecule| and will be parsed into a ``fort.34`` file using the *EXTERNAL* keyword. It can also be supplied to the ``myjob.settings.input`` branch by using the function |mol2CrystalConf| to create a CRYSTAL-type input of your structure inside the input file (set ``myjob.settings.ignore_molecule = True``).
+Consult `the manual <http://http://www.crystal.unito.it/documentation.php>`_ for further information on the different input options of CRYSTAL.
 
 
 
@@ -26,17 +26,17 @@ Input
 
 Settings must contain at least (case insensitive):
 
-- one geometry key ('CRYSTAL','SLAB','POLYMER','HELIX','MOLECULE','EXTERNAL','DLVINPUT') (use |mol2CrystalConf|).
+- one geometry key ('CRYSTAL','SLAB','POLYMER','HELIX','MOLECULE','EXTERNAL','DLVINPUT') (use the |Molecule| parser of |CRYSTALJob| or |mol2CrystalConf|, see below).
 - one basis key ('BASISSET')
 - one option_key ('options' and anything else)
 
 The ordering inside the geometry-, basis- and option-block can be controlled:
 
-    >>> settings.input.crystal._h = 'top line'
-    >>> settings.input.crystal._1 = 'first line'
-    >>> settings.input.crystal._2 = 'second line'
+    >>> settings.input.basisset._h = 'top line'
+    >>> settings.input.basisset._1 = 'first line'
+    >>> settings.input.basisset._2 = 'second line'
 
-and so on. Note that you can also pass lists with to the ordered version. Every item will end up in one line.
+and so on. Note that you can also pass lists to the ordered version. Every item will end up in one line.
 
 To make input nicer, the 'options' key will never be printed, since the input does not allow an opening statement for this block. This way you can use
 
@@ -53,20 +53,14 @@ without the 'options' beeing printed, but the section will still be closed with 
 Runscript
 +++++++++
 
-The command ``crystal`` should point to the crystal binary or a runscript (so make sure it is in your ``$PATH``), that the input can be piped to. Modify ``CrystalJob._command`` if necessary. PLAMS will not clean up the mess of files that crystal produces, if you want that your runscript should do it for you. Standard output is written to ``$JN.out``.
+The command ``crystal`` should point to the crystal binary or a runscript (so make sure it is in your ``$PATH``), that the input can be piped to. Modify ``CrystalJob._command`` if necessary. PLAMS will not clean up the mess of files that crystal produces. If you want that, your runscript should do it for you. Standard output is written to ``$JN.out``.
 
-Molecule conversion
+Molecule parsing
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-Call |mol2CrystalConf| to create a CRYSTAL-type input of your structure.
+The |Molecule| parser of |CRYSTALJob| makes use of the ``EXTERNAL`` keyword by writing the |Molecule| instance to the file *fort.34*. This is done using the ``write_crystal`` method from ASE.
 
-Returns a given |Molecule| object as a geomkey and a list of strings that can be used to create a Settings instance for Crystal.
+If you do not have ASE installed you cannot use this feature. In this case use the function |mol2CrystalConf| to create a list to pass to ``myjob.settings.input.<geomKey>``. Remember to set ``myjob.settings.ignore_molecule = True`` if you are doing this.
 
-        >>> print(crystalMol2Conf(mol))
-        'GEOMKEY', ['0 0 0', '1', 'lattice', 'nAtoms', 'ElementNumber1 X1 Y1 Z1','ElementNumber2 X2 Y2 Z2', ...]
-
-- IFLAG,IFHR and IFSO are returned as 0,0,0 by default with Symmetry group P1 (number 1). This should allow most calculations to run. The user needs to change them if he wants to take advantage of symmetry.
-- The geometry key is guessed from the number of lattice vectors. For special stuff change it by hand.
-- The number of lattice vectors in the given molecule should correspond to the dimensionality of the system. Do not fill them with zeros or unit vectors, this will result in a 3D-Periodic system with wrong fractional coordinates. So stick with the standard PLAMS way of doing things.
 
 Results extraction
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,7 +70,7 @@ Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
-
+     mol = Molecule('test.xyz')
      common = Settings()
      geom = ['0 0 0',
      '194',
@@ -90,7 +84,7 @@ Example
      'OPTGEOM',
      'FULLOPTG',
      'ENDGEOM']
-     common.input.crystal = geom
+
      common.input.basisset = 'STO-3G'
      common.input.options.shrink = '9 18'
      common.input.options.scfdir = ''
@@ -101,7 +95,17 @@ Example
      common.input.options.fmixing = 90
      #common.input.options.test = True
 
-     job = CrystalJob(name='crystaltest', settings=common)
+     common.input.crystal = geom
+     common.ignore_molecule = True
+
+     #alternative 1
+     #common.input.crystal = mol2CrystalConf(mol)
+     #common.ignore_molecule = True
+
+     #alternative 2
+     #just pass the molecule to CrystalJob if you have ASE
+
+     job = CrystalJob(name='crystaltest', settings=common, molecule=mol)
      jobres = job.run()
 
 

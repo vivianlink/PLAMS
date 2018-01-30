@@ -217,8 +217,16 @@ class CrystalJob(SingleJob):
 
 def mol2CrystalConf(molecule):
     """
-    Returns a given Molecule object as a geomkey and a list of strings that can be used to create a
-    Settings instance for Crystal. See Documentation of the Crystal interface.
+Call this function to create a CRYSTAL-type input of your structure:
+
+Returns a given |Molecule| object as a geomkey and a list of strings that can be used to create a Settings instance for Crystal.
+
+        >>> print(crystalMol2Conf(mol))
+        'GEOMKEY', ['0 0 0', '1', 'lattice', 'nAtoms', 'ElementNumber1 X1 Y1 Z1','ElementNumber2 X2 Y2 Z2', ...]
+
+- IFLAG,IFHR and IFSO are returned as 0,0,0 by default with Symmetry group P1 (number 1). This should allow most calculations to run. The user needs to change them if he wants to take advantage of symmetry.
+- The geometry key is guessed from the number of lattice vectors. For special stuff change it by hand.
+- The number of lattice vectors in the given molecule should correspond to the dimensionality of the system. Do not fill them with zeros or unit vectors, this will result in a 3D-Periodic system with wrong fractional coordinates. So stick with the standard PLAMS way of doing things.
     """
     geomList =  []
 
