@@ -15,11 +15,12 @@ class Cp2kJob(SingleJob):
         with blocks, subblocks, keys and values.
         """
 
-        _reserved_keywords = ["KIND", "XC", "JOB"]
+        _reserved_keywords = ["KIND", "XC", "JOB", "AT_SET", "AT_INCLUDE", "AT_IF"]
 
         def parse(key, value, indent=''):
             ret = ''
             key = key.upper()
+            print("Keys: ", key)
             if isinstance(value, Settings):
                 if not any(k in key for k in _reserved_keywords):
                     ret += '{}&{}\n'.format(indent, key)
@@ -49,8 +50,8 @@ class Cp2kJob(SingleJob):
                     job_names = value['input_file_names']
                     job_ids = value['job_ids']
 
-                    for k, (jobID, name, wd) in \
-                        enumerate(zip(job_ids, job_names, work_dirs)):
+                    for k, (jobID, name, wd) in enumerate(zip(
+                            job_ids, job_names, work_dirs)):
                         ret += '{}&JOB\n'.format(indent)
                         if k > 0:
                             ret += '  {}DEPENDENCIES {}\n'.format(indent, jobID - 1)
@@ -58,6 +59,19 @@ class Cp2kJob(SingleJob):
                         ret += '  {}INPUT_FILE_NAME {}\n'.format(indent, name)
                         ret += '  {}JOB_ID {}\n'.format(indent, jobID)
                         ret += '{}&END JOB\n\n'.format(indent)
+                elif "AT_SET" in key:
+                    var, val = tuple(value.items())[0]
+                    ret += '@SET {} {}\n'.format(var, val)
+
+                elif "AT_IF" in key:
+                    pred, branch = tuple(value.items())[0]
+                    ret += '{}@IF {}\n'.format(indent, pred)
+                    for k, v in branch.items():
+                        ret += parse(k, v, indent + '  ')
+                    ret += '{}@ENDIF\n'.format(indent)
+
+            elif key == "AT_INCLUDE":
+                ret += '@include {}\n'.format(value)
 
             elif isinstance(value, list):
                 for el in value:
