@@ -8,3 +8,5 @@ Currently PLAMS offers interfaces to the following programs:
     adfsuite
     mopac
     dirac
+    crystal
+    dftbplus

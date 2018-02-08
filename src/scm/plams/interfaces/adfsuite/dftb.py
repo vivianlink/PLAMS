@@ -40,6 +40,32 @@ class DFTBResults(SCMResults):
         return self.get_main_molecule()
 
 
+    def get_history_molecules(self):
+        """get_history_molecules()
+        Return a list of |Molecule| instances with all Structures from the ``History`` section of the ``.rkf`` file.
+        If the structures have lattice information, it is written into the corresponding |Molecule| instance.
+
+        All data used by this method is taken from ``$JN.rkf`` file. If no ``History`` section is available an empty list is returned and a level 5 log entry appears.
+        """
+        if not ('History', 'nEntries') in self._kf:
+            log('No History section found in rkf during get_history_molecules, returning an empty list.',level=5)
+            return []
+
+        nEntries = self.readkf('History', 'nEntries')
+        #list of molecules to return
+        history = []
+        #iterate over entries
+        for i in range(1,nEntries+1):
+            mol = self.get_molecule('History','Coords('+str(i)+')')
+            #read lattice if there is any
+            if ('History','LatticeVectors('+str(i)+')') in self._kf:
+                #LatticeVectors has to be length dimensions*3, so we can do this
+                lattice = Units.convert(self.readkf('History','LatticeVectors('+str(i)+')'), 'bohr', 'angstrom')
+                mol.lattice = [tuple(lattice[j:j+3]) for j in range(0,len(lattice),3)]
+            history.append(mol)
+        return history
+
+
     def get_energy(self, unit='au'):
         """get_energy(unit='au')
         Return DFTB final energy, expressed in *unit*.

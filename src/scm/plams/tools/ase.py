@@ -1,4 +1,6 @@
 from ..core.basemol import Molecule,Atom
+from numpy import zeros as npz
+from numpy import array as npa
 
 __all__ = ['toASE','fromASE']
 
@@ -30,7 +32,7 @@ def toASE(molecule):
         aseMol.append(aseAtom(atom.atnum, atom.coords))
 
     #get lattice info if any
-    lattice = []
+    lattice = npz((3,3))
     pbc = [False,False,False]
     for i,vec in enumerate(molecule.lattice):
 
@@ -39,7 +41,7 @@ def toASE(molecule):
             raise ValueError("Non-Number in Lattice Vectors, not compatible with ASE")
 
         pbc[i] = True
-        lattice.append(vec)
+        lattice[i] = npa(vec)
 
     #save lattice info to aseMol
     if any(pbc):
