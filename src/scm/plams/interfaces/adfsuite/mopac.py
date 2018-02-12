@@ -19,6 +19,9 @@ class MOPACResults(SCMResults):
     def _int2inp(self):
         return list(range(1, 1+len(self.job.molecule)))
 
+    def _atomic_numbers_input_order(self):
+        return self.readkf('Molecule', 'AtomicNumbers')
+
 
 class MOPACJob(SingleJob):
     """A class representing a single computational job with MOPAC."""
@@ -67,6 +70,7 @@ class MOPACJob(SingleJob):
         ret += 'cp {} {}.stdout\n'.format(self._filename('err'), self._filename('inp'))
         ret += 'tokf mopac {} {}.rkf\n'.format(self._filename('inp'), self.name)
         ret += 'rm {}.stdout\n\n'.format(self._filename('inp'))
+        ret += 'rm {}\n\n'.format(self._filename('out'))
         return ret
 
 
