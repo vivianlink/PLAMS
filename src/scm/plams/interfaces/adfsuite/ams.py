@@ -162,7 +162,7 @@ class AMSResults(Results):
         coords = [sectdict['Coords'][i:i+3] for i in range(0,len(sectdict['Coords']),3)]
         symbols = sectdict['AtomSymbols'].split()
         for at, crd, sym, mass in zip(sectdict['AtomicNumbers'], coords, symbols, sectdict['AtomMasses']):
-            newatom = Atom(atnum=at, coords=crd)
+            newatom = Atom(atnum=at, coords=crd, unit='bohr')
             if sym.startswith('Gh.'):
                 sym = sym[3:]
                 newatom.properties.ghost = True
