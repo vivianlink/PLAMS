@@ -86,6 +86,7 @@ class Units(object):
     distance['nm'] = distance['A'] / 10.0
     distance['pm'] = distance['A'] * 100.0
     distance['bohr'] = 1.0 / constants['bohr_radius']
+    distance['Bohr'] = 1.0 / constants['bohr_radius']
     distance['a0'] = distance['bohr']
     distance['au'] = distance['bohr']
     dicts.append(distance)
