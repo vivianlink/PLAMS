@@ -18,16 +18,21 @@ class Units(object):
     *   constants:
 
         -   ``speed_of_light`` (also ``c``)
-        -   ``elementary_charge`` (also ``e`` and ``electron_charge``)
-        -   ``avogadro_constant`` (also ``NA``)
-        -   ``bohr_radius``
+        -   ``electron_charge`` (also ``e``)
+        -   ``Avogadro_constant`` (also ``NA``)
+        -   ``Bohr_radius``
 
     *   distance:
 
-        -   ``Angstrom``, ``angstrom``, ``A``
-        -   ``bohr``, ``a0``, ``au``
+        -   ``Angstrom``, ``A``
+        -   ``Bohr``, ``au``, ``a.u.``
         -   ``nm``
         -   ``pm``
+
+    *   reciprocal distance:
+
+        -   ``1/Angstrom``, ``1/A``, ``Angstrom^-1``, ``A^-1``,
+        -   ``1/Bohr``, ``Bohr^-1``
 
     *   angle:
 
@@ -38,17 +43,17 @@ class Units(object):
 
     *   energy:
 
-        -   ``au``, ``hartree``, ``Hartree``
-        -   ``ev``, ``eV``
+        -   ``au``, ``a.u.``, ``Hartree``
+        -   ``eV``
         -   ``kcal/mol``
         -   ``kJ/mol``
-        -   ``cm^-1``
+        -   ``cm^-1``, ``cm-1``
 
     *   dipole moment:
 
-        -   ``au``
+        -   ``au``, ``a.u.``
         -   ``Cm``
-        -   ``D``, ``Debye``, ``debye``
+        -   ``Debye``, ``D``
 
     Example::
 
@@ -58,8 +63,8 @@ class Units(object):
         1.6021766208e-19
         >>> print(Units.convert(123, 'angstrom', 'bohr'))
         232.436313431
-        >>> print(Units.convert(23.32, 'kJ/mol', 'kcal/mol'))
-        5.57361376673
+        >>> print(Units.convert([23.32, 145.0, -34.7], 'kJ/mol', 'kcal/mol'))
+        [5.573613766730401, 34.655831739961755, -8.293499043977056]
         >>> print(Units.conversion_ratio('kcal/mol', 'kJ/mol'))
         4.184
 
@@ -67,57 +72,47 @@ class Units(object):
     """
 
     constants = {}
-    constants['bohr_radius'] = 0.52917721067   #http://physics.nist.gov/cgi-bin/cuu/Value?bohrrada0
-    constants['avogadro_constant'] = 6.022140857e23   #http://physics.nist.gov/cgi-bin/cuu/Value?na
-    constants['speed_of_light'] = 299792458   #http://physics.nist.gov/cgi-bin/cuu/Value?c
-    constants['electron_charge'] = 1.6021766208e-19   #http://physics.nist.gov/cgi-bin/cuu/Value?e
+    constants['Bohr_radius']                         =  0.52917721067   #http://physics.nist.gov/cgi-bin/cuu/Value?bohrrada0
+    constants['Avogadro_constant'] = constants['NA'] =  6.022140857e23   #http://physics.nist.gov/cgi-bin/cuu/Value?na
+    constants['speed_of_light'] = constants['c']     =  299792458   #http://physics.nist.gov/cgi-bin/cuu/Value?c
+    constants['electron_charge'] = constants['e']    =  1.6021766208e-19   #http://physics.nist.gov/cgi-bin/cuu/Value?e
 
-    constants['NA'] = constants['avogadro_constant']
-    constants['c'] = constants['speed_of_light']
-    constants['e'] = constants['electron_charge']
-    constants['elementary_charge'] = constants['electron_charge']
-
-    dicts = []
 
     distance = {}
-    distance['A'] = 1.0
-    distance['angstrom'] = distance['A']
-    distance['Angstrom'] = distance['A']
-    distance['nm'] = distance['A'] / 10.0
-    distance['pm'] = distance['A'] * 100.0
-    distance['bohr'] = 1.0 / constants['bohr_radius']
-    distance['Bohr'] = 1.0 / constants['bohr_radius']
-    distance['a0'] = distance['bohr']
-    distance['au'] = distance['bohr']
-    dicts.append(distance)
+    distance['A'] = distance['Angstrom']                 =  1.0
+    distance['Bohr'] = distance['a.u.'] = distance['au'] =  1.0 / constants['Bohr_radius']
+    distance['nm']                                       = distance['A'] / 10.0
+    distance['pm']                                       = distance['A'] * 100.0
+
+    rec_distance = {}
+    rec_distance['1/A'] = rec_distance['1/Angstrom'] = rec_distance['A^-1'] = rec_distance['Angstrom^-1'] = 1.0
+    rec_distance['1/Bohr'] = rec_distance['Bohr^-1'] = constants['Bohr_radius']
 
     energy = {}
-    energy['au'] = 1.0
-    energy['hartree'] = energy['au']
-    energy['Hartree'] = energy['au']
-    energy['eV'] = 27.21138602   #http://physics.nist.gov/cgi-bin/cuu/Value?hrev
-    energy['ev'] = energy['eV']
-    energy['kJ/mol'] = 4.359744650e-21 * constants['NA']  #http://physics.nist.gov/cgi-bin/cuu/Value?hrj
-    energy['kcal/mol'] = energy['kJ/mol'] / 4.184
-    energy['cm^-1'] = 219474.6313702   #http://physics.nist.gov/cgi-bin/cuu/Value?hrminv
-    dicts.append(energy)
+    energy['au'] = energy['a.u.'] = energy['Hartree'] =  1.0
+    energy['eV']                                      =  27.21138602   #http://physics.nist.gov/cgi-bin/cuu/Value?hrev
+    energy['kJ/mol']                                  =  4.359744650e-21 * constants['NA']  #http://physics.nist.gov/cgi-bin/cuu/Value?hrj
+    energy['kcal/mol']                                =  energy['kJ/mol'] / 4.184
+    energy['cm^-1']                                   =  219474.6313702   #http://physics.nist.gov/cgi-bin/cuu/Value?hrminv
 
     angle = {}
-    angle['degree'] = 1.0
-    angle['deg'] = angle['degree']
-    angle['radian'] = math.pi / 180.0
-    angle['rad'] = angle['radian']
-    angle['grad'] = 100.0 / 90.0
-    angle['circle'] = 1.0 / 360.0
-    dicts.append(angle)
+    angle['degree'] =  angle['deg'] = 1.0
+    angle['radian'] =  angle['rad'] = math.pi / 180.0
+    angle['grad']   =  100.0 / 90.0
+    angle['circle'] =  1.0 / 360.0
 
     dipole = {}
-    dipole['au'] = 1.0
-    dipole['Cm'] = constants['e'] * constants['bohr_radius'] * 1e-10
-    dipole['Debye'] = dipole['Cm'] * constants['c']* 1e21
-    dipole['debye'] = dipole['Debye']
-    dipole['D'] = dipole['Debye']
-    dicts.append(dipole)
+    dipole['au'] = dipole['a.u.'] =  1.0
+    dipole['Cm']                  =  constants['e'] * constants['Bohr_radius'] * 1e-10
+    dipole['Debye'] = dipole['D'] =  dipole['Cm'] * constants['c']* 1e21
+
+
+    dicts = {}
+    dicts['distance'] = distance
+    dicts['energy'] = energy
+    dicts['angle'] = angle
+    dicts['dipole'] = dipole
+    dicts['reciprocal distance'] = rec_distance
 
 
     def __init__(self):
@@ -125,12 +120,39 @@ class Units(object):
 
 
     @classmethod
+    def find_unit(cls, unit):
+        ret = {}
+        for quantity in cls.dicts:
+            for k in cls.dicts[quantity]:
+                if k.lower() == unit.lower():
+                    ret[quantity] = k
+        return ret
+
+
+    @classmethod
     def conversion_ratio(cls, inp, out):
         """Return conversion ratio from unit *inp* to *out*."""
-        for d in cls.dicts:
-            if inp in d.keys() and out in d.keys():
-                return d[out]/d[inp]
-        raise UnitsError('Invalid conversion_ratio call: unsupported units')
+        inps = cls.find_unit(inp)
+        outs = cls.find_unit(out)
+        common = set(inps.keys()) & set(outs.keys())
+        if len(common) > 0:
+            quantity = common.pop()
+            d = cls.dicts[quantity]
+            return d[outs[quantity]]/d[inps[quantity]]
+        else:
+            if len(inps) == 0 and len(outs) == 0:
+                raise UnitsError("Unsupported units: '{}' and '{}'".format(inp, out))
+            if len(inps) > 0 and len(outs) > 0:
+                raise UnitsError("Invalid unit conversion: '{}' is a unit of {} and '{}' is a unit of {}".format(inp, ', '.join(list(inps.keys())), out, ', '.join(list(outs.keys()))))
+            else: #exactly one of (inps,outs) empty
+                invalid, nonempty = (out,inps) if len(inps) else (inp,outs)
+                if len(nonempty) == 1:
+                    quantity = list(nonempty.keys())[0]
+                    raise UnitsError("Invalid unit conversion: {} is not supported. Supported units for {}: {}".format(invalid, quantity, ', '.join(list(cls.dicts[quantity].keys()))))
+                else:
+                    raise UnitsError("Invalid unit conversion: {} is not a supported unit for {}".format(invalid, ', '.join(list(nonempty.keys()))))
+
+
 
 
     @classmethod
