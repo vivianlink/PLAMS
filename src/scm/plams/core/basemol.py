@@ -1116,8 +1116,7 @@ class Molecule (object):
         if self.lattice:
             s += '  Lattice:\n'
             for vec in self.lattice:
-                v = [Units.convert(x, 'bohr', 'angstrom') for x in vec]
-                s += '    {:16.10f} {:16.10f} {:16.10f}\n'.format(*v)
+                s += '    {:16.10f} {:16.10f} {:16.10f}\n'.format(*vec)
         return s
 
 
@@ -1253,8 +1252,7 @@ class Molecule (object):
         for at in self.atoms:
             f.write(str(at) + '\n')
         for i,vec in enumerate(self.lattice):
-            v = [Units.convert(x, 'bohr', 'angstrom') for x in vec]
-            f.write('VEC'+str(i+1) + '%14.6f %14.6f %14.6f\n'%tuple(v))
+            f.write('VEC'+str(i+1) + '%14.6f %14.6f %14.6f\n'%tuple(vec))
 
 
     def readmol(self, f, frame):
