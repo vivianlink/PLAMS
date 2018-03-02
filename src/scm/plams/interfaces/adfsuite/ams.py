@@ -10,6 +10,7 @@ from ...core.private import sha256
 from ...core.results import Results
 from ...core.settings import Settings
 from ...tools.kftools import KFFile
+from ...tools.units import Units
 
 
 
@@ -175,7 +176,9 @@ class AMSResults(Results):
             ret.properties.charge = sectdict['Charge']
 
         if 'nLatticeVectors' in sectdict:
-            ret.lattice = [tuple(sectdict['LatticeVectors'][i:i+3]) for i in range(0,len(sectdict['LatticeVectors']),3)]
+            ret.lattice = []
+            for i in range(0,len(sectdict['LatticeVectors']),3):
+                ret.lattice.append(tuple(Units.convert(sectdict['LatticeVectors'][i:i+3], 'bohr', 'angstrom')))
 
         if 'EngineAtomicInfo' in sectdict:
             suffixes = sectdict['EngineAtomicInfo'].splitlines()
