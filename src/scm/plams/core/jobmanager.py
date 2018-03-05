@@ -149,6 +149,9 @@ class JobManager(object):
                 job._lock = threading.Lock()
                 for child in job:
                     setstate(child, opj(path, child.name), job)
+                for otherjob in job.other_jobs():
+                    setstate(otherjob, opj(path, otherjob.name), job)
+
             job.results.refresh()
             h = job.hash()
             if h is not None:

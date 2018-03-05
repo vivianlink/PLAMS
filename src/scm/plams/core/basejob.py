@@ -450,6 +450,18 @@ class MultiJob(Job):
         return all([child.status in ['successful', 'copied'] for child in self])
 
 
+    def other_jobs(self):
+        """Iterate through other jobs that belong to this |MultiJob|, but are not in ``children``.
+
+        Sometimes |prerun| or |postrun| methods create and run some small jobs that don't end up in ``children`` collection, but are still considered a part of a |MultiJob| instance (their ``parent`` atribute points to the |MultiJob| and their working folder is inside MultiJob's working folder). This method provides an iterator that goes through all such jobs.
+
+        Each attribute of ``self`` that is an instance of a |Job| and has it's parent pointing to ``self`` is returned, in random order.
+        """
+        for attr in self.__dict__.values():
+            if isinstance(attr, Job):
+                yield attr
+
+
     def _get_ready(self):
         """Get ready for :meth:`~MultiJob._execute`. Count children jobs and set their ``parent`` attribute."""
         self._active_children = len(self.children)
