@@ -176,9 +176,7 @@ class AMSResults(Results):
             ret.properties.charge = sectdict['Charge']
 
         if 'nLatticeVectors' in sectdict:
-            ret.lattice = []
-            for i in range(0,len(sectdict['LatticeVectors']),3):
-                ret.lattice.append(tuple(Units.convert(sectdict['LatticeVectors'][i:i+3], 'bohr', 'angstrom')))
+            ret.lattice = Units.convert([tuple(sectdict['LatticeVectors'][i:i+3]) for i in range(0,len(sectdict['LatticeVectors']),3)], 'bohr', 'angstrom')
 
         if 'EngineAtomicInfo' in sectdict:
             suffixes = sectdict['EngineAtomicInfo'].splitlines()
