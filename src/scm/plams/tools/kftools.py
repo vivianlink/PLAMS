@@ -135,7 +135,10 @@ class KFReader(object):
         if step > 0:
             while step <= len(block):
                 new = struct.unpack(str(formatstring), block[:step])
-                new = tuple(map(lambda x: x.decode() if isinstance(x,bytes) else x, new))
+                try:
+                    new = tuple(map(lambda x: x.decode() if isinstance(x,bytes) else x, new))
+                except:
+                    new = tuple(map(lambda x: x.decode("Latin-1") if isinstance(x,bytes) else x, new))
                 ret.append(new)
                 block = block[step:]
         return ret
