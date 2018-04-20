@@ -137,7 +137,7 @@ class KFReader(object):
                 new = struct.unpack(str(formatstring), block[:step])
                 try:
                     new = tuple(map(lambda x: x.decode() if isinstance(x,bytes) else x, new))
-                except:
+                except UnicodeDecodeError:
                     new = tuple(map(lambda x: x.decode("Latin-1") if isinstance(x,bytes) else x, new))
                 ret.append(new)
                 block = block[step:]
@@ -152,7 +152,7 @@ class KFReader(object):
         contents = self._parse(datablock[hlen:], zip((i,d,s,b),(self.word,'d','s',self.word)))
         if contents:
             ret = list(contents[0])
-            return ret[:i], ret[i:i+d], ret[i+d], map(bool,ret[i+d+1:])
+            return ret[:i], ret[i:i+d], ret[i+d], list(map(bool,ret[i+d+1:]))
         else:
             return [], [], [], []
 
