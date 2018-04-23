@@ -3,6 +3,7 @@ import shutil
 import struct
 
 from bisect import bisect
+from collections import OrderedDict
 from subprocess import DEVNULL
 
 from ..core.private import saferun
@@ -258,7 +259,7 @@ class KFFile(object):
     def __init__(self, path, autosave=True):
         self.autosave = autosave
         self.path = os.path.abspath(path)
-        self.tmpdata = {}
+        self.tmpdata = OrderedDict()
         self.reader = KFReader(self.path) if os.path.isfile(self.path) else None
 
 
@@ -285,7 +286,7 @@ class KFFile(object):
                 raise ValueError('Only lists of int, float or bool can be stored in KFFile')
 
         if section not in self.tmpdata:
-            self.tmpdata[section] = {}
+            self.tmpdata[section] = OrderedDict()
         self.tmpdata[section][variable] = value
 
         if self.autosave:
@@ -302,7 +303,7 @@ class KFFile(object):
                     val = self.tmpdata[section][variable]
                     txt += '{}\n{}\n{}\n'.format(section, variable, KFFile._str(val))
                     newvars.append(section+'%'+variable)
-            self.tmpdata = {}
+            self.tmpdata = OrderedDict()
 
             tmpfile = self.path+'.tmp' if self.reader else self.path
             saferun(['udmpkf', tmpfile], input=txt.encode(), stdout=DEVNULL, stderr=DEVNULL)
